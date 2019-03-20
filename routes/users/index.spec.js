@@ -7,6 +7,13 @@ beforeAll(() => {
 });
 
 describe("Users route", () => {
+  describe('GET /', () => {
+    it('should return 200 if request succeeds', () => {
+      return request(server)
+        .post("/api/users")
+        .then(res => expect(res.status).toBe(200));
+    });
+  });
   describe("Registration", () => {
     it("should return 422 if the request in incomplete", () => {
       return request(server)
