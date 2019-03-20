@@ -1,0 +1,34 @@
+{
+  "name": "labs11-adNetwork-BE",
+  "version": "1.0.0",
+  "description": "Backend repo for Labs11 Ad Network Team",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --watch --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/labs11-ad-network/labs11-adNetwork-BE.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/labs11-ad-network/labs11-adNetwork-BE/issues"
+  },
+  "homepage": "https://github.com/labs11-ad-network/labs11-adNetwork-BE#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^7.0.0",
+    "express": "^4.16.4",
+    "helmet": "^3.16.0",
+    "jest": "^24.5.0",
+    "jsonwebtoken": "^8.5.1",
+    "knex": "^0.16.3",
+    "morgan": "^1.9.1",
+    "pg": "^7.9.0",
+    "sqlite3": "^4.0.6",
+    "supertest": "^4.0.2"
+  }
+}
