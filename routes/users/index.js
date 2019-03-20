@@ -3,8 +3,9 @@ const bcrypt = require("bcryptjs");
 const models = require("../../common/helpers");
 const { genToken } = require("../../common/authentication");
 
-route.get("/", (req, res) => {
-  res.json("USERS ROUTE");
+route.get("/", async (req, res) => {
+  const users = await models.get("users");
+  res.status(200).json(users);
 });
 
 route.post("/register", async (req, res) => {
