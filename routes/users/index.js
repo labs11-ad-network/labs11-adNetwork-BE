@@ -1,76 +1,74 @@
 const route = require("express").Router();
-const bcrypt = require("bcryptjs");
 const models = require("../../common/helpers");
-const { genToken } = require("../../common/authentication");
 
-route.get("/", (req, res) => {
-  res.json("USERS ROUTE");
-});
-
-route.post("/register", async (req, res) => {
-  const { first_name, last_name, email, password, phone, acct_type } = req.body;
-
+route.get('/' async (req, res) => {
   try {
-    console.log(req.body);
-    if (
-      !first_name ||
-      !last_name ||
-      !email ||
-      !password ||
-      !phone ||
-      !acct_type
-    )
-      return res.status(422).json({ message: "All fields required" });
-
-    const hash = bcrypt.hashSync(password, 14);
-
-    const user = await models.findBy("users", { email });
-
-    if (user) return res.status(409).json({ message: "User already exists" });
-
-    const [id] = await models.add("users", {
-      first_name,
-      last_name,
-      email,
-      password: hash,
-      phone,
-      acct_type
-    });
-
-    const newUser = await models.findBy("users", { id });
-    delete newUser.password;
-
-    res.status(201).json(newUser);
-  } catch (error) {
-    res.status(500).json({ error });
+    const users = await models.get('users')
+    if(users) {
+      res.status(200).json(users)
+    } else {
+      res.status(500).json({ message: 'Users do not exist.' })
+    }
+  } catch({ message }) {
+    res.status(404).json({ message })
   }
-});
+})
 
-route.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+route.get('/:id', async (req, res) => {
+  const id = req.params.id
   try {
-    if (!email || !password)
-      return res.status(422).json({ message: "All fields required" });
+    const user = await models.findBy('users', id)
+    if(user) {
+      res.status(200).json(user)
+    } else {
+      res.status(500).json({ message: 'User does not exist.' })
+    }
 
-    const user = await models.findBy("users", { email });
+  } catch({ message })
+    res.status(404).json({ message })
+})
 
-    if (!user) return res.status(404).json({ message: "User does not exist" });
-
-    const correct = bcrypt.compareSync(password, user.password);
-
-    if (!correct)
-      return res.status(401).json({ message: "Invalid credentials" });
-
-    const token = await genToken(user);
-
-    if (!token) return res.status(500).json({ message: "Server error" });
-
-    delete user.password;
-
-    res.json({ user, token });
-  } catch (error) {
-    res.status(500).json(error);
+route.post('/', async (req, res) => {
+  try {
+    const [id] = await models.add('users', req.body)
+    if(id) {
+      const user = await models.findBy('users', id)
+      res.status(200).json(user, message: 'User created successfully.')
+    } else {
+      res.status(500).json({ message: 'There was an issue creating this user.' })
+    }
+  } catch({ message }) {
+    res.status(404).json({ message })
   }
-});
+})
+
+route.put('/:id', async (req, res) => {
+  const id = req.params.id
+  try {
+    const success = await models.update('users', id, req.body)
+    if(success) {
+      const user = await models.findBy('users', id)
+      res.status(200).json(user, message: 'User edited successfully.')
+    } else {
+      res.status(404).json({ message: 'There was an issue editing this user.' })
+    }
+  } catch({ message }) {
+    res.status(500).json({ message })
+  }
+})
+
+route.delete('/:id', async (req, res) => {
+  const id = req.params.id
+  try {
+    const success = await models.remove('users', id)
+    if(success) {
+      res.status(200).json({ message: 'User deleted successfully.' })
+    } else {
+      res.status(500).json({ message: 'There was an issue editing this user.' })
+    }
+  } catch({ message }) {
+    res.status(404).json({ message })
+  }
+})
 
 module.exports = route;
