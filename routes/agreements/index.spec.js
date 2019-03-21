@@ -26,8 +26,7 @@ describe("Agreement routes", () => {
           .post("/api/agreements")
           .send({
             offer_id: 1,
-            affiliate_id: 1,
-            advertiser_id: 3
+            affiliate_id: 1
           })
           .then(res => expect(res.status).toBe(201));
       });
@@ -38,13 +37,31 @@ describe("Agreement routes", () => {
           .post("/api/agreements")
           .send({
             offer_id: 1,
-            affiliate_id: 1,
-            advertiser_id: 3
+            affiliate_id: 1
           });
 
         const res = await request(server).delete("/api/agreements/1");
 
         expect(res.status).toBe(200);
+      });
+    });
+    describe("Agreement PUT route", () => {
+      it("should update an agreement", async () => {
+        await request(server)
+          .post("/api/agreements")
+          .send({
+            offer_id: 1,
+            affiliate_id: 1
+          });
+
+        const res = await request(server)
+          .put("/api/agreements/1")
+          .send({
+            offer_id: 1,
+            affiliate_id: 2
+          });
+
+        expect(res.body.affiliate_id).toBe(2);
       });
     });
   });
