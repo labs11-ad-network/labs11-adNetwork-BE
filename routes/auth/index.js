@@ -8,6 +8,10 @@ route.get("/", async (req, res) => {
   res.status(200).json(users);
 });
 
+
+// @route    GET /api/users/register
+// @desc     register user
+// @Access   Public
 route.post("/register", async (req, res) => {
   const {
     first_name,
@@ -57,6 +61,9 @@ route.post("/register", async (req, res) => {
   }
 });
 
+// @route    GET /api/users/login
+// @desc     login user
+// @Access   Public
 route.post("/login", async (req, res) => {
   const { email, password, oauth_token } = req.body;
   try {
