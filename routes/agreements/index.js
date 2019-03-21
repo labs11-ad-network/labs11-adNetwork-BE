@@ -69,7 +69,7 @@ route.delete('/:id', async (req, res) => {
         .status(404)
         .json({ message: "There was an issue deleting the agreement at that ID." });
     }
-  } catch ({message}) {
+  } catch ({ message }) {
     res.status(500).json({ message });
   }
 });
