@@ -73,6 +73,7 @@ route.post("/register", async (req, res) => {
 // @desc     login user
 // @Access   Public
 route.post("/login", async (req, res) => {
+
   const { message, isValid } = validateLogin(req.body);
   if (!isValid) {
     return res.status(422).json(message);
