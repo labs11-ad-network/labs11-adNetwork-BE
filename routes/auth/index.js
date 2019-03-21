@@ -4,10 +4,11 @@ const models = require("../../common/helpers");
 const { genToken } = require("../../common/authentication");
 
 const validateLogin = require("../../validation/loginValidation")
+const validateRegister = require("../../validation/registerValidation")
 
 
 
-// @route    GET api/users
+// @route    GET api/auth
 // @desc     get all users for testing
 // @Access   Public
 route.get("/", async (req, res) => {
@@ -16,10 +17,14 @@ route.get("/", async (req, res) => {
 });
 
 
-// @route    GET /api/users/register
+// @route    GET /api/auth/register
 // @desc     register user
 // @Access   Public
 route.post("/register", async (req, res) => {
+  const { message, isValid } = validateRegister(req.body);
+  if (!isValid) {
+    return res.status(422).json(message);
+  }
   const {
     first_name,
     last_name,
@@ -30,11 +35,7 @@ route.post("/register", async (req, res) => {
     image_url,
     oauth_token
   } = req.body;
-
   try {
-    if (!first_name || !last_name || !email || !phone || !acct_type)
-      return res.status(422).json({ message: "All fields required" });
-
     if (!password && !oauth_token)
       return res
         .status(500)
@@ -68,16 +69,17 @@ route.post("/register", async (req, res) => {
   }
 });
 
-// @route    GET /api/users/login
+// @route    GET /api/auth/login
 // @desc     login user
 // @Access   Public
 route.post("/login", async (req, res) => {
+
+  const { message, isValid } = validateLogin(req.body);
+  if (!isValid) {
+    return res.status(422).json(message);
+  }
   const { email, password, oauth_token } = req.body;
 
-  const { errors, isValid } = validateLogin({ email });
-  if (!isValid) {
-    return res.status(422).json(errors);
-  }
 
   try {
     const user = await models.findBy("users", { email });
