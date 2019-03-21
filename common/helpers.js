@@ -27,6 +27,7 @@ const queryByDate = (tbl, started_at, ended_at) =>
   db(tbl)
     .where("created_at", ">=", started_at)
     .where("created_at", "<", ended_at);
+
 module.exports = {
   get,
   findBy,
