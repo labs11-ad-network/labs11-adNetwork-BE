@@ -8,6 +8,10 @@ exports.up = function(knex, Promise) {
     tbl.string("destination_url").nullable();
     tbl.string("back_img").nullable();
     tbl.string("size").nullable();
+    tbl.boolean("active").defaultTo(false);
+    tbl.string("text_color").nullable();
+    tbl.string("btn_color").nullable();
+    tbl.string("btn_text_color").nullable();
     tbl
       .integer("user_id")
       .references("id")
