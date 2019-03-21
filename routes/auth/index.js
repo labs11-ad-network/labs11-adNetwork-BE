@@ -66,8 +66,15 @@ route.post("/register", async (req, res) => {
 // @Access   Public
 route.post("/login", async (req, res) => {
   const { email, password, oauth_token } = req.body;
+
+  //MAKE SURE TO IMPORT VALIDATION and Change Name !! 
+  const { errors, isValid } = validatePostInput(email);
+  if (!isValid) {
+    return res.status(422).json(errors);
+  }
+
   try {
-    if (!email) return res.status(422).json({ message: "All fields required" });
+
 
     const user = await models.findBy("users", { email });
 
