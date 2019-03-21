@@ -14,12 +14,12 @@ module.exports = function validateRegister(data) {
   data.phone = !isEmpty(data.phone) ? data.phone : "";
   data.acct_type = !isEmpty(data.acct_type) ? data.acct_type : "";
 
-  // ------------ has to be a valid email -----------------
+  // ----------------- has to be a valid email ----------------------
   if (!Validator.isEmail(data.email)) {
     errors.email = "has to be a valid email";
   }
 
-  // ------------ fields are required -----------------
+  // ----------------- fields are required ----------------------
   if (Validator.isEmpty(data.email)) {
     errors.email = "Email field is required";
   }
