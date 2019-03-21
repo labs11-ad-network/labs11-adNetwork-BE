@@ -15,9 +15,9 @@ route.get('/', async (req, res) => {
 })
 
 route.get('/:id', async (req, res) => {
-  const id = req.params.id
+  const id  = req.params.id
   try {
-    const user = await models.findBy('users', id)
+    const user = await models.findBy('users', { id })
     if(user) {
       res.status(200).json(user)
     } else {
@@ -31,12 +31,9 @@ route.get('/:id', async (req, res) => {
 route.put('/:id', async (req, res) => {
   const id = req.params.id
   try {
-    if(req.body.length == 0) {
-      return res.status(204).json({ message: 'No content provided.' })
-    }
-    const success = await models.update('users', id, req.body)
+    const success = await models.update('users', id, { ...req.body })
     if(success) {
-      const user = await models.findBy('users', id)
+      const user = await models.findBy('users', { id })
       res.status(200).json({ user, message: 'User edited successfully.' })
     } else {
       res.status(404).json({ message: 'There was an issue editing this user.' })
@@ -53,7 +50,7 @@ route.delete('/:id', async (req, res) => {
     if(success) {
       res.status(200).json({ message: 'User deleted successfully.' })
     } else {
-      res.status(500).json({ message: 'There was an issue editing this user.' })
+      res.status(500).json({ message: 'There was an issue deleting this user.' })
     }
   } catch({ message }) {
     res.status(404).json({ message })
