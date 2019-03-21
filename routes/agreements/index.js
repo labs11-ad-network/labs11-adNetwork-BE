@@ -32,15 +32,13 @@ route.get("/:id", async (req, res) => {
   }
 });
 
-
-// Without authentication. When we add that we will refactor based on 
+// Without authentication. When we add that we will refactor based on
 // whether req.decoded.id is affiliate_id or advertiser_id
 route.post("/", async (req, res) => {
   if (
     !(
       req.body.hasOwnProperty("offer_id") &&
-      req.body.hasOwnProperty("affiliate_id") &&
-      req.body.hasOwnProperty("advertiser_id")
+      req.body.hasOwnProperty("affiliate_id")
     )
   ) {
     res.status(400).json({ message: "Required information is missing." });

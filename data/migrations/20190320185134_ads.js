@@ -13,6 +13,13 @@ exports.up = function(knex, Promise) {
     tbl.string("btn_color").nullable();
     tbl.string("btn_text_color").nullable();
     tbl
+      .integer("offer_id")
+      .unsigned()
+      .notNullable()
+      .references("id")
+      .inTable("offers")
+      .onDelete("restrict");
+    tbl
       .integer("user_id")
       .references("id")
       .inTable("users");
