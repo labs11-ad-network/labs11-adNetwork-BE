@@ -1,4 +1,4 @@
-bconst route = require("express").Router();
+const route = require("express").Router();
 const bcrypt = require("bcryptjs");
 const models = require("../../common/helpers");
 const { genToken } = require("../../common/authentication");
