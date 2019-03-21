@@ -4,6 +4,7 @@ const models = require("../../common/helpers");
 const { genToken } = require("../../common/authentication");
 
 const validateLogin = require("../../validation/loginValidation")
+const validateRegister = require("../../validation/registerValidation")
 
 
 
@@ -30,7 +31,10 @@ route.post("/register", async (req, res) => {
     image_url,
     oauth_token
   } = req.body;
-
+  // const { errors, isValid } = validateRegister({ email, first_name, last_name, phone, acct_type });
+  // if (!isValid) {
+  //   return res.status(422).json(errors);
+  // }
   try {
     if (!first_name || !last_name || !email || !phone || !acct_type)
       return res.status(422).json({ message: "All fields required" });

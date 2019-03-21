@@ -58,4 +58,20 @@ route.post("/", async (req, res) => {
   }
 });
 
+route.delete('/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const success = await models.remove("agreements", id);
+    if (success) {
+      res.status(200).json({ message: "User sucessfully deleted." });
+    } else {
+      res
+        .status(404)
+        .json({ message: "There was an issue deleting the agreement at that ID." });
+    }
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
+
 module.exports = route;
