@@ -16,6 +16,12 @@ exports.up = function(knex, Promise) {
     t.string("category").notNullable();
     t.string("currency").notNullable();
     t.string("status").notNullable();
+    t.integer("advertiser_id")
+      .unsigned()
+      .notNullable()
+      .references("id")
+      .inTable("users")
+      .onDelete("restrict");
     t.timestamps(true, true);
   });
 };
