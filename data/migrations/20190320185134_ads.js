@@ -8,6 +8,7 @@ exports.up = function(knex, Promise) {
     tbl.string("destination_url").nullable();
     tbl.string("back_img").nullable();
     tbl.string("size").nullable();
+    tbl.boolean("active").defaultTo(false);
     tbl
       .integer("user_id")
       .references("id")
