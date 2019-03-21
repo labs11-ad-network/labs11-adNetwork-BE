@@ -16,7 +16,7 @@ exports.up = function(knex, Promise) {
     t.string("category").notNullable();
     t.string("currency").notNullable();
     t.string("status").notNullable();
-    t.integer("advertiser_id")
+    t.integer("user_id")
       .unsigned()
       .notNullable()
       .references("id")

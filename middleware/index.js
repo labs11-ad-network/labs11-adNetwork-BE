@@ -10,6 +10,7 @@ const auth = require("../routes/auth");
 const offers = require("../routes/offers");
 const ads = require("../routes/mockups");
 const users = require("../routes/users");
+const analytics = require("../routes/analytics");
 
 const configureMiddleware = server => {
   server.use(json);
@@ -23,6 +24,7 @@ const configureMiddleware = server => {
   server.use("/api/auth", auth);
   server.use("/api/offers", offers);
   server.use("/api/ads", ads);
+  server.use("/api/analytics", analytics);
   server.use("/api/users", users);
 };
 
