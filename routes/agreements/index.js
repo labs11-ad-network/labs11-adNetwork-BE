@@ -58,16 +58,40 @@ route.post("/", async (req, res) => {
   }
 });
 
-route.delete('/:id', async (req, res) => {
+route.put("/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const agreement = await models.findBy("agreements", { id });
+    if (agreement) {
+      const count = await models.update("agreements", id, {
+        ...req.body,
+        updated_at: Date.now()
+      });
+
+      if (count > 0) {
+        const updated = await models.findBy("agreements", { id });
+        return res.status(200).json(updated);
+      }
+    } else {
+      res
+        .status(404)
+        .json({ message: "There was no agreement found at that ID." });
+    }
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
+
+route.delete("/:id", async (req, res) => {
   const id = req.params.id;
   try {
     const success = await models.remove("agreements", id);
     if (success) {
       res.status(200).json({ message: "User sucessfully deleted." });
     } else {
-      res
-        .status(404)
-        .json({ message: "There was an issue deleting the agreement at that ID." });
+      res.status(404).json({
+        message: "There was an issue deleting the agreement at that ID."
+      });
     }
   } catch ({ message }) {
     res.status(500).json({ message });
