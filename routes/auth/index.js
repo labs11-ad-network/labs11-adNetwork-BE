@@ -3,11 +3,22 @@ const bcrypt = require("bcryptjs");
 const models = require("../../common/helpers");
 const { genToken } = require("../../common/authentication");
 
+const validateLogin = require("../../validation/loginValidation")
+
+
+
+// @route    GET api/users
+// @desc     get all users for testing
+// @Access   Public
 route.get("/", async (req, res) => {
   const users = await models.get("users");
   res.status(200).json(users);
 });
 
+
+// @route    GET /api/users/register
+// @desc     register user
+// @Access   Public
 route.post("/register", async (req, res) => {
   const {
     first_name,
@@ -57,11 +68,18 @@ route.post("/register", async (req, res) => {
   }
 });
 
+// @route    GET /api/users/login
+// @desc     login user
+// @Access   Public
 route.post("/login", async (req, res) => {
   const { email, password, oauth_token } = req.body;
-  try {
-    if (!email) return res.status(422).json({ message: "All fields required" });
 
+  const { errors, isValid } = validateLogin({ email });
+  if (!isValid) {
+    return res.status(422).json(errors);
+  }
+
+  try {
     const user = await models.findBy("users", { email });
 
     if (oauth_token) {
