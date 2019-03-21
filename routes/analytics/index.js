@@ -21,4 +21,26 @@ route.post("/", async (req, res) => {
   }
 });
 
+route.get("/", async (req, res) => {
+  const { action, start_date, end_date, agreement_id } = req.query;
+
+  try {
+    const getAction = await models.queryByDate(
+      "analytics",
+      start_date,
+      end_date
+    );
+    res.json(getAction);
+    // if (action) {
+    //   const getAction = await models.findAllBy("analytics", { action, updated_at: });
+    //   res.json(getAction);
+    // } else {
+    //   const analytics = await models.get("analytics");
+    //   res.json(analytics);
+    // }
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
+
 module.exports = route;
