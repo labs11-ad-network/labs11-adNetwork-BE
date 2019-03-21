@@ -2,7 +2,7 @@ const request = require("supertest");
 const server = require("../../api/server");
 const db = require("../../data/dbConfig");
 
-beforeAll(() => {
+beforeEach(() => {
   return db("agreements").truncate();
 });
 
@@ -30,6 +30,21 @@ describe("Agreement routes", () => {
             advertiser_id: 3
           })
           .then(res => expect(res.status).toBe(201));
+      });
+    });
+    describe("Agreement DELETE route", () => {
+      it("should return 200 if the agreement is sucessfully deleted", async () => {
+        await request(server)
+          .post("/api/agreements")
+          .send({
+            offer_id: 1,
+            affiliate_id: 1,
+            advertiser_id: 3
+          });
+
+        const res = await request(server).delete("/api/agreements/1");
+
+        expect(res.status).toBe(200);
       });
     });
   });
