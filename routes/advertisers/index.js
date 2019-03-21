@@ -37,7 +37,7 @@ route.put('/:id', async (req, res) => {
     const success = await models.update('users', id, { ...req.body })
     if(success) {
       const advertiser = await models.findBy('users', { acct_type: 'advertiser', id })
-      res.status(200).json({ user, message: 'Advertiser edited successfully.' })
+      res.status(200).json({ advertiser, message: 'Advertiser edited successfully.' })
     } else {
       res.status(404).json({ message: 'There was an issue editing this advertiser.' })
     }
