@@ -45,4 +45,16 @@ route.get("/myads", authenticate, async (req, res) => {
   }
 });
 
+route.get("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const ad = await models.findBy("ads", { id });
+    if (!ad) return res.status(404).json({ message: "No ads found" });
+    res.json(ad);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
 module.exports = route;
