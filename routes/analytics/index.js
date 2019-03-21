@@ -1,5 +1,6 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const db = require("../../data/dbConfig");
 
 route.post("/", async (req, res) => {
   const { action, browser, ip, referrer, agreement_id } = req.body;
@@ -22,22 +23,33 @@ route.post("/", async (req, res) => {
 });
 
 route.get("/", async (req, res) => {
-  const { action, start_date, end_date, agreement_id } = req.query;
-
+  const { action, started_at, ended_at, agreement_id } = req.query;
   try {
-    const getAction = await models.queryByDate(
-      "analytics",
-      start_date,
-      end_date
-    );
-    res.json(getAction);
-    // if (action) {
-    //   const getAction = await models.findAllBy("analytics", { action, updated_at: });
-    //   res.json(getAction);
-    // } else {
-    //   const analytics = await models.get("analytics");
-    //   res.json(analytics);
-    // }
+    if (action && started_at && ended_at) {
+      const getActions = await db
+        .select("*")
+        .from("analytics")
+        .where({ action })
+        .where("created_at", ">=", started_at)
+        .where("created_at", "<", ended_at);
+      res.json(getActions);
+    } else if (!action && started_at && ended_at) {
+      const getActions = await db
+        .select("*")
+        .from("analytics")
+        .where("created_at", ">=", started_at)
+        .where("created_at", "<", ended_at);
+      res.json(getActions);
+    } else if (!started_at && !ended_at && action) {
+      const getActions = await db
+        .select("*")
+        .from("analytics")
+        .where({ action });
+      res.json(getActions);
+    } else {
+      const analytics = await models.get("analytics");
+      res.json(analytics);
+    }
   } catch ({ message }) {
     res.status(500).json({ message });
   }
