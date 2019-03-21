@@ -14,6 +14,8 @@ module.exports = function validateLogin(data) {
     errors.email = "Email is invalid";
   }
 
-
-
+  return {
+    errors,
+    isValid: isEmpty(errors)
+  };
 }
