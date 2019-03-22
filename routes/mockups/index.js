@@ -2,6 +2,15 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
 const db = require('../../data/dbConfig')
+const cloudinary = require('cloudinary');
+const multipart = require("connect-multiparty")();
+
+cloudinary.config({
+  cloud_name: 'dxvyzmvhi',
+  api_key: '672796748434519',
+  api_secret: 'Jf7IESazEon7JKlD9dd8fkMgESk'
+});
+
 route.get("/", authenticate, async (req, res) => {
   try {
     const ads = await models.get("ads");
@@ -11,16 +20,20 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
-route.post("/", authenticate, async (req, res) => {
+route.post("/", authenticate, multipart, async (req, res) => {
   const user_id = req.decoded.id;
-  try {
-    const [newAd] = await models.add("ads", { ...req.body, user_id });
+
+  cloudinary.v2.uploader.upload(req.files.image.path, async (err, result) => {
+    if(err) return res.status(500).json({message: err})
+    try {
+      const [newAd] = await models.add("ads", { ...req.body, back_img: result.url, user_id });
     if (!newAd) return res.status(500).json({ message: "Failed to add ad" });
-    const ad = await models.findBy("ads", { id: newAd });
-    res.json(ad);
-  } catch ({ message }) {
-    res.status(500).json({ message });
-  }
+      const ad = await models.findBy("ads", { id: newAd });
+      res.json(ad);
+    } catch ({ message }) {
+      res.status(500).json({ message });
+    }
+  })
 });
 
 route.delete("/:id", authenticate, async (req, res) => {

@@ -74,42 +74,36 @@ route.post("/register", async (req, res) => {
 // @Access   Public
 route.post("/login", async (req, res) => {
 
-  // const { message, isValid } = validateLogin(req.body);
-  // if (!isValid) {
-  //   return res.status(422).json(message);
-  // }
-  const { response } = req.body;
+  const { message, isValid } = validateLogin(req.body);
+  if (!isValid) {
+    return res.status(422).json(message);
+  }
+  const { email, password, oauth_token } = req.body;
 
 
   try {
-    // const user = await models.findBy("users", { email });
+    const user = await models.findBy("users", { email });
 
-    // if (oauth_token) {
-    //   const oauth_user = await models.findBy("users", { oauth_token, email });
-    //   const token = await genToken(oauth_user);
-    //   if (oauth_user) return res.json({user:oauth_user, token});
-    // }
+    if (oauth_token) {
+      const oauth_user = await models.findBy("users", { oauth_token, email });
+      const token = await genToken(oauth_user);
+      if (oauth_user) return res.json({user:oauth_user, token});
+    }
 
-    // if (!user) return res.status(404).json({ message: "User does not exist" });
+    if (!user) return res.status(404).json({ message: "User does not exist" });
 
-    // const correct = bcrypt.compareSync(password, user.password);
+    const correct = bcrypt.compareSync(password, user.password);
 
-    // if (!correct)
-    //   return res.status(401).json({ message: "Invalid credentials" });
+    if (!correct)
+      return res.status(401).json({ message: "Invalid credentials" });
 
-    // const token = await genToken(user);
+    const token = await genToken(user);
 
-    // if (!token) return res.status(500).json({ message: "Server error" });
+    if (!token) return res.status(500).json({ message: "Server error" });
 
-    // delete user.password;
+    delete user.password;
 
-    // res.json({ user, token });
-    if(!response.profileObj) return res.status(500).json({message: "Failed to login"})
-
-
-    const token = await genToken(response.profileObj)
-
-    res.json({token, user: {first_name: response.profileObj.givenName, last_name: response.profileObj.familyName, image_url: response.profileObj.imageUrl}})
+    res.json({ user, token });
   } catch (error) {
     res.status(500).json(error);
   }
