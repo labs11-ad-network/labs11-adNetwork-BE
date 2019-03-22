@@ -1,7 +1,7 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
-
+const db = require('../../data/dbConfig')
 route.get("/", authenticate, async (req, res) => {
   try {
     const ads = await models.get("ads");
@@ -58,7 +58,9 @@ route.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const ad = await models.findBy("ads", { id });
+    const ad = await db.select('a.*', 'ag.*').from('ads as a').join('agreements as ag', 'ag.offer_id', 'a.offer_id')
+    // const ad = await models.findBy("ads", { id });
+    console.log({ad})
     if (!ad) return res.status(404).json({ message: "No ads found" });
     res.json(ad);
   } catch (error) {
