@@ -44,7 +44,7 @@ const configureMiddleware = server => {
   server.use("/api/ads", ads);
   server.use("/api/analytics", analytics);
   server.use("/api/users", users);
-  server.use("/api/usersV2", usersV2);
+  // server.use("/api/usersV2", usersV2);
 };
 
 module.exports = {

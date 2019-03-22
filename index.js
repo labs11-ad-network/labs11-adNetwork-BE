@@ -12,6 +12,6 @@ server.use(function (err, req, res, next) {
   return res.status(500).json({ error: err });
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 server.listen(port, () => console.log(`🔥 -------- listening on port ${port} ---------- 🔥`));

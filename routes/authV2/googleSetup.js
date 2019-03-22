@@ -15,7 +15,7 @@ passport.use(
   new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://localhost:3000/api/usersV2/google/callback"
+    callbackURL: "https://localhost:5000/api/usersV2/google/callback"
   }, async function (accessToken, refreshToken, profile, done) {
     const user = await db.select().from('usersV2').where({ googleId: profile.id }).first();
     if (user) {
