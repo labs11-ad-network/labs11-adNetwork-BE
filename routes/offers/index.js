@@ -3,9 +3,9 @@ const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
 
 route.get("/", authenticate, async (req, res) => {
-  const id = req.decoded.id;
+  const user_id = req.decoded.id;
   try {
-    const offers = await models.findAllBy("offers", { id })
+    const offers = await models.findAllBy("offers", { user_id });
     if (offers) {
       res.status(200).json(offers);
     } else {
