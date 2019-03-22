@@ -13,7 +13,7 @@ const users = require("../routes/users");
 const analytics = require("../routes/analytics");
 
 // -------------- passport oauth --------------
-const auth
+const authV2 = require('../routes/authV2')
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 // -------------- passport oauth --------------
@@ -23,6 +23,16 @@ const configureMiddleware = server => {
   server.use(json);
   server.use(helmet());
   server.use(morgan("dev"));
+  // cookie
+  server.use(cookieParser());
+  server.use(session({
+    secret: process.env.SESSION_KEY,
+    resave: false,
+    saveUninitialized: false
+  }));
+  // Passport/session initialization
+  server.use(auth.passport.initialize());
+  server.use(auth.passport.session());
   server.use(cors());
   server.use("/api/admin", admin);
   server.use("/api/advertisers", advertisers);
@@ -33,6 +43,7 @@ const configureMiddleware = server => {
   server.use("/api/ads", ads);
   server.use("/api/analytics", analytics);
   server.use("/api/users", users);
+  server.use("/api/authV2", authV2);
 };
 
 module.exports = {
