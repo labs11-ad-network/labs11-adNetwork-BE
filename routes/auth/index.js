@@ -95,7 +95,7 @@ route.post("/login", async (req, res) => {
 
     if (!correct)
       return res.status(401).json({ message: "Invalid credentials" });
-
+    console.log(user)
     const token = await genToken(user);
 
     if (!token) return res.status(500).json({ message: "Server error" });
