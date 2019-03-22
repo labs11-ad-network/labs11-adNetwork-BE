@@ -1,6 +1,15 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
+const cloudinary = require('cloudinary');
+const multipart = require('connect-multiparty')();
+
+cloudinary.config({
+  cloud_name: 'lambda-school',
+  api_key: process.env.CD_KEY,
+  api_secret: process.env.CD_SECRET,
+})
+
 
 route.get("/", authenticate, async (req, res) => {
   try {
@@ -11,6 +20,9 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
+// @route    GET /api/ads
+// @desc     post ads
+// @Access   Private
 route.post("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   try {

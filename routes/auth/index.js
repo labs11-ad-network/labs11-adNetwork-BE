@@ -73,19 +73,18 @@ route.post("/register", async (req, res) => {
 // @desc     login user
 // @Access   Public
 route.post("/login", async (req, res) => {
-
   const { message, isValid } = validateLogin(req.body);
   if (!isValid) {
     return res.status(422).json(message);
   }
   const { email, password, oauth_token } = req.body;
 
-
   try {
     const user = await models.findBy("users", { email });
 
     if (oauth_token) {
       const oauth_user = await models.findBy("users", { oauth_token });
+      console.log(oauth_token)
       if (oauth_user) return res.json(oauth_user);
     }
 
@@ -109,3 +108,8 @@ route.post("/login", async (req, res) => {
 });
 
 module.exports = route;
+
+
+
+
+

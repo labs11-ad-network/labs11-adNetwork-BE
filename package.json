@@ -21,6 +21,8 @@
   "homepage": "https://github.com/labs11-ad-network/labs11-adNetwork-BE#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.13.2",
+    "connect-multiparty": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^7.0.0",
     "express": "^4.16.4",
