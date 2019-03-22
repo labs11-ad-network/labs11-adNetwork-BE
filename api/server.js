@@ -1,7 +1,9 @@
 const express = require("express");
 const { configureMiddleware } = require("../middleware");
+
 const server = express();
 
+server.set("view engine", "pug");
 configureMiddleware(server);
 
 server.get("/", (req, res) => {
