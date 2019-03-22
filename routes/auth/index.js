@@ -104,11 +104,12 @@ route.post("/login", async (req, res) => {
     // delete user.password;
 
     // res.json({ user, token });
-    if(!response) return res.status(500).json({message: "Failed to login"})
+    if(!response.profileObj) return res.status(500).json({message: "Failed to login"})
+
 
     const token = await genToken(response.profileObj)
 
-    res.json({token, user: response.profileObj})
+    res.json({token, user: {first_name: response.profileObj.givenName, last_name: response.profileObj.familyName, image_url: response.profileObj.imageUrl}})
   } catch (error) {
     res.status(500).json(error);
   }
