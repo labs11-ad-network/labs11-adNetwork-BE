@@ -20,20 +20,41 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
-route.post("/", authenticate, multipart, async (req, res) => {
+// route.post('/images', multipart, async (req, res) => {
+//     console.log(req.files);
+//   cloudinary.v2.uploader.upload(
+//   req.files.image.path,
+//    (error, result) => {
+//      if(error) return res.json({message: error})
+//      res.json(result)
+//    })
+// })
+
+route.post("/", authenticate, multipart,  async (req, res) => {
   const user_id = req.decoded.id;
 
-  cloudinary.v2.uploader.upload(req.files.image.path, async (err, result) => {
-    if(err) return res.status(500).json({message: err})
-    try {
-      const [newAd] = await models.add("ads", { ...req.body, back_img: result.url, user_id });
-    if (!newAd) return res.status(500).json({ message: "Failed to add ad" });
-      const ad = await models.findBy("ads", { id: newAd });
-      res.json(ad);
-    } catch ({ message }) {
-      res.status(500).json({ message });
-    }
-  })
+  cloudinary.v2.uploader.upload(
+  req.files.image.path,
+   async (error, result) => {
+     if(error) return res.status(500).json({message: error})
+     try {
+        const [newAd] = await models.add("ads", { ...req.body, back_img: result.secure_url, user_id });
+        if (!newAd) return res.status(500).json({ message: "Failed to add ad" });
+        const ad = await models.findBy("ads", { id: newAd });
+        res.json(ad);
+     } catch ({message}) {
+       res.status(500).json({message})
+     }
+   })
+
+  // try {
+  //   const [newAd] = await models.add("ads", { ...req.body, user_id });
+  //   if (!newAd) return res.status(500).json({ message: "Failed to add ad" });
+  //   const ad = await models.findBy("ads", { id: newAd });
+  //   res.json(ad);
+  // } catch ({ message }) {
+  //   res.status(500).json({ message });
+  // }
 });
 
 route.delete("/:id", authenticate, async (req, res) => {
@@ -71,8 +92,8 @@ route.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const ad = await db.select('a.*', 'ag.*').from('ads as a').join('agreements as ag', 'ag.offer_id', 'a.offer_id')
-    // const ad = await models.findBy("ads", { id });
+    // const ad = await db.select('a.*', 'ag.*').from('ads as a').join('agreements as ag', 'ag.offer_id', 'a.offer_id')
+    const ad = await models.findBy("ads", { id });
     console.log({ad})
     if (!ad) return res.status(404).json({ message: "No ads found" });
     res.json(ad);
