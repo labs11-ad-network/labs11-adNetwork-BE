@@ -85,8 +85,9 @@ route.post("/login", async (req, res) => {
     const user = await models.findBy("users", { email });
 
     if (oauth_token) {
-      const oauth_user = await models.findBy("users", { oauth_token });
-      if (oauth_user) return res.json(oauth_user);
+      const oauth_user = await models.findBy("users", { oauth_token, email });
+      const token = await genToken(oauth_user);
+      if (oauth_user) return res.json({user:oauth_user, token});
     }
 
     if (!user) return res.status(404).json({ message: "User does not exist" });
@@ -95,7 +96,7 @@ route.post("/login", async (req, res) => {
 
     if (!correct)
       return res.status(401).json({ message: "Invalid credentials" });
-    console.log(user)
+
     const token = await genToken(user);
 
     if (!token) return res.status(500).json({ message: "Server error" });
