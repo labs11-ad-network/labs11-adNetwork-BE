@@ -13,9 +13,10 @@ const users = require("../routes/users");
 const analytics = require("../routes/analytics");
 
 // -------------- passport oauth --------------
-const authV2 = require('../routes/authV2')
+const usersV2 = require('../routes/authV2')
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const oauth = require('../routes/authV2/googleSetup')
 // -------------- passport oauth --------------
 
 
@@ -31,8 +32,8 @@ const configureMiddleware = server => {
     saveUninitialized: false
   }));
   // Passport/session initialization
-  server.use(auth.passport.initialize());
-  server.use(auth.passport.session());
+  server.use(oauth.passport.initialize());
+  server.use(oauth.passport.session());
   server.use(cors());
   server.use("/api/admin", admin);
   server.use("/api/advertisers", advertisers);
@@ -43,7 +44,7 @@ const configureMiddleware = server => {
   server.use("/api/ads", ads);
   server.use("/api/analytics", analytics);
   server.use("/api/users", users);
-  server.use("/api/authV2", authV2);
+  server.use("/api/usersV2", usersV2);
 };
 
 module.exports = {

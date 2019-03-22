@@ -15,9 +15,16 @@ passport.use(
   new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://localhost:3000/"
+    callbackURL: "https://localhost:3000/api/usersV2/google/callback"
   }, async function (accessToken, refreshToken, profile, done) {
-    console.log(profile)
-    const user = await db.select().from('')
+    const user = await db.select().from('usersV2').where({ googleId: profile.id }).first();
+    if (user) {
+      return done(null, profile);
+    } else {
+      await db.insert({ googleId: profileId }).into('usersV2').returning('id');
+      return done(null, profile)
+
+    }
   })
 )
+module.exports = { passport: passport };
