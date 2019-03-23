@@ -1,6 +1,7 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 
+
 route.get("/", async (req, res) => {
   try {
     const agreements = await models.get("agreements");
@@ -34,6 +35,7 @@ route.get("/:id", async (req, res) => {
 
 // Without authentication. When we add that we will refactor based on
 // whether req.decoded.id is affiliate_id or advertiser_id
+
 route.post("/", async (req, res) => {
   if (
     !(
@@ -41,8 +43,10 @@ route.post("/", async (req, res) => {
       req.body.hasOwnProperty("affiliate_id")
     )
   ) {
-    res.status(400).json({ message: "Required information is missing." });
+    return res.status(400).json({ message: "Required information is missing." });
   }
+
+
   try {
     const [id] = await models.add("agreements", req.body);
     if (id) {
@@ -57,6 +61,9 @@ route.post("/", async (req, res) => {
     res.status(500).json({ message });
   }
 });
+
+
+
 
 route.put("/:id", async (req, res) => {
   const id = req.params.id;

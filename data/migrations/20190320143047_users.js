@@ -1,4 +1,4 @@
-exports.up = function(knex, Promise) {
+exports.up = function (knex, Promise) {
   return knex.schema.createTable("users", t => {
     t.increments();
     t.integer("balance")
@@ -11,7 +11,7 @@ exports.up = function(knex, Promise) {
       .unique();
     t.string("password", 128).nullable();
     t.string("phone", 32).notNullable();
-    t.string("image_url", 128).nullable();
+    t.string("image_url", 256).nullable();
     t.string("acct_type", 16).notNullable();
     t.string("stripe_cust_id", 128)
       .nullable()
@@ -21,6 +21,6 @@ exports.up = function(knex, Promise) {
   });
 };
 
-exports.down = function(knex, Promise) {
+exports.down = function (knex, Promise) {
   return knex.schema.dropTableIfExists("users");
 };
