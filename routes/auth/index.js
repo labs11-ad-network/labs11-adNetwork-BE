@@ -83,9 +83,12 @@ route.post("/login", async (req, res) => {
     const user = await models.findBy("users", { email });
 
     if (oauth_token) {
-      const oauth_user = await models.findBy("users", { oauth_token });
-      console.log(oauth_token)
-      if (oauth_user) return res.json(oauth_user);
+      
+
+      const oauth_user = await models.findBy("users", { oauth_token, email });
+      const token = await genToken(oauth_user);
+      if (oauth_user) return res.json({user:oauth_user, token});
+
     }
 
     if (!user) return res.status(404).json({ message: "User does not exist" });
