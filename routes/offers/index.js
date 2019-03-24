@@ -103,7 +103,7 @@ route.delete("/:id", authenticate, async (req, res) => {
 
     const success = await models.remove("offers", id);
     if (success) {
-      res.status(200).json({ message: "User successfully deleted." });
+      res.status(200).json({ message: "Offer successfully deleted." });
     } else {
       res
         .status(404)
