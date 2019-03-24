@@ -47,24 +47,26 @@ route.get("/", authenticate, async (req, res) => {
   const { action, started_at, ended_at, agreement_id } = req.query;
   try {
     if (action && started_at && ended_at) {
-      const getActions = await db
-        .select("*")
-        .from("analytics")
-        .where({ action })
+      const getActions = await db.select('an.*', 'o.price_per_click', 'o.price_per_impression')
+                                  .from('analytics as an')
+                                  .join('agreements as ag', 'ag.affiliate_id', affiliate_id)
+                                  .join('offers as o', 'o.id', 'ag.offer_id')
         .where("created_at", ">=", started_at)
         .where("created_at", "<", ended_at);
       res.json(getActions);
     } else if (!action && started_at && ended_at) {
-      const getActions = await db
-        .select("*")
-        .from("analytics")
+      const getActions = await db.select('an.*', 'o.price_per_click', 'o.price_per_impression')
+                                  .from('analytics as an')
+                                  .join('agreements as ag', 'ag.affiliate_id', affiliate_id)
+                                  .join('offers as o', 'o.id', 'ag.offer_id')
         .where("created_at", ">=", started_at)
         .where("created_at", "<", ended_at);
       res.json(getActions);
     } else if (!started_at && !ended_at && action) {
-      const getActions = await db
-        .select("*")
-        .from("analytics")
+      const getActions = await db.select('an.*', 'o.price_per_click', 'o.price_per_impression')
+                                  .from('analytics as an')
+                                  .join('agreements as ag', 'ag.affiliate_id', affiliate_id)
+                                  .join('offers as o', 'o.id', 'ag.offer_id')
         .where({ action });
       res.json(getActions);
     } else {
