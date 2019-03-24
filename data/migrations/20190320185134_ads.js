@@ -18,7 +18,7 @@ exports.up = function(knex, Promise) {
       .notNullable()
       .references("id")
       .inTable("offers")
-      .onDelete("restrict");
+      .onDelete("CASCADE");
     tbl
       .integer("user_id")
       .references("id")

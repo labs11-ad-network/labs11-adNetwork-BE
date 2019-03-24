@@ -8,7 +8,7 @@ exports.up = function(knex, Promise) {
       .notNullable()
       .references("id")
       .inTable("offers")
-      .onDelete("restrict");
+      .onDelete("CASCADE");
 
     t.integer("affiliate_id")
       .unsigned()

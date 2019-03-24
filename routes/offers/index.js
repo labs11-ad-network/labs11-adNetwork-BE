@@ -5,7 +5,7 @@ const { authenticate } = require("../../common/authentication");
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   try {
-    const offers = await models.findAllBy("offers", { user_id });
+    const offers = await models.findAllBy("offers", { user_id }).orderBy('id', 'asc');
     if (offers) {
       res.status(200).json(offers);
     } else {
