@@ -78,7 +78,7 @@ route.put("/:id", authenticate, async (req, res) => {
     const success = await models.update("offers", id, { ...req.body });
 
     if (success) {
-      const offers = await models.findAllBy("offers", { user_id });
+      const offers = await models.findAllBy("offers", { user_id }).orderBy('id', 'asc');
       res.status(200).json(offers);
     } else {
       res
