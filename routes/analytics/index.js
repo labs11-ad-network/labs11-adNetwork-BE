@@ -43,6 +43,7 @@ route.get("/:id", authenticate, async (req, res) => {
 });
 
 route.get("/", authenticate, async (req, res) => {
+  const affiliate_id = req.decoded.id
   const { action, started_at, ended_at, agreement_id } = req.query;
   try {
     if (action && started_at && ended_at) {
@@ -67,7 +68,10 @@ route.get("/", authenticate, async (req, res) => {
         .where({ action });
       res.json(getActions);
     } else {
-      const analytics = await models.get("analytics");
+      const analytics  = await db.select('an.*', 'o.price_per_click', 'o.price_per_impression')
+                                  .from('analytics as an')
+                                  .join('agreements as ag', 'ag.affiliate_id', affiliate_id)
+                                  .join('offers as o', 'o.id', 'ag.offer_id')
       res.json(analytics);
     }
   } catch ({ message }) {
