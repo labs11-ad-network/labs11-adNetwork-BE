@@ -1,9 +1,12 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const { authenticate } = require("../../common/authentication");
 
-route.get("/", async (req, res) => {
+// Postman TESTED
+route.get("/", authenticate, async (req, res) => {
+  const affiliate_id = req.decoded.id;
   try {
-    const agreements = await models.get("agreements");
+    const agreements = await models.findAllBy("agreements", { affiliate_id });
     if (agreements) {
       res.status(200).json(agreements);
     } else {
@@ -16,10 +19,12 @@ route.get("/", async (req, res) => {
   }
 });
 
-route.get("/:id", async (req, res) => {
+// Postman TESTED
+route.get("/:id", authenticate, async (req, res) => {
+  const affiliate_id = req.decoded.id;
   const id = req.params.id;
   try {
-    const agreement = await models.findBy("agreements", { id });
+    const agreement = await models.findBy("agreements", { id, affiliate_id });
     if (agreement) {
       res.status(200).json(agreement);
     } else {
@@ -34,17 +39,18 @@ route.get("/:id", async (req, res) => {
 
 // Without authentication. When we add that we will refactor based on
 // whether req.decoded.id is affiliate_id or advertiser_id
-route.post("/", async (req, res) => {
-  if (
-    !(
-      req.body.hasOwnProperty("offer_id") &&
-      req.body.hasOwnProperty("affiliate_id")
-    )
-  ) {
+// Postman TESTED
+
+route.post("/", authenticate, async (req, res) => {
+  const affiliate_id = req.decoded.id;
+  if (!req.body.hasOwnProperty("offer_id")) {
     res.status(400).json({ message: "Required information is missing." });
   }
   try {
-    const [id] = await models.add("agreements", req.body);
+    const [id] = await models.add("agreements", {
+      offer_id: req.body.offer_id,
+      affiliate_id
+    });
     if (id) {
       const agreement = await models.findBy("agreements", { id });
       res.status(201).json(agreement);
@@ -58,10 +64,12 @@ route.post("/", async (req, res) => {
   }
 });
 
-route.put("/:id", async (req, res) => {
+route.put("/:id", authenticate, async (req, res) => {
+  const affiliate_id = req.decoded.id;
+
   const id = req.params.id;
   try {
-    const agreement = await models.findBy("agreements", { id });
+    const agreement = await models.findBy("agreements", { id, affiliate_id });
     if (agreement) {
       const count = await models.update("agreements", id, {
         ...req.body,
@@ -82,12 +90,21 @@ route.put("/:id", async (req, res) => {
   }
 });
 
-route.delete("/:id", async (req, res) => {
+// Postman TESTED
+route.delete("/:id", authenticate, async (req, res) => {
+  const affiliate_id = req.decoded.id;
+
   const id = req.params.id;
   try {
+    const agreement = await models.findBy("agreements", { id, affiliate_id });
+
+    if (!agreement)
+      return res
+        .status(401)
+        .json({ message: "You are not allowed to delete this" });
     const success = await models.remove("agreements", id);
     if (success) {
-      res.status(200).json({ message: "User sucessfully deleted." });
+      res.status(200).json({ message: "Agreement sucessfully deleted." });
     } else {
       res.status(404).json({
         message: "There was an issue deleting the agreement at that ID."
