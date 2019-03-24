@@ -15,7 +15,7 @@ exports.up = function(knex, Promise) {
     t.string("description").notNullable();
     t.string("category").notNullable();
     t.string("currency").notNullable();
-    t.string("status").notNullable();
+    t.boolean("status").defaultTo(true);
     t.integer("user_id")
       .unsigned()
       .notNullable()

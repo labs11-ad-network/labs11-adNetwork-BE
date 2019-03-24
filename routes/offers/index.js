@@ -78,8 +78,8 @@ route.put("/:id", authenticate, async (req, res) => {
     const success = await models.update("offers", id, { ...req.body });
 
     if (success) {
-      const offer = await models.findBy("offers", { id });
-      res.status(200).json({ offer, message: "Offer successfully edited." });
+      const offers = await models.findAllBy("offers", { user_id });
+      res.status(200).json(offers);
     } else {
       res
         .status(404)
