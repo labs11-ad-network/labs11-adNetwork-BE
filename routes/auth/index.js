@@ -72,10 +72,10 @@ route.post('/test', async (req, res) => {
     console.log('id', id);
     if (id) {
       const user = await models.findBy('usersV2', { id })
-      req.decoded = user
       res.status(200).json(user)
 
     } else {
+
       return res.status(400).json({ message: 'user already exists' })
     }
 
