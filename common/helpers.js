@@ -29,7 +29,6 @@ const queryByDate = (tbl, started_at, ended_at) =>
     .where("created_at", ">=", started_at)
     .where("created_at", "<", ended_at);
 
-<<<<<<< HEAD
 const analyticsWithPricing = id => db.select('an.*', 'o.price_per_click', 'o.price_per_impression')
                                       .from('analytics as an')
                                       .join('agreements as ag', 'ag.affiliate_id', id )
@@ -51,5 +50,4 @@ module.exports = {
   queryByDate,
   analyticsWithPricing,
   analyticsWithPricingAdvertiser
-
 };
