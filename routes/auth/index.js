@@ -46,7 +46,7 @@ route.post("/registerV2", async (req, res) => {
     //    const exists = await models.findBy("usersV2", { email }).returning('id')
     const exists = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first().returning('id')
     if (exists) {
-      return res.status(500).json({ message: 'user already exists' })
+      return res.status(200).json(exists)
     }
 
     const [id] = await models.add('usersV2', req.body)
