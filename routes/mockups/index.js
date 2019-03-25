@@ -1,6 +1,7 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
+<<<<<<< HEAD
 const db = require('../../data/dbConfig')
 const cloudinary = require('cloudinary');
 const multipart = require("connect-multiparty")();
@@ -9,6 +10,16 @@ cloudinary.config({
   cloud_name: 'dxvyzmvhi',
   api_key: '672796748434519',
   api_secret: 'Jf7IESazEon7JKlD9dd8fkMgESk'
+=======
+const db = require("../../data/dbConfig");
+const cloudinary = require("cloudinary");
+const multipart = require("connect-multiparty")();
+
+cloudinary.config({
+  cloud_name: "dxvyzmvhi",
+  api_key: "672796748434519",
+  api_secret: "Jf7IESazEon7JKlD9dd8fkMgESk"
+>>>>>>> hamza-elkhoudiri
 });
 
 route.get("/", authenticate, async (req, res) => {
@@ -20,6 +31,7 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
 route.post("/", authenticate, multipart, async (req, res) => {
   const user_id = req.decoded.id;
@@ -38,6 +50,26 @@ route.post("/", authenticate, multipart, async (req, res) => {
       }
     })
 
+=======
+route.post("/", authenticate, multipart, async (req, res) => {
+  const user_id = req.decoded.id;
+
+  cloudinary.v2.uploader.upload(req.files.image.path, async (error, result) => {
+    if (error) return res.status(500).json({ message: error });
+    try {
+      const [newAd] = await models.add("ads", {
+        ...req.body,
+        back_img: result.secure_url,
+        user_id
+      });
+      if (!newAd) return res.status(500).json({ message: "Failed to add ad" });
+      const ad = await models.findBy("ads", { id: newAd });
+      res.json(ad);
+    } catch ({ message }) {
+      res.status(500).json({ message });
+    }
+  });
+>>>>>>> hamza-elkhoudiri
 });
 
 route.delete("/:id", authenticate, async (req, res) => {
@@ -77,7 +109,11 @@ route.get("/:id", async (req, res) => {
   try {
     // const ad = await db.select('a.*', 'ag.*').from('ads as a').join('agreements as ag', 'ag.offer_id', 'a.offer_id')
     const ad = await models.findBy("ads", { id });
+<<<<<<< HEAD
     console.log({ ad })
+=======
+    console.log({ ad });
+>>>>>>> hamza-elkhoudiri
     if (!ad) return res.status(404).json({ message: "No ads found" });
     res.json(ad);
   } catch (error) {
