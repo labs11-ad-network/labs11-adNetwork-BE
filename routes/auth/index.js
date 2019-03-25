@@ -2,18 +2,68 @@ const route = require("express").Router();
 const bcrypt = require("bcryptjs");
 const models = require("../../common/helpers");
 const { genToken } = require("../../common/authentication");
+const { authenticate } = require('../../common/authentication')
 
 const validateLogin = require("../../validation/loginValidation")
 const validateRegister = require("../../validation/registerValidation")
 
+const db = require('../../data/dbConfig')
 
+//error Helper 
+const errorHelper = require('../../error-helper/errorHelper')
 
-// @route    GET api/auth
-// @desc     get all users for testing
+// @route    GET api/test
+// @desc     get all user testing
 // @Access   Public
-route.get("/", async (req, res) => {
-  const users = await models.get("users");
+route.get("/", authenticate, async (req, res) => {
+  const users = await models.get("usersV2");
+  console.log('req.decoded.id', req.decoded);
+
   res.status(200).json(users);
+
+});
+
+
+route.delete("/", async (req, res) => {
+  const removedAllUser = await db.del().from("usersV2");
+  res.json(removedAllUser)
+
+  res.status(200).json(users);
+
+});
+
+
+// @route    GET api/test
+// @desc     signing up user 
+// @Access   Public
+route.post("/registerV2", async (req, res) => {
+  const { name, email, image_url, nickname, acct_type, phone, sub, stripe_cust_id } = req.body
+
+  if (!name || !email || !image_url || !nickname || !sub) {
+    return res.status(400).json({ message: 'All fields are required' })
+  }
+
+  try {
+    //    const exists = await models.findBy("usersV2", { email }).returning('id')
+    const exists = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first().returning('id')
+    if (exists) {
+      return res.status(500).json({ message: 'user already exists' })
+    }
+
+    const [id] = await models.add('usersV2', req.body)
+    console.log('id', id);
+    if (id) {
+      const user = await models.findBy('usersV2', { id })
+      res.status(200).json(user)
+
+    } else {
+
+      return res.status(400).json({ message: 'user already exists' })
+    }
+
+  } catch (error) {
+    return errorHelper(500, error, res)
+  }
 });
 
 
@@ -83,11 +133,11 @@ route.post("/login", async (req, res) => {
     const user = await models.findBy("users", { email });
 
     if (oauth_token) {
-      
+
 
       const oauth_user = await models.findBy("users", { oauth_token, email });
       const token = await genToken(oauth_user);
-      if (oauth_user) return res.json({user:oauth_user, token});
+      if (oauth_user) return res.json({ user: oauth_user, token });
 
     }
 
