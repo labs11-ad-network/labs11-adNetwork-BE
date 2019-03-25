@@ -11,19 +11,6 @@ cloudinary.config({
   api_secret: "Jf7IESazEon7JKlD9dd8fkMgESk"
 });
 
-const cloudinary = require("cloudinary");
-const multipart = require("connect-multiparty")();
-
-//console.log(process.env.CD_KEY, process.env.CD_SECRET)
-cloudinary.config({
-  cloud_name: "lambda-school",
-  api_key: process.env.CD_KEY,
-  api_secret: process.env.CD_SECRET
-})
-console.log()
-
-
-
 
 route.get("/", authenticate, async (req, res) => {
   try {
