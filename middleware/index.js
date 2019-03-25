@@ -18,7 +18,7 @@ const configureMiddleware = server => {
   server.use(helmet());
   server.use(morgan("dev"));
   server.use(cors());
-  server.use(require("body-parser").urlencoded({extended: false}));
+  server.use(require("body-parser").urlencoded({ extended: false }));
   server.use("/api/admin", admin);
   server.use("/api/advertisers", advertisers);
   server.use("/api/affiliates", affiliates);
@@ -28,7 +28,7 @@ const configureMiddleware = server => {
   server.use("/api/ads", ads);
   server.use("/api/analytics", analytics);
   server.use("/api/users", users);
-//   server.use("/api/checkout", stripe_routes)
+  // server.use("/api/checkout", stripe_routes)
 };
 
 module.exports = {

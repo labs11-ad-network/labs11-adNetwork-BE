@@ -101,3 +101,4 @@ route.get("/offers/:id", authenticate, async (req, res) => {
 });
 
 module.exports = route;
+
