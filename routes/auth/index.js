@@ -23,17 +23,22 @@ route.get("/", async (req, res) => {
 // @desc     get all user testing
 // @Access   Public
 
-route.get("/test", authenticateV2, async (req, res) => {
-  try {
+// route.get("/test", async (req, res) => {
+//   try {
 
-    const users = await models.get("usersV2");
-    // console.log('req.decoded', req.decoded);
-    res.status(200).json(users);
-  } catch (error) {
-    return errorHelper(500, error, res)
+//     const users = await models.get("usersV2");
+//     // console.log('req.decoded', req.decoded);
+//     res.status(200).json(users);
+//   } catch (error) {
+//     return errorHelper(500, error, res)
 
-  }
+//   }
+// });
+route.get("/test", async (req, res) => {
+  const users = await models.get("usersV2");
+  res.status(200).json(users);
 });
+
 
 
 // @route    GET api/test

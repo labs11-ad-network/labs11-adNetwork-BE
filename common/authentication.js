@@ -36,14 +36,19 @@ const authenticateV2 = async (req, res, next) => {
 
     if (token) {
       const decoded = jwtDecode(token);
-      const user = await models.findBy("usersV2", { email }).returning('id');
-      console.log(decoded)
+      console.log('---- decoded ---', decoded);
+      const user = await models.findBy("usersV2", { email: decoded.email }).returning('id');
+
+      if (user) {
+        next()
+      } else {
+
+      }
 
 
     } else {
       res.status(401).json({ message: "You are not authorized" });
     }
-
 
   } catch (err) {
     return errorHelper(500, error, res)
