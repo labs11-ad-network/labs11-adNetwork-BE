@@ -2,14 +2,9 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
 
-<<<<<<< HEAD
-
-route.get("/", async (req, res) => {
-=======
 // Postman TESTED
 route.get("/", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
->>>>>>> hamza-elkhoudiri
   try {
     const agreements = await models.findAllBy("agreements", { affiliate_id });
     if (agreements) {
@@ -44,24 +39,12 @@ route.get("/:id", authenticate, async (req, res) => {
 
 // Without authentication. When we add that we will refactor based on
 // whether req.decoded.id is affiliate_id or advertiser_id
-<<<<<<< HEAD
-
-route.post("/", async (req, res) => {
-  if (
-    !(
-      req.body.hasOwnProperty("offer_id") &&
-      req.body.hasOwnProperty("affiliate_id")
-    )
-  ) {
-    return res.status(400).json({ message: "Required information is missing." });
-=======
 // Postman TESTED
 
 route.post("/", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
   if (!req.body.hasOwnProperty("offer_id")) {
     res.status(400).json({ message: "Required information is missing." });
->>>>>>> hamza-elkhoudiri
   }
 
 
@@ -83,16 +66,9 @@ route.post("/", authenticate, async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-
-
-
-route.put("/:id", async (req, res) => {
-=======
 route.put("/:id", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
 
->>>>>>> hamza-elkhoudiri
   const id = req.params.id;
   try {
     const agreement = await models.findBy("agreements", { id, affiliate_id });

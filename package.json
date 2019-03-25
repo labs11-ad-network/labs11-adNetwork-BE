@@ -1,52 +1,3 @@
-<<<<<<< HEAD
-{
-  "name": "labs11-adNetwork-BE",
-  "version": "1.0.0",
-  "description": "Backend repo for Labs11 Ad Network Team",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest --watch --verbose",
-    "start": "node index.js",
-    "server": "nodemon index.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/labs11-ad-network/labs11-adNetwork-BE.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/labs11-ad-network/labs11-adNetwork-BE/issues"
-  },
-  "homepage": "https://github.com/labs11-ad-network/labs11-adNetwork-BE#readme",
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cloudinary": "^1.13.2",
-    "connect-multiparty": "^2.2.0",
-    "cookie-parser": "^1.4.4",
-    "cors": "^2.8.5",
-    "dotenv": "^7.0.0",
-    "express": "^4.16.4",
-    "express-session": "^1.15.6",
-    "helmet": "^3.16.0",
-    "jest": "^24.5.0",
-    "jsonwebtoken": "^8.5.1",
-    "jwt-decode": "^2.2.0",
-    "knex": "^0.16.3",
-    "morgan": "^1.9.1",
-    "passport": "^0.4.0",
-    "passport-google-oauth": "^2.0.0",
-    "pg": "^7.9.0",
-    "sqlite3": "^4.0.6",
-    "supertest": "^4.0.2",
-    "validator": "^10.11.0"
-  },
-  "devDependencies": {
-    "nodemon": "^1.18.10"
-  }
-}
-=======
 {
   "name": "labs11-adNetwork-BE",
   "version": "1.0.0",
@@ -92,4 +43,3 @@
     "nodemon": "^1.18.10"
   }
 }
->>>>>>> hamza-elkhoudiri
