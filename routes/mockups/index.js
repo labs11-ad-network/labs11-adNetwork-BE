@@ -11,6 +11,20 @@ cloudinary.config({
   api_secret: "Jf7IESazEon7JKlD9dd8fkMgESk"
 });
 
+const cloudinary = require("cloudinary");
+const multipart = require("connect-multiparty")();
+
+//console.log(process.env.CD_KEY, process.env.CD_SECRET)
+cloudinary.config({
+  cloud_name: "lambda-school",
+  api_key: process.env.CD_KEY,
+  api_secret: process.env.CD_SECRET
+})
+console.log()
+
+
+
+
 route.get("/", authenticate, async (req, res) => {
   try {
     const ads = await models.get("ads");
@@ -39,6 +53,7 @@ route.post("/", authenticate, multipart, async (req, res) => {
     }
   });
 });
+
 
 route.delete("/:id", authenticate, async (req, res) => {
   const { id } = req.params;
@@ -82,19 +97,6 @@ route.get("/:id", async (req, res) => {
     res.json(ad);
   } catch (error) {
     res.status(500).json(error);
-  }
-});
-
-route.get("/offers/:id", authenticate, async (req, res) => {
-  const user_id = req.decoded.id;
-  const offer_id = req.params.id;
-
-  try {
-    const ads = await models.findAllBy("ads", { user_id, offer_id });
-    if (!ads.length) return res.status(404).json({ message: "No Ads found" });
-    res.json(ads);
-  } catch ({ message }) {
-    res.status(500).json({ message });
   }
 });
 

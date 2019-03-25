@@ -5,6 +5,7 @@ const {affiliateCheck} = require('../../common/roleCheck')
 // Postman TESTED
 route.get("/", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
+
   try {
     const agreements = await models.findAllBy("agreements", { affiliate_id });
     if (agreements) {
@@ -45,7 +46,10 @@ route.post("/", authenticate, affiliateCheck, async (req, res) => {
   const affiliate_id = req.decoded.id;
   if (!req.body.hasOwnProperty("offer_id")) {
     res.status(400).json({ message: "Required information is missing." });
+
   }
+
+
   try {
     const [id] = await models.add("agreements", {
       offer_id: req.body.offer_id,
@@ -66,6 +70,7 @@ route.post("/", authenticate, affiliateCheck, async (req, res) => {
 
 route.put("/:id", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
+
 
   const id = req.params.id;
   try {
