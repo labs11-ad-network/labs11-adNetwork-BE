@@ -6,7 +6,8 @@ const { genToken } = require("../../common/authentication");
 const validateLogin = require("../../validation/loginValidation")
 const validateRegister = require("../../validation/registerValidation")
 
-
+//error Helper 
+const errorHelper = require('../../error-helper/errorHelper')
 
 // @route    GET api/auth
 // @desc     get all users for testing
@@ -53,7 +54,7 @@ route.post('/test', async (req, res) => {
     res.send(`it's working`)
 
   } catch (error) {
-    res.status(500).json(error)
+    return errorHelper(500, error, res)
   }
 });
 
