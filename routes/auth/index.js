@@ -18,10 +18,38 @@ route.get("/", async (req, res) => {
 
 
 // @route    GET api/test
+// @desc     get all user testing
+// @Access   Public
+
+route.get("/", async (req, res) => {
+  const users = await models.get("authv2");
+  console.log('req.decoded', req.decoded);
+
+  res.status(200).json(users);
+});
+
+
+// @route    GET api/test
 // @desc     signing up user 
 // @Access   Public
 route.post('/test', async (req, res) => {
+  const { name, email, image_url, nickname, acct_type, phone, sub } = req.body
+
+  if (!name || !email || !image_url || !nickname || !sub) {
+    return res.status(400).json({ message: 'All fields are required' })
+  }
+
   try {
+    const [id] = await models.add('authv2', req.body)
+    console.log('id', id);
+    if (id) {
+      return res.status(400).json({ message: 'user already exists' })
+    } else {
+      const user = await models.findBy('authv2', { email })
+      req.decoded = user
+      res.status(200).json(user)
+    }
+
     res.send(`it's working`)
 
   } catch (error) {

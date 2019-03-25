@@ -8,6 +8,7 @@ const findBy = (tbl, filter) =>
     .first()
 
 const findAllBy = (tbl, filter) => db(tbl).where(filter);
+
 const add = (tbl, item) =>
   db(tbl)
     .insert(item)
