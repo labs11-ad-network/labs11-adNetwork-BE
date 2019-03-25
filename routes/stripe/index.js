@@ -1,3 +1,4 @@
+require('dotenv').config()
 const route = require('express').Router()
 const models = require('../../common/helpers')
 const pubKey = process.env.PUBLIC_KEY
@@ -7,46 +8,45 @@ route.get('/', (req, res) => {
   res.render('index.pug', { pubKey })
 })
 
-route.post("/create_customer", (req, res) => {
+route.post("/create_customer", async (req, res) => {
   // Create a one time use token from User Payment Info entered on front end
-  stripe.tokens.create({
-                        card: {
-                        number: req.body.number || '4242424242424242',
-                        exp_month: req.body.exp_month || 12,
-                        exp_year: req.body.exp_year || 2020,
-                        cvc: req.body.cvc || '123'
-                        }
-  })
-  .then(token => {
-    res.status(200).json({ message: 'Success!', token })
-  })
-  .catch(e => res.status(500).json(e))
+  try {
+    const customer = await stripe.customers.create({
+      account_balance: req.body.amount || 0,
+      coupon: req.body.coupon || null,
+      email: req.body.stripeEmail || req.decoded.email,
+      description: req.body.description || `Stripe Account for ${req.body.stripeEmail}`,
+      source: req.body.stripeToken || 'tok_visa'
+    })
 
-  // Create a particular account type for a user
-  stripe.customers.create({
-    account_balance: req.body.amount || 0,
-    coupon: req.body.coupon || null,
-    email: req.body.stripeEmail,
-    description: req.body.description || `Stripe Account for ${this.email}`,
-    source: req.body.stripeToken || cust_source.id
-  })
-  .then(customer =>
-    res.status(200).json(customer)
-  )
-  .catch(e => res.status(404).json(e))
-  });
+    if(customer.id) {
+      const success = await models.update('users', { email: customer.email }, { stripe_cust_id: customer.id })
+      res.status(201).json({ message: 'Customer created successfully', customer })
+    } else {
+      res.status(500).json({ message: 'There was an issue creating the customer.' })
+    }
+  } catch({ message }) {
+    res.status(404).json({ message })
+  }
+})
 
-  // Charge the customer, but gonna set this to a different function to split
-  stripe.charges.create({
-    amount,
-    description: "Sample Charge",
-    currency: "USD",
-    customer: customer.id || 3
-  })
+route.post('/charge_customer', async (req, res) => {
+  const _customer = await models.findBy('users', { id: req.decoded.id })
+
+  try {
+    const charge = await stripe.charges.create({
+      amount: req.body.amount || 0,
+      currency: 'usd',
+      customer: _customer.stripe_cust_id,
+      receipt_email: customer.email,
+      description: "Your payment receipt from the LAD Network"
+    })
+    res.status(200).json(charge)
+  } catch({ message }) {
+    res.status(500).json({ message })
+  }
 })
 
 
-
-
-
+//Stripe apparently handles source updating for bank cards on their own so we'll leave that lone
 module.exports = route
