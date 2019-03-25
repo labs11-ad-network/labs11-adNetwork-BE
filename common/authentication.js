@@ -14,40 +14,37 @@ const genToken = user => {
   });
 };
 
-const authenticate = (req, res, next) => {
-  const token = req.get("Authorization");
+// const authenticate = (req, res, next) => {
+//   const token = req.get("Authorization");
 
-  if (token) {
-    jwt.verify(token, "SECRET KEY", (error, decoded) => {
-      if (error) {
-        res.status(401).json({ message: "You are not authorized" });
-      } else {
-        req.decoded = decoded;
-        next();
-      }
-    });
-  } else {
-    res.status(401).json({ message: "You are not authorized" });
-  }
-};
+//   if (token) {
+//     jwt.verify(token, "SECRET KEY", (error, decoded) => {
+//       if (error) {
+//         res.status(401).json({ message: "You are not authorized" });
+//       } else {
+//         req.decoded = decoded;
+//         next();
+//       }
+//     });
+//   } else {
+//     res.status(401).json({ message: "You are not authorized" });
+//   }
+// };
 
 
-const authenticateV2 = async (req, res, next) => {
+const authenticate = async (req, res, next) => {
   const token = req.get("Authorization");
   try {
 
     if (token) {
       const decoded = jwtDecode(token);
-
       const user = await models.findBy("usersV2", { email: decoded.email }).returning('id');
-
       if (user) {
         req.decoded = decoded;
         next()
       } else {
         res.status(401).json({ message: "You are not authorized" });
       }
-
     } else {
       res.status(401).json({ message: "You need to passed Headers !" });
     }

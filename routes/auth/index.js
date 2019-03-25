@@ -2,7 +2,7 @@ const route = require("express").Router();
 const bcrypt = require("bcryptjs");
 const models = require("../../common/helpers");
 const { genToken } = require("../../common/authentication");
-const { authenticateV2 } = require('../../common/authentication')
+const { authenticate } = require('../../common/authentication')
 
 const validateLogin = require("../../validation/loginValidation")
 const validateRegister = require("../../validation/registerValidation")
@@ -15,17 +15,16 @@ const errorHelper = require('../../error-helper/errorHelper')
 // @route    GET api/auth
 // @desc     get all users for testing
 // @Access   Public
-route.get("/", async (req, res) => {
-  const users = await models.get("users");
-  res.status(200).json(users);
-});
+
 
 
 // @route    GET api/test
 // @desc     get all user testing
 // @Access   Public
-route.get("/test", authenticateV2, async (req, res) => {
+route.get("/test", authenticate, async (req, res) => {
   const users = await models.get("usersV2");
+  console.log('req.decoded', req.decoded);
+
   res.status(200).json(users);
 
 });
@@ -48,12 +47,10 @@ route.delete("/test/:id", async (req, res) => {
 });
 
 
-
-
 // @route    GET api/test
 // @desc     signing up user 
 // @Access   Public
-route.post('/test', async (req, res) => {
+route.post("/test", async (req, res) => {
   const { name, email, image_url, nickname, acct_type, phone, sub, stripe_cust_id } = req.body
 
   if (!name || !email || !image_url || !nickname || !sub) {
@@ -61,7 +58,6 @@ route.post('/test', async (req, res) => {
   }
 
   try {
-
     //    const exists = await models.findBy("usersV2", { email }).returning('id')
     const exists = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first()
     console.log('--- exists ---', exists);
@@ -75,6 +71,7 @@ route.post('/test', async (req, res) => {
     if (id) {
       const user = await models.findBy('usersV2', { id })
       res.status(200).json(user)
+      req.decoded.id = id
 
     } else {
 
