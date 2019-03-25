@@ -12,13 +12,6 @@ const ads = require("../routes/mockups");
 const users = require("../routes/users");
 const analytics = require("../routes/analytics");
 
-// -------------- passport oauth --------------
-const usersV2 = require('../routes/authV2')
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const oauth = require('../routes/authV2/googleSetup')
-// -------------- passport oauth --------------
-
 
 const configureMiddleware = server => {
   server.use(json);
