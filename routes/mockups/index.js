@@ -20,15 +20,6 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
-// route.post('/images', multipart, async (req, res) => {
-//     console.log(req.files);
-//   cloudinary.v2.uploader.upload(
-//   req.files.image.path,
-//    (error, result) => {
-//      if(error) return res.json({message: error})
-//      res.json(result)
-//    })
-// })
 
 route.post("/", authenticate, multipart, async (req, res) => {
   const user_id = req.decoded.id;
@@ -47,14 +38,6 @@ route.post("/", authenticate, multipart, async (req, res) => {
       }
     })
 
-  // try {
-  //   const [newAd] = await models.add("ads", { ...req.body, user_id });
-  //   if (!newAd) return res.status(500).json({ message: "Failed to add ad" });
-  //   const ad = await models.findBy("ads", { id: newAd });
-  //   res.json(ad);
-  // } catch ({ message }) {
-  //   res.status(500).json({ message });
-  // }
 });
 
 route.delete("/:id", authenticate, async (req, res) => {
