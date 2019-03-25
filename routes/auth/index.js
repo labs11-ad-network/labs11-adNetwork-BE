@@ -2,6 +2,7 @@ const route = require("express").Router();
 const bcrypt = require("bcryptjs");
 const models = require("../../common/helpers");
 const { genToken } = require("../../common/authentication");
+const { authenticateV2 } = require('../../common/authentication')
 
 const validateLogin = require("../../validation/loginValidation")
 const validateRegister = require("../../validation/registerValidation")
@@ -22,11 +23,16 @@ route.get("/", async (req, res) => {
 // @desc     get all user testing
 // @Access   Public
 
-route.get("/", async (req, res) => {
-  const users = await models.get("authv2");
-  console.log('req.decoded', req.decoded);
+route.get("/test", authenticateV2, async (req, res) => {
+  try {
 
-  res.status(200).json(users);
+    const users = await models.get("usersV2");
+    // console.log('req.decoded', req.decoded);
+    res.status(200).json(users);
+  } catch (error) {
+    return errorHelper(500, error, res)
+
+  }
 });
 
 
@@ -41,17 +47,18 @@ route.post('/test', async (req, res) => {
   }
 
   try {
-    const [id] = await models.add('authv2', req.body)
+    const [id] = await models.add('usersV2', req.body)
     console.log('id', id);
     if (id) {
       return res.status(400).json({ message: 'user already exists' })
+
     } else {
-      const user = await models.findBy('authv2', { email })
+
+      const user = await models.findBy('usersV2', { email })
       req.decoded = user
       res.status(200).json(user)
-    }
 
-    res.send(`it's working`)
+    }
 
   } catch (error) {
     return errorHelper(500, error, res)
