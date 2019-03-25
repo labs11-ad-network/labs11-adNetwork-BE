@@ -1,7 +1,7 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
-
+const {affiliateCheck} = require('../../common/roleCheck')
 // Postman TESTED
 route.get("/", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
@@ -41,7 +41,7 @@ route.get("/:id", authenticate, async (req, res) => {
 // whether req.decoded.id is affiliate_id or advertiser_id
 // Postman TESTED
 
-route.post("/", authenticate, async (req, res) => {
+route.post("/", authenticate, affiliateCheck, async (req, res) => {
   const affiliate_id = req.decoded.id;
   if (!req.body.hasOwnProperty("offer_id")) {
     res.status(400).json({ message: "Required information is missing." });
