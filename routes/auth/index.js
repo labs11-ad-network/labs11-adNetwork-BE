@@ -7,6 +7,8 @@ const { authenticateV2 } = require('../../common/authentication')
 const validateLogin = require("../../validation/loginValidation")
 const validateRegister = require("../../validation/registerValidation")
 
+const db = require('../../data/dbConfig')
+
 //error Helper 
 const errorHelper = require('../../error-helper/errorHelper')
 
@@ -52,7 +54,7 @@ route.delete("/test/:id", async (req, res) => {
 // @desc     signing up user 
 // @Access   Public
 route.post('/test', async (req, res) => {
-  const { name, email, image_url, nickname, acct_type, phone, sub } = req.body
+  const { name, email, image_url, nickname, acct_type, phone, sub, stripe_cust_id } = req.body
 
   if (!name || !email || !image_url || !nickname || !sub) {
     return res.status(400).json({ message: 'All fields are required' })
@@ -60,13 +62,13 @@ route.post('/test', async (req, res) => {
 
   try {
 
-    const exists = await models.findBy("usersV2", { email }).returning('id')
-    console.log('exists', exists);
+    //    const exists = await models.findBy("usersV2", { email }).returning('id')
+    const exists = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first()
+    console.log('--- exists ---', exists);
 
     if (exists) {
       return res.status(500).json({ message: 'user already exists' })
     }
-
 
     const [id] = await models.add('usersV2', req.body)
     console.log('id', id);

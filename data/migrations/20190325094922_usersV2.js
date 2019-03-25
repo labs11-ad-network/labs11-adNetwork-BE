@@ -8,6 +8,9 @@ exports.up = function (knex, Promise) {
     tbl.string("sub");
     tbl.string("acct_type");
     tbl.string("phone");
+    tbl.string("stripe_cust_id", 128)
+      .nullable()
+      .unique();
 
 
 

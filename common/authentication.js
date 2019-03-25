@@ -30,6 +30,8 @@ const authenticate = (req, res, next) => {
     res.status(401).json({ message: "You are not authorized" });
   }
 };
+
+
 const authenticateV2 = async (req, res, next) => {
   const token = req.get("Authorization");
   try {
@@ -41,14 +43,10 @@ const authenticateV2 = async (req, res, next) => {
 
       if (user) {
         req.decoded = decoded;
-
-
         next()
       } else {
         res.status(401).json({ message: "You are not authorized" });
-
       }
-
 
     } else {
       res.status(401).json({ message: "You need to passed Headers !" });
