@@ -17,6 +17,19 @@ route.get("/", async (req, res) => {
 });
 
 
+// @route    GET api/test
+// @desc     signing up user 
+// @Access   Public
+route.post('/test', async (req, res) => {
+  try {
+    res.send(`it's working`)
+
+  } catch (error) {
+    res.status(500).json(error)
+  }
+});
+
+
 // @route    GET /api/auth/register
 // @desc     register user
 // @Access   Public
@@ -83,11 +96,11 @@ route.post("/login", async (req, res) => {
     const user = await models.findBy("users", { email });
 
     if (oauth_token) {
-      
+
 
       const oauth_user = await models.findBy("users", { oauth_token, email });
       const token = await genToken(oauth_user);
-      if (oauth_user) return res.json({user:oauth_user, token});
+      if (oauth_user) return res.json({ user: oauth_user, token });
 
     }
 
