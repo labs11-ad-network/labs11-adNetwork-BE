@@ -22,23 +22,15 @@ route.get("/", authenticate, async (req, res) => {
   res.status(200).json(users);
 
 });
-// route.delete("/:id", async (req, res) => {
-//   const { id } = req.params
-//   try {
-//     const removed = await models.remove("usersV2", id)
-//     if (removed) {
 
-//       res.json(removed)
-//     } else {
-//       res.status(404).json({ message: 'cannot find that user' })
-//     }
 
-//   } catch (error) {
-//     return errorHelper(500, error, res)
+route.delete("/", async (req, res) => {
+  const removedAllUser = await db.del().from("usersV2");
+  res.json(removedAllUser)
 
-//   }
+  res.status(200).json(users);
 
-// });
+});
 
 
 // @route    GET api/test
@@ -53,9 +45,7 @@ route.post("/registerV2", async (req, res) => {
 
   try {
     //    const exists = await models.findBy("usersV2", { email }).returning('id')
-    const exists = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first()
-    console.log('--- exists ---', exists);
-
+    const exists = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first().returning('id')
     if (exists) {
       return res.status(500).json({ message: 'user already exists' })
     }

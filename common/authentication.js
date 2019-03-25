@@ -1,5 +1,8 @@
 const jwt = require("jsonwebtoken");
 const models = require("../common/helpers");
+
+const db = require('../data/dbConfig')
+
 const jwtDecode = require('jwt-decode')
 const errorHelper = require('../error-helper/errorHelper')
 const genToken = user => {
@@ -14,23 +17,6 @@ const genToken = user => {
   });
 };
 
-// const authenticate = (req, res, next) => {
-//   const token = req.get("Authorization");
-
-//   if (token) {
-//     jwt.verify(token, "SECRET KEY", (error, decoded) => {
-//       if (error) {
-//         res.status(401).json({ message: "You are not authorized" });
-//       } else {
-//         req.decoded = decoded;
-//         next();
-//       }
-//     });
-//   } else {
-//     res.status(401).json({ message: "You are not authorized" });
-//   }
-// };
-
 
 const authenticate = async (req, res, next) => {
   const token = req.get("Authorization");
@@ -38,8 +24,7 @@ const authenticate = async (req, res, next) => {
 
     if (token) {
       const decoded = jwtDecode(token);
-      const user = await models.findBy("usersV2", { email: decoded.email }).returning('id');
-
+      const user = await db.select().from('usersV2').where({ email: decoded.email }).andWhere({ sub: decoded.sub }).first()
 
       if (user) {
         req.decoded = user;

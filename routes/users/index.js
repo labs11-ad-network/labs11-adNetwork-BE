@@ -1,11 +1,16 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const { authenticate } = require('../../common/authentication')
+const db = require('../../data/dbConfig')
 
 
-route.get("/", async (req, res) => {
-  const { id } = req.decoded;
+route.get("/", authenticate, async (req, res) => {
+  const { id, sub, email } = req.decoded;
+  console.log('---- req.decoded ----', req.decoded);
+
   try {
-    const users = await models.findBy("usersV2", { id });
+    const users = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first()
+
     if (users) {
       res.status(200).json(users);
     } else {
