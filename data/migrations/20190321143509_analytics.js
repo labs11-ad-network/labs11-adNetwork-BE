@@ -10,8 +10,7 @@ exports.up = function(knex, Promise) {
       .unsigned()
       .notNullable()
       .references("id")
-      .inTable("agreements")
-      .onDelete("CASCADE");
+      .inTable("agreements");
 
     tbl.timestamps(true, true);
   });
