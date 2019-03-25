@@ -39,8 +39,10 @@ const authenticate = async (req, res, next) => {
     if (token) {
       const decoded = jwtDecode(token);
       const user = await models.findBy("usersV2", { email: decoded.email }).returning('id');
+
+
       if (user) {
-        req.decoded = decoded;
+        req.decoded = user;
         next()
       } else {
         res.status(401).json({ message: "You are not authorized" });
@@ -49,7 +51,7 @@ const authenticate = async (req, res, next) => {
       res.status(401).json({ message: "You need to passed Headers !" });
     }
 
-  } catch (err) {
+  } catch (error) {
     return errorHelper(500, error, res)
   }
 };
@@ -57,5 +59,4 @@ const authenticate = async (req, res, next) => {
 module.exports = {
   genToken,
   authenticate,
-  authenticateV2
 };

@@ -12,45 +12,39 @@ const db = require('../../data/dbConfig')
 //error Helper 
 const errorHelper = require('../../error-helper/errorHelper')
 
-// @route    GET api/auth
-// @desc     get all users for testing
-// @Access   Public
-
-
-
 // @route    GET api/test
 // @desc     get all user testing
 // @Access   Public
-route.get("/test", authenticate, async (req, res) => {
+route.get("/", authenticate, async (req, res) => {
   const users = await models.get("usersV2");
-  console.log('req.decoded', req.decoded);
+  console.log('req.decoded.id', req.decoded);
 
   res.status(200).json(users);
 
 });
-route.delete("/test/:id", async (req, res) => {
-  const { id } = req.params
-  try {
-    const removed = await models.remove("usersV2", id)
-    if (removed) {
+// route.delete("/:id", async (req, res) => {
+//   const { id } = req.params
+//   try {
+//     const removed = await models.remove("usersV2", id)
+//     if (removed) {
 
-      res.json(removed)
-    } else {
-      res.status(404).json({ message: 'cannot find that user' })
-    }
+//       res.json(removed)
+//     } else {
+//       res.status(404).json({ message: 'cannot find that user' })
+//     }
 
-  } catch (error) {
-    return errorHelper(500, error, res)
+//   } catch (error) {
+//     return errorHelper(500, error, res)
 
-  }
+//   }
 
-});
+// });
 
 
 // @route    GET api/test
 // @desc     signing up user 
 // @Access   Public
-route.post("/test", async (req, res) => {
+route.post("/registerV2", async (req, res) => {
   const { name, email, image_url, nickname, acct_type, phone, sub, stripe_cust_id } = req.body
 
   if (!name || !email || !image_url || !nickname || !sub) {
@@ -71,7 +65,6 @@ route.post("/test", async (req, res) => {
     if (id) {
       const user = await models.findBy('usersV2', { id })
       res.status(200).json(user)
-      req.decoded.id = id
 
     } else {
 

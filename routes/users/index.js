@@ -1,8 +1,8 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const { authenticate } = require("../../common/authentication");
 
-route.get("/", authenticate, async (req, res) => {
+
+route.get("/", async (req, res) => {
   const { id } = req.decoded;
   try {
     const users = await models.findBy("usersV2", { id });
@@ -19,7 +19,7 @@ route.get("/", authenticate, async (req, res) => {
 route.get("/:id", async (req, res) => {
   const id = req.params.id;
   try {
-    const user = await models.findBy("users", { id });
+    const user = await models.findBy("usersV2", { id });
     if (user) {
       res.status(200).json(user);
     } else {
@@ -31,11 +31,15 @@ route.get("/:id", async (req, res) => {
 });
 
 route.put("/:id", async (req, res) => {
+  const { email, sub } = req.body;
+  if (email || sub) {
+    return res.status(500).json({ message: 'updating email and sub is not allowed' })
+  }
   const id = req.params.id;
   try {
-    const success = await models.update("users", id, { ...req.body });
+    const success = await models.update("usersV2", id, { ...req.body });
     if (success) {
-      const user = await models.findBy("users", { id });
+      const user = await models.findBy("usersV2", { id });
       res.status(200).json({ user, message: "User edited successfully." });
     } else {
       res
@@ -50,7 +54,7 @@ route.put("/:id", async (req, res) => {
 route.delete("/:id", async (req, res) => {
   const id = req.params.id;
   try {
-    const success = await models.remove("users", id);
+    const success = await models.remove("usersV2", id);
     if (success) {
       res.status(200).json({ message: "User deleted successfully." });
     } else {
