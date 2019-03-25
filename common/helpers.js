@@ -29,10 +29,6 @@ const queryByDate = (tbl, started_at, ended_at) =>
     .where("created_at", ">=", started_at)
     .where("created_at", "<", ended_at);
 
-const analyticsWithPricing = id => db.select('an.*', 'o.price_per_click', 'o.price_per_impression')
-                                  .from('analytics as an')
-                                  .join('agreements as ag', 'ag.affiliate_id', id)
-                                  .join('offers as o', 'o.id', 'ag.offer_id')
 module.exports = {
   get,
   findBy,
@@ -40,6 +36,5 @@ module.exports = {
   remove,
   update,
   findAllBy,
-  queryByDate,
-  analyticsWithPricing
+  queryByDate
 };

@@ -1,15 +1,6 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
-const db = require("../../data/dbConfig");
-const cloudinary = require("cloudinary");
-const multipart = require("connect-multiparty")();
-
-cloudinary.config({
-  cloud_name: "dxvyzmvhi",
-  api_key: "672796748434519",
-  api_secret: "Jf7IESazEon7JKlD9dd8fkMgESk"
-});
 
 route.get("/", authenticate, async (req, res) => {
   try {
@@ -75,9 +66,7 @@ route.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    // const ad = await db.select('a.*', 'ag.*').from('ads as a').join('agreements as ag', 'ag.offer_id', 'a.offer_id')
     const ad = await models.findBy("ads", { id });
-    console.log({ ad });
     if (!ad) return res.status(404).json({ message: "No ads found" });
     res.json(ad);
   } catch (error) {
