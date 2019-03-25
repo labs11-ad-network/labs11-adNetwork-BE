@@ -11,7 +11,7 @@ const offers = require("../routes/offers");
 const ads = require("../routes/mockups");
 const users = require("../routes/users");
 const analytics = require("../routes/analytics");
-// const stripe_routes = require("../routes/stripe")
+
 
 const configureMiddleware = server => {
   server.use(json);

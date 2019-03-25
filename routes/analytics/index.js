@@ -37,34 +37,43 @@ route.get('/:id', authenticate, async (req, res) => {
   }
 })
 
-route.get("/", async (req, res) => {
+route.get("/", authenticate, async (req, res) => {
+
+  // Current logged in user
+  const affiliate_id = req.decoded.id
+  const {acct_type} = req.decoded
+
+  // // destructuring the query
+
   const { action, started_at, ended_at, agreement_id } = req.query;
+
   try {
-    if (action && started_at && ended_at) {
-      const getActions = await db
-        .select("*")
-        .from("analytics")
-        .where({ action })
-        .where("created_at", ">=", started_at)
-        .where("created_at", "<", ended_at);
-      res.json(getActions);
-    } else if (!action && started_at && ended_at) {
-      const getActions = await db
-        .select("*")
-        .from("analytics")
-        .where("created_at", ">=", started_at)
-        .where("created_at", "<", ended_at);
-      res.json(getActions);
-    } else if (!started_at && !ended_at && action) {
-      const getActions = await db
-        .select("*")
-        .from("analytics")
-        .where({ action });
-      res.json(getActions);
-    } else {
-      const analytics = await models.get("analytics");
-      res.json(analytics);
+
+    if(acct_type === 'affiliate'){
+      if (action && started_at && ended_at) {
+          const getActions = await models.analyticsWithPricing(affiliate_id)
+                                          .where("created_at", ">=", started_at)
+                                          .where("created_at", "<", ended_at);
+          res.json(getActions);
+        } else if (!action && started_at && ended_at) {
+          const getActions = await models.analyticsWithPricing(affiliate_id)
+                                          .where("created_at", ">=", started_at)
+                                          .where("created_at", "<", ended_at);
+          res.json(getActions);
+        } else if (!started_at && !ended_at && action) {
+          const getActions = await models.analyticsWithPricing(affiliate_id).where({ action });
+          res.json(getActions);
+        } else {
+
+          // all analytics that match the logged in user
+          const analytics  = await models.analyticsWithPricing(affiliate_id)
+          res.json(analytics);
+        }
+    } else if(acct_type === 'advertiser'){
+          const analyticsForAdvertisers = await models.analyticsWithPricingAdvertiser(affiliate_id)
+          res.json(analyticsForAdvertisers)
     }
+    
   } catch ({ message }) {
     res.status(500).json({ message });
   }
