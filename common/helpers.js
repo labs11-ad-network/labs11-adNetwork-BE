@@ -29,9 +29,15 @@ const queryByDate = (tbl, started_at, ended_at) =>
     .where("created_at", "<", ended_at);
 
 const analyticsWithPricing = id => db.select('an.*', 'o.price_per_click', 'o.price_per_impression')
-                                  .from('analytics as an')
-                                  .join('agreements as ag', 'ag.affiliate_id', id)
-                                  .join('offers as o', 'o.id', 'ag.offer_id')
+                                      .from('analytics as an')
+                                      .join('agreements as ag', 'ag.affiliate_id', id )
+                                      .join('offers as o', 'ag.offer_id', 'o.id')
+
+const analyticsWithPricingAdvertiser = id => db.select('an.*', 'o.price_per_click', 'o.price_per_impression')
+                                                .from('analytics as an')
+                                                .join('agreements as ag', 'ag.id', 'an.agreement_id')
+                                                .join('offers as o', 'ag.offer_id', 'o.id')
+                                                .where('user_id', id)
 module.exports = {
   get,
   findBy,
@@ -40,5 +46,6 @@ module.exports = {
   update,
   findAllBy,
   queryByDate,
-  analyticsWithPricing
+  analyticsWithPricing,
+  analyticsWithPricingAdvertiser
 };
