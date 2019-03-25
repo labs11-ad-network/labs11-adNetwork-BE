@@ -1,3 +1,4 @@
+
 const json = require("express").json();
 const helmet = require("helmet");
 const morgan = require("morgan");
@@ -56,3 +57,4 @@ const configureMiddleware = server => {
 module.exports = {
   configureMiddleware
 };
+

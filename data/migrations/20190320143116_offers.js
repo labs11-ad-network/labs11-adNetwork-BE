@@ -1,21 +1,21 @@
 exports.up = function(knex, Promise) {
   return knex.schema.createTable("offers", t => {
     t.increments();
-    t.float("price_per_click")
+    t.integer("price_per_click")
       .nullable()
       .defaultTo(0);
-    t.float("price_per_impression")
+    t.integer("price_per_impression")
       .nullable()
       .defaultTo(0);
-    t.float("num_applicants")
+    t.integer("num_applicants")
       .nullable()
       .defaultTo(0);
-    t.float("budget").notNullable();
+    t.integer("budget").notNullable();
     t.string("name").notNullable();
     t.string("description").notNullable();
     t.string("category").notNullable();
     t.string("currency").notNullable();
-    t.boolean("status").defaultTo(true);
+    t.string("status").notNullable();
     t.integer("user_id")
       .unsigned()
       .notNullable()

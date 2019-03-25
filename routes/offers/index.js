@@ -5,7 +5,7 @@ const { authenticate } = require("../../common/authentication");
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   try {
-    const offers = await models.findAllBy("offers", { user_id }).orderBy('id', 'asc');
+    const offers = await models.findAllBy("offers", { user_id });
     if (offers) {
       res.status(200).json(offers);
     } else {
@@ -78,8 +78,8 @@ route.put("/:id", authenticate, async (req, res) => {
     const success = await models.update("offers", id, { ...req.body });
 
     if (success) {
-      const offers = await models.findAllBy("offers", { user_id }).orderBy('id', 'asc');
-      res.status(200).json(offers);
+      const offer = await models.findBy("offers", { id });
+      res.status(200).json({ offer, message: "Offer successfully edited." });
     } else {
       res
         .status(404)
@@ -103,7 +103,7 @@ route.delete("/:id", authenticate, async (req, res) => {
 
     const success = await models.remove("offers", id);
     if (success) {
-      res.status(200).json({ message: "Offer successfully deleted." });
+      res.status(200).json({ message: "User successfully deleted." });
     } else {
       res
         .status(404)
