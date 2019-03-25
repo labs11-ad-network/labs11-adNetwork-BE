@@ -42,12 +42,13 @@ const authenticateV2 = async (req, res, next) => {
       if (user) {
         next()
       } else {
+        res.status(401).json({ message: "You are not authorized" });
 
       }
 
 
     } else {
-      res.status(401).json({ message: "You are not authorized" });
+      res.status(401).json({ message: "You need to passed Headers !" });
     }
 
   } catch (err) {
