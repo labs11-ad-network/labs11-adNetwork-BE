@@ -1,6 +1,6 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-
+const { authenticate } = require("../../common/authentication")
 // Postman TESTED
 route.get("/", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
