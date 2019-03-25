@@ -42,7 +42,6 @@ route.post("/registerV2", async (req, res) => {
   if (!name || !email || !image_url || !nickname || !sub) {
     return res.status(400).json({ message: 'All fields are required' })
   }
-
   try {
     //    const exists = await models.findBy("usersV2", { email }).returning('id')
     const exists = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first().returning('id')
