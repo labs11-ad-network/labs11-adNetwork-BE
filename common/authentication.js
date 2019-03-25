@@ -21,7 +21,6 @@ const genToken = user => {
 const authenticate = async (req, res, next) => {
   const token = req.get("Authorization");
   try {
-
     if (token) {
       const decoded = jwtDecode(token);
       const user = await db.select().from('usersV2').where({ email: decoded.email }).andWhere({ sub: decoded.sub }).first()
