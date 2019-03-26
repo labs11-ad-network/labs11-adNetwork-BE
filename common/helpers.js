@@ -68,6 +68,23 @@ const actionCount = (filter, id) =>
     .where("user_id", id)
     .andWhere("action", filter);
 
+const browserCountAdvertisers = (filter, id) =>
+  db
+    .select()
+    .from("analytics as an")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .join("offers as o", "ag.offer_id", "o.id")
+    .where("user_id", id)
+    .andWhere("browser", filter);
+
+const browserCountAffiliates = (filter, id) =>
+  db
+    .select()
+    .from("analytics as an")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .join("offers as o", "ag.affiliate_id", id)
+    // .where("user_id", id)
+    .where("browser", filter);
 module.exports = {
   get,
   findBy,
@@ -80,5 +97,7 @@ module.exports = {
   analyticsWithPricingAdvertiser,
   getAdvertiserEmail,
   actionCount,
-  actionCountAffiliate
+  actionCountAffiliate,
+  browserCountAdvertisers,
+  browserCountAffiliates
 };

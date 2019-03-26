@@ -73,6 +73,7 @@ route.get("/", authenticate, async (req, res) => {
         res.json(getActions);
       } else {
         // all analytics that match the logged in user
+
         const getAffiliateClicks = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "click");
@@ -98,13 +99,42 @@ route.get("/", authenticate, async (req, res) => {
           "conversion"
         );
 
+        const chromeAnalytics = await models.browserCountAffiliates(
+          "Chrome",
+          affiliate_id
+        );
+        const safariAnalytics = await models.browserCountAffiliates(
+          "Safari",
+          affiliate_id
+        );
+        const edgeAnalytics = await models.browserCountAffiliates(
+          "Edge",
+          affiliate_id
+        );
+        const firefoxAnalytics = await models.browserCountAffiliates(
+          "Firefox",
+          affiliate_id
+        );
+        const otherAnalytics = await models.browserCountAffiliates(
+          "",
+          affiliate_id
+        );
         res.json({
           clicks: getAffiliateClicks,
           impressions: getAffiliateImpressions,
           conversions: getAffiliateConversion,
-          numOfImpressions: Number(analyticsForAffiliateImpressions.length),
-          numOfClicks: Number(analyticsForAffiliateClicks.length),
-          numOfConversions: Number(analyticsForAffiliateConversions.length)
+          actionCount: {
+            impressions: Number(analyticsForAffiliateImpressions.length),
+            clicks: Number(analyticsForAffiliateClicks.length),
+            conversions: Number(analyticsForAffiliateConversions.length)
+          },
+          browserCount: {
+            chrome: chromeAnalytics.length,
+            safari: safariAnalytics.length,
+            edge: edgeAnalytics.length,
+            firefox: firefoxAnalytics.length,
+            other: otherAnalytics.length
+          }
         });
       }
     } else if (acct_type === "advertiser") {
@@ -124,13 +154,43 @@ route.get("/", authenticate, async (req, res) => {
       const clicks = await models.actionCount("click", affiliate_id);
       const conversions = await models.actionCount("conversion", affiliate_id);
 
+      const chromeAnalytics = await models.browserCountAdvertisers(
+        "Chrome",
+        affiliate_id
+      );
+      const safariAnalytics = await models.browserCountAdvertisers(
+        "Safari",
+        affiliate_id
+      );
+      const edgeAnalytics = await models.browserCountAdvertisers(
+        "Edge",
+        affiliate_id
+      );
+      const firefoxAnalytics = await models.browserCountAdvertisers(
+        "Firefox",
+        affiliate_id
+      );
+      const otherAnalytics = await models.browserCountAdvertisers(
+        "",
+        affiliate_id
+      );
+
       res.json({
         clicks: analyticsForAdvertisersClicks,
         impressions: analyticsForAdvertisersImpressions,
         conversions: analyticsForAdvertisersConversions,
-        numOfImpressions: Number(impressions.length),
-        numOfClicks: Number(clicks.length),
-        numOfConversions: Number(conversions.length)
+        actionCount: {
+          impressions: Number(impressions.length),
+          clicks: Number(clicks.length),
+          conversions: Number(conversions.length)
+        },
+        browserCount: {
+          chrome: chromeAnalytics.length,
+          safari: safariAnalytics.length,
+          edge: edgeAnalytics.length,
+          firefox: firefoxAnalytics.length,
+          other: otherAnalytics.length
+        }
       });
     }
   } catch ({ message }) {
