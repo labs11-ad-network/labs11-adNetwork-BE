@@ -4,23 +4,24 @@ const { authenticate } = require("../../common/authentication");
 
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
-  const {acct_type} = req.decoded
+  const { acct_type } = req.decoded;
   try {
-    if(acct_type === 'affiliate'){
-      const allOffers = await models.get('offers')
+    if (acct_type === "affiliate") {
+      const allOffers = await models.get("offers");
 
-      return res.json(allOffers)
+      return res.json(allOffers);
     } else {
-      const offers = await models.findAllBy("offers", { user_id });
-    if (offers) {
-      res.status(200).json(offers);
-    } else {
-      res
-        .status(404)
-        .json({ message: "There was an issue retrieving the offers." });
+      const offers = await models
+        .findAllBy("offers", { user_id })
+        .orderBy("id", "asc");
+      if (offers) {
+        res.status(200).json(offers);
+      } else {
+        res
+          .status(404)
+          .json({ message: "There was an issue retrieving the offers." });
+      }
     }
-    }
-    
   } catch ({ message }) {
     res.status(500).json({ message });
   }
@@ -86,8 +87,11 @@ route.put("/:id", authenticate, async (req, res) => {
     const success = await models.update("offers", id, { ...req.body });
 
     if (success) {
-      const offer = await models.findBy("offers", { id });
-      res.status(200).json({ offer, message: "Offer successfully edited." });
+      const offers = await models
+        .findAllBy("offers", { user_id })
+        .orderBy("id", "asc");
+
+      res.status(200).json(offers);
     } else {
       res
         .status(404)
