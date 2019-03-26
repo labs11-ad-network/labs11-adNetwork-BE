@@ -30,11 +30,11 @@ const queryByDate = (tbl, started_at, ended_at) =>
     .where("created_at", "<", ended_at);
 
 const analyticsWithPricing = id =>
-  db
-    .select("an.*", "o.price_per_click", "o.price_per_impression")
-    .from("analytics as an")
-    .join("agreements as ag", "ag.affiliate_id", id)
-    .join("offers as o", "ag.offer_id", "o.id");
+  db("agreements as ag")
+    .join("analytics as an", "an.agreement_id", "ag.id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("ag.affiliate_id", id)
+    .select("an.*", "o.price_per_click", "o.price_per_impression");
 
 const actionCountAffiliate = (id, filter) =>
   db
