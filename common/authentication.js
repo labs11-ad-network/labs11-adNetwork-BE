@@ -23,7 +23,7 @@ const authenticate = async (req, res, next) => {
   try {
     if (token) {
       const decoded = jwtDecode(token);
-      const user = await db.select().from('usersV2').where({ email: decoded.email }).andWhere({ sub: decoded.sub }).first()
+      const user = await db.select().from('users').where({ email: decoded.email }).andWhere({ sub: decoded.sub }).first()
 
       if (user) {
         req.decoded = user;

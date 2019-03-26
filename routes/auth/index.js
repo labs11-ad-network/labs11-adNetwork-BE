@@ -16,7 +16,7 @@ const errorHelper = require('../../error-helper/errorHelper')
 // @desc     get all user testing
 // @Access   Public
 route.get("/", authenticate, async (req, res) => {
-  const users = await models.get("usersV2");
+  const users = await models.get("users");
   console.log('req.decoded.id', req.decoded);
 
   res.status(200).json(users);
@@ -25,7 +25,7 @@ route.get("/", authenticate, async (req, res) => {
 
 
 route.delete("/", async (req, res) => {
-  const removedAllUser = await db.del().from("usersV2");
+  const removedAllUser = await db.del().from("users");
   res.json(removedAllUser)
 
   res.status(200).json(users);
@@ -43,16 +43,16 @@ route.post("/registerV2", async (req, res) => {
     return res.status(400).json({ message: 'All fields are required' })
   }
   try {
-    //    const exists = await models.findBy("usersV2", { email }).returning('id')
-    const exists = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first().returning('id')
+    //    const exists = await models.findBy("users", { email }).returning('id')
+    const exists = await db.select().from('users').where({ email }).andWhere({ sub }).first().returning('id')
     if (exists) {
       return res.status(200).json(exists)
     }
 
-    const [id] = await models.add('usersV2', req.body)
+    const [id] = await models.add('users', req.body)
     console.log('id', id);
     if (id) {
-      const user = await models.findBy('usersV2', { id })
+      const user = await models.findBy('users', { id })
       res.status(200).json(user)
 
     } else {
