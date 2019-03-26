@@ -90,11 +90,18 @@ route.get("/:id", async (req, res) => {
 route.get("/offers/:id", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   const offer_id = req.params.id;
-
+  const {acct_type} = req.decoded
   try {
-    const ads = await models.findAllBy("ads", { user_id, offer_id });
-    if (!ads.length) return res.status(404).json({ message: "No Ads found" });
-    res.json(ads);
+
+    if(acct_type === 'affiliate'){
+      const affiliateAds = await models.findAllBy("ads", { offer_id });
+      if (!affiliateAds.length) return res.status(404).json({ message: "No Ads found" });
+      return res.json(affiliateAds);
+    } else {
+      const ads = await models.findAllBy("ads", { user_id, offer_id });
+      if (!ads.length) return res.status(404).json({ message: "No Ads found" });
+      return res.json(ads);
+    }
   } catch ({ message }) {
     res.status(500).json({ message });
   }
