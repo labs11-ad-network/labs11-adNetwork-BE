@@ -40,6 +40,10 @@ const analyticsWithPricingAdvertiser = id => db.select('an.*', 'o.price_per_clic
                                                 .join('offers as o', 'ag.offer_id', 'o.id')
                                                 .where('user_id', id)
 
+const getAdvertiserEmail = id => db.select('u.*')
+                                    .from('agreements as ag')
+                                    .join('offers as o', 'o.id', id)
+                                    .join('users as u', 'o.user_id', 'u.id')
 module.exports = {
   get,
   findBy,
@@ -49,5 +53,6 @@ module.exports = {
   findAllBy,
   queryByDate,
   analyticsWithPricing,
-  analyticsWithPricingAdvertiser
+  analyticsWithPricingAdvertiser,
+  getAdvertiserEmail
 };

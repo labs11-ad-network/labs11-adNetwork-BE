@@ -2,6 +2,8 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
 const {affiliateCheck} = require('../../common/roleCheck')
+const emailer = require('../../common/mailer')
+
 // Postman TESTED
 route.get("/", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
@@ -57,6 +59,10 @@ route.post("/", authenticate, affiliateCheck, async (req, res) => {
     });
     if (id) {
       const agreement = await models.findBy("agreements", { id });
+      const { email } = await models.getAdvertiserEmail(req.body.offer_id).first()
+
+      emailer(res, email)
+
       res.status(201).json(agreement);
     } else {
       res
