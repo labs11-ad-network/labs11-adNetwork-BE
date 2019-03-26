@@ -9,7 +9,7 @@ route.get("/", authenticate, async (req, res) => {
   console.log('---- req.decoded ----', req.decoded);
 
   try {
-    const users = await db.select().from('usersV2').where({ email }).andWhere({ sub }).first()
+    const users = await db.select().from('users').where({ email }).andWhere({ sub }).first()
 
     if (users) {
       res.status(200).json(users);
@@ -24,7 +24,7 @@ route.get("/", authenticate, async (req, res) => {
 route.get("/:id", async (req, res) => {
   const id = req.params.id;
   try {
-    const user = await models.findBy("usersV2", { id });
+    const user = await models.findBy("users", { id });
     if (user) {
       res.status(200).json(user);
     } else {
@@ -42,9 +42,9 @@ route.put("/:id", async (req, res) => {
   }
   const id = req.params.id;
   try {
-    const success = await models.update("usersV2", id, { ...req.body });
+    const success = await models.update("users", id, { ...req.body });
     if (success) {
-      const user = await models.findBy("usersV2", { id });
+      const user = await models.findBy("users", { id });
       res.status(200).json({ user, message: "User edited successfully." });
     } else {
       res
@@ -59,7 +59,7 @@ route.put("/:id", async (req, res) => {
 route.delete("/:id", async (req, res) => {
   const id = req.params.id;
   try {
-    const success = await models.remove("usersV2", id);
+    const success = await models.remove("users", id);
     if (success) {
       res.status(200).json({ message: "User deleted successfully." });
     } else {
