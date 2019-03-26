@@ -1,7 +1,7 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
-const {authenticate} = require('../../common/authentication')
+const { authenticate } = require("../../common/authentication");
 
 route.post("/", async (req, res) => {
   const { action, browser, ip, referrer, agreement_id } = req.body;
@@ -23,57 +23,116 @@ route.post("/", async (req, res) => {
   }
 });
 
-route.get('/:id', authenticate, async (req, res) => {
-  const {id} = req.params
-  const user_id = req.decoded.id
+route.get("/:id", authenticate, async (req, res) => {
+  const { id } = req.params;
+  const user_id = req.decoded.id;
 
   try {
     // Route to GET analytics per offer query
-    const analytics = await db.select('an.*', 'ag.*').from('analytics as an').join('agreements as ag', 'an.agreement_id', 'ag.id').where('ag.affiliate_id', user_id).andWhere('ag.offer_id', id)
+    const analytics = await db
+      .select("an.*", "ag.*")
+      .from("analytics as an")
+      .join("agreements as ag", "an.agreement_id", "ag.id")
+      .where("ag.affiliate_id", user_id)
+      .andWhere("ag.offer_id", id);
 
-    res.json(analytics)
-  } catch ({message}) {
-    res.status(500).json({message})
+    res.json(analytics);
+  } catch ({ message }) {
+    res.status(500).json({ message });
   }
-})
+});
 
 route.get("/", authenticate, async (req, res) => {
-
   // Current logged in user
-  const affiliate_id = req.decoded.id
-  const {acct_type} = req.decoded
+  const affiliate_id = req.decoded.id;
+  const { acct_type } = req.decoded;
 
   // // destructuring the query
 
   const { action, started_at, ended_at, agreement_id } = req.query;
 
   try {
-
-    if(acct_type === 'affiliate'){
+    if (acct_type === "affiliate") {
       if (action && started_at && ended_at) {
-          const getActions = await models.analyticsWithPricing(affiliate_id)
-                                          .where("created_at", ">=", started_at)
-                                          .where("created_at", "<", ended_at);
-          res.json(getActions);
-        } else if (!action && started_at && ended_at) {
-          const getActions = await models.analyticsWithPricing(affiliate_id)
-                                          .where("created_at", ">=", started_at)
-                                          .where("created_at", "<", ended_at);
-          res.json(getActions);
-        } else if (!started_at && !ended_at && action) {
-          const getActions = await models.analyticsWithPricing(affiliate_id).where({ action });
-          res.json(getActions);
-        } else {
+        const getActions = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("created_at", ">=", started_at)
+          .where("created_at", "<", ended_at)
+          .andWhere("action", action);
+        res.json(getActions);
+      } else if (!action && started_at && ended_at) {
+        const getActions = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("created_at", ">=", started_at)
+          .where("created_at", "<", ended_at);
+        res.json(getActions);
+      } else if (!started_at && !ended_at && action) {
+        const getActions = await models
+          .analyticsWithPricing(affiliate_id)
+          .where({ action });
+        res.json(getActions);
+      } else {
+        // all analytics that match the logged in user
+        const getAffiliateClicks = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("action", "click");
 
-          // all analytics that match the logged in user
-          const analytics  = await models.analyticsWithPricing(affiliate_id)
-          res.json(analytics);
-        }
-    } else if(acct_type === 'advertiser'){
-          const analyticsForAdvertisers = await models.analyticsWithPricingAdvertiser(affiliate_id)
-          res.json(analyticsForAdvertisers)
+        const getAffiliateImpressions = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("action", "impression");
+
+        const getAffiliateConversion = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("action", "conversion");
+
+        const analyticsForAffiliateImpressions = await models.actionCountAffiliate(
+          affiliate_id,
+          "impression"
+        );
+        const analyticsForAffiliateClicks = await models.actionCountAffiliate(
+          affiliate_id,
+          "click"
+        );
+        const analyticsForAffiliateConversions = await models.actionCountAffiliate(
+          affiliate_id,
+          "conversion"
+        );
+
+        res.json({
+          clicks: getAffiliateClicks,
+          impressions: getAffiliateImpressions,
+          conversions: getAffiliateConversion,
+          numOfImpressions: Number(analyticsForAffiliateImpressions.length),
+          numOfClicks: Number(analyticsForAffiliateClicks.length),
+          numOfConversions: Number(analyticsForAffiliateConversions.length)
+        });
+      }
+    } else if (acct_type === "advertiser") {
+      const analyticsForAdvertisersClicks = await models
+        .analyticsWithPricingAdvertiser(affiliate_id)
+        .andWhere("action", "click");
+
+      const analyticsForAdvertisersImpressions = await models
+        .analyticsWithPricingAdvertiser(affiliate_id)
+        .andWhere("action", "impression");
+
+      const analyticsForAdvertisersConversions = await models
+        .analyticsWithPricingAdvertiser(affiliate_id)
+        .andWhere("action", "conversion");
+
+      const impressions = await models.actionCount("impression", affiliate_id);
+      const clicks = await models.actionCount("click", affiliate_id);
+      const conversions = await models.actionCount("conversion", affiliate_id);
+
+      res.json({
+        clicks: analyticsForAdvertisersClicks,
+        impressions: analyticsForAdvertisersImpressions,
+        conversions: analyticsForAdvertisersConversions,
+        numOfImpressions: Number(impressions.length),
+        numOfClicks: Number(clicks.length),
+        numOfConversions: Number(conversions.length)
+      });
     }
-    
   } catch ({ message }) {
     res.status(500).json({ message });
   }
