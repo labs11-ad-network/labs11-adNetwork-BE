@@ -26,17 +26,30 @@ route.post("/", async (req, res) => {
 route.get("/:id", authenticate, async (req, res) => {
   const { id } = req.params;
   const user_id = req.decoded.id;
+  const { acct_type } = req.decoded;
 
   try {
-    // Route to GET analytics per offer query
-    const analytics = await db
-      .select("an.*", "ag.*")
-      .from("analytics as an")
-      .join("agreements as ag", "an.agreement_id", "ag.id")
-      .where("ag.affiliate_id", user_id)
-      .andWhere("ag.offer_id", id);
+    if (acct_type === "affiliate") {
+      // send the id of an agreeement and get the analytics for that agreement formatter like below
+      const affiliateAnalytics = await db("analytics as an")
+        .join("agreements as ag", "an.agreement_id", "ag.id")
+        .join("offers as o", "o.id", "ag.offer_id")
+        .where("offer_id", id)
+        .andWhere("affiliate_id", user_id)
+        .select("an.*", "o.price_per_click", "o.price_per_impression");
 
-    res.json(analytics);
+      res.json(affiliateAnalytics);
+    } else if (acct_type === "advertiser") {
+      // send the id of an offer and get the analytics for that offer formatted like below
+      const advertiserAnalytics = await db("analytics as an")
+        .join("agreements as ag", "an.agreement_id", "ag.id")
+        .join("offers as o", "o.id", "ag.offer_id")
+        .where("offer_id", id)
+        .andWhere("user_id", user_id)
+        .select("an.*", "o.price_per_click", "o.price_per_impression");
+
+      res.json(advertiserAnalytics);
+    }
   } catch ({ message }) {
     res.status(500).json({ message });
   }
