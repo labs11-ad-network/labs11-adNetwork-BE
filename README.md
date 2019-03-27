@@ -17,19 +17,18 @@
 
 
 ### Summary Table of API Endpoints
-| Type   | Endpoints            | Description   |
-| ------ | -------------------- | ------------- |
-| POST   | /api/auth/registerV2 | Register User |
-| GET    | /api/api/users       | Get User Info |
-| GET    | /api/api/users/:id   | Register User |
-| POST   | /api/api/users       | Register User |
-| PUT    | /api/api/users/:id   | Register User |
-| DELETE | /api/api/users/:id   | Register User |
-| GET    | /api/offers          | Register User |
-| GET    | /api/offers/:id      | Register User |
-| POST   | /api/offers          | Register User |
-| PUT    | /api/offers/:id      | Register User |
-| DELETE | /api/offers/:id      | Register User |
+| Type   | Endpoints            | Description      |
+| ------ | -------------------- | ---------------- |
+| POST   | /api/auth/registerV2 | Register User    |
+| GET    | /api/api/users       | Get User Info    |
+| GET    | /api/api/users/:id   | Get User by Id   |
+| PUT    | /api/api/users/:id   | Update User      |
+| DELETE | /api/api/users/:id   | Delete User      |
+| GET    | /api/offers          | Get offers       |
+| GET    | /api/offers/:id      | Get offers by id |
+| POST   | /api/offers          | Add offers       |
+| PUT    | /api/offers/:id      | Update Offer     |
+| DELETE | /api/offers/:id      | Delete Offer     |
 
 
 
@@ -67,7 +66,6 @@
     "stripe_cust_id": null
 }
 ```
- 
 #### Offers 
 `GET 200 success ✅`
 ```
@@ -97,7 +95,13 @@
     }
 }
 ```
-
+#### Private Route middleware
+`500 error ❌`
+```
+{
+    "message": "You need to passed Headers !"
+}
+```
 
 #### ️DB Schema
 ![](assets/dbSchema.png)

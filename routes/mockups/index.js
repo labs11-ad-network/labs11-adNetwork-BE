@@ -11,7 +11,9 @@ cloudinary.config({
   api_secret: "Jf7IESazEon7JKlD9dd8fkMgESk"
 });
 
-
+// @route    GET /api/ads
+// @desc     get all ads
+// @Access   Private
 route.get("/", authenticate, async (req, res) => {
   try {
     const ads = await models.get("ads");
@@ -21,6 +23,10 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
+
+// @route    GET /api/ads 
+// @desc     Post an ads
+// @Access   Private
 route.post("/", authenticate, multipart, async (req, res) => {
   const user_id = req.decoded.id;
 
@@ -41,7 +47,9 @@ route.post("/", authenticate, multipart, async (req, res) => {
   });
 });
 
-
+// @route    GET /api/ads
+// @desc     Delete an ads
+// @Access   Public
 route.delete("/:id", authenticate, async (req, res) => {
   const { id } = req.params;
   const user_id = req.decoded.id;
@@ -62,6 +70,9 @@ route.delete("/:id", authenticate, async (req, res) => {
   }
 });
 
+// @route    GET /api/ads/myads 
+// @desc     get all my ads
+// @Access   Private
 route.get("/myads", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
 
@@ -73,6 +84,10 @@ route.get("/myads", authenticate, async (req, res) => {
   }
 });
 
+
+// @route    GET /api/ads/:id
+// @desc     Get ads by od
+// @Access   Public
 route.get("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -87,13 +102,16 @@ route.get("/:id", async (req, res) => {
   }
 });
 
+// @route    GET /api/ads/offers/:id  
+// @desc     get offers by id 
+// @Access   Private
 route.get("/offers/:id", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   const offer_id = req.params.id;
-  const {acct_type} = req.decoded
+  const { acct_type } = req.decoded
   try {
 
-    if(acct_type === 'affiliate'){
+    if (acct_type === 'affiliate') {
       const affiliateAds = await models.findAllBy("ads", { offer_id });
       if (!affiliateAds.length) return res.status(404).json({ message: "No Ads found" });
       return res.json(affiliateAds);
