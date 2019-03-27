@@ -24,6 +24,9 @@ route.get("/", authenticate, async (req, res) => {
 });
 
 
+// @route    GET api/auth
+// @desc     Dis is only for tesitng
+// @Access   Public
 route.delete("/", async (req, res) => {
   const removedAllUser = await db.del().from("users");
   res.json(removedAllUser)
@@ -31,6 +34,8 @@ route.delete("/", async (req, res) => {
   res.status(200).json(users);
 
 });
+
+
 
 
 // @route    GET api/test
