@@ -185,13 +185,108 @@ route.get("/", authenticate, async (req, res) => {
         res.json(getActions);
       } else {
 
-        // all analytics that match the logged in user
-        const analytics = await models.analyticsWithPricing(affiliate_id)
-        res.json(analytics);
+        const analyticsForAffiliateImpressions = await models.actionCountAffiliate(
+          affiliate_id,
+          "impression"
+        );
+        const analyticsForAffiliateClicks = await models.actionCountAffiliate(
+          affiliate_id,
+          "click"
+        );
+        const analyticsForAffiliateConversions = await models.actionCountAffiliate(
+          affiliate_id,
+          "conversion"
+        );
+
+        const chromeAnalytics = await await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Chrome");
+        const safariAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Safari");
+        const edgeAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Edge");
+        const firefoxAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Firefox");
+        const otherAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Other");
+
+        res.json({
+          clicks: getAffiliateClicks,
+          impressions: getAffiliateImpressions,
+          conversions: getAffiliateConversion,
+          actionCount: {
+            impressions: Number(getAffiliateImpressions.length),
+            clicks: Number(getAffiliateClicks.length),
+            conversions: Number(getAffiliateConversion.length)
+          },
+          browserCount: {
+            chrome: chromeAnalytics.length,
+            safari: safariAnalytics.length,
+            edge: edgeAnalytics.length,
+            firefox: firefoxAnalytics.length,
+            other: otherAnalytics.length
+          }
+        });
       }
-    } else if (acct_type === 'advertiser') {
-      const analyticsForAdvertisers = await models.analyticsWithPricingAdvertiser(affiliate_id)
-      res.json(analyticsForAdvertisers)
+    } else if (acct_type === "advertiser") {
+      const analyticsForAdvertisersClicks = await models
+        .analyticsWithPricingAdvertiser(affiliate_id)
+        .andWhere("action", "click");
+
+      const analyticsForAdvertisersImpressions = await models
+        .analyticsWithPricingAdvertiser(affiliate_id)
+        .andWhere("action", "impression");
+
+      const analyticsForAdvertisersConversions = await models
+        .analyticsWithPricingAdvertiser(affiliate_id)
+        .andWhere("action", "conversion");
+
+      const impressions = await models.actionCount("impression", affiliate_id);
+      const clicks = await models.actionCount("click", affiliate_id);
+      const conversions = await models.actionCount("conversion", affiliate_id);
+
+      const chromeAnalytics = await models.browserCountAdvertisers(
+        "Chrome",
+        affiliate_id
+      );
+      const safariAnalytics = await models.browserCountAdvertisers(
+        "Safari",
+        affiliate_id
+      );
+      const edgeAnalytics = await models.browserCountAdvertisers(
+        "Edge",
+        affiliate_id
+      );
+      const firefoxAnalytics = await models.browserCountAdvertisers(
+        "Firefox",
+        affiliate_id
+      );
+      const otherAnalytics = await models.browserCountAdvertisers(
+        "Other",
+        affiliate_id
+      );
+
+      res.json({
+        clicks: analyticsForAdvertisersClicks,
+        impressions: analyticsForAdvertisersImpressions,
+        conversions: analyticsForAdvertisersConversions,
+        actionCount: {
+          impressions: Number(analyticsForAdvertisersImpressions.length),
+          clicks: Number(analyticsForAdvertisersImpressions.length),
+          conversions: Number(analyticsForAdvertisersConversions.length)
+        },
+        browserCount: {
+          chrome: chromeAnalytics.length,
+          safari: safariAnalytics.length,
+          edge: edgeAnalytics.length,
+          firefox: firefoxAnalytics.length,
+          other: otherAnalytics.length
+        }
+      });
     }
 
   } catch ({ message }) {
