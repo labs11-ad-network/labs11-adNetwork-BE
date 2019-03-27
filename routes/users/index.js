@@ -83,31 +83,45 @@ route.put("/", authenticate, multipart, async (req, res) => {
       .json({ message: "updating email and sub is not allowed" });
   }
 
-  // ------------- cloudinary - ---------
-  cloudinary.v2.uploader.upload(
-    req.files.image_url.path,
-    async (error, result) => {
-      if (error) return res.status(500).json({ message: error });
-      try {
-        // ------------- update - ---------
-        const success = await models.update("users", id, {
-          ...req.body,
-          image_url: result.secure_url
-        });
-
-        if (success) {
-          const user = await models.findBy("users", { id });
-          res.status(200).json({ user, message: "User edited successfully." });
-        } else {
-          res
-            .status(404)
-            .json({ message: "There was an issue editing this user." });
-        }
-      } catch ({ message }) {
-        res.status(500).json({ message });
-      }
+  if (!req.files.image_url) {
+    const success = await models.update("users", id, { ...req.body });
+    if (success) {
+      const user = await models.findBy("users", { id });
+      res.status(200).json({ user, message: "User edited successfully." });
+    } else {
+      res
+        .status(404)
+        .json({ message: "There was an issue editing this user." });
     }
-  );
+  } else {
+    // ------------- cloudinary - ---------
+    cloudinary.v2.uploader.upload(
+      req.files.image_url.path,
+      async (error, result) => {
+        if (error) return res.status(500).json({ message: error });
+        try {
+          // ------------- update - ---------
+          const success = await models.update("users", id, {
+            ...req.body,
+            image_url: result.secure_url
+          });
+
+          if (success) {
+            const user = await models.findBy("users", { id });
+            res
+              .status(200)
+              .json({ user, message: "User edited successfully." });
+          } else {
+            res
+              .status(404)
+              .json({ message: "There was an issue editing this user." });
+          }
+        } catch ({ message }) {
+          res.status(500).json({ message });
+        }
+      }
+    );
+  }
 });
 
 // @route    GET api/user
