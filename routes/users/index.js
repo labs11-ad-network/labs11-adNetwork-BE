@@ -73,7 +73,7 @@ route.get("/:id", async (req, res) => {
 });
 
 
-// @route    GET api/users
+// @route    PUT api/users
 // @desc     update user info
 // @Access   Private
 route.put("/", authenticate, multipart, async (req, res) => {
