@@ -115,7 +115,7 @@ route.put("/:id", authenticate, async (req, res) => {
     res.status(500).json({ message });
   }
 });
-// @route    /api/offers
+// @route    /api/offers/:id
 // @desc     DELETE offers
 // @Access   Private
 route.delete("/:id", authenticate, async (req, res) => {
