@@ -2,6 +2,7 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
+const emailer = require("../../common/mailer");
 
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
@@ -104,6 +105,12 @@ route.put("/:id", authenticate, async (req, res) => {
     const success = await models.update("offers", id, { ...req.body });
 
     if (success) {
+      const { emails } = await models.getAdvertiserEmail(req.body.offer_id);
+
+      emails.map(email => {
+        emailer(res, email);
+      });
+
       const offers = await models
         .findAllBy("offers", { user_id })
         .orderBy("id", "asc");
