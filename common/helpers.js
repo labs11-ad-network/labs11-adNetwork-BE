@@ -24,6 +24,11 @@ const update = (tbl, id, item) =>
     .where({ id })
     .update(item);
 
+const updateStripe = (tbl, filter, item) =>
+  db(tbl)
+    .where(filter)
+    .update(item);
+
 const queryByDate = (tbl, started_at, ended_at) =>
   db(tbl)
     .where("created_at", ">=", started_at)
@@ -90,7 +95,7 @@ const analyticsPerOfferWithPricing = (filter, id, offer_id) =>
   db("analytics as an")
     .join("agreements as ag", "an.agreement_id", "ag.id")
     .join("offers as o", "o.id", "ag.offer_id")
-    .where("offer_id", offer_id)
+    .where("agreement_id", offer_id)
     .andWhere("affiliate_id", id)
     .andWhere("action", filter)
     .select("an.*", "o.price_per_click", "o.price_per_impression");
@@ -127,6 +132,7 @@ module.exports = {
   add,
   remove,
   update,
+  updateStripe,
   findAllBy,
   queryByDate,
   analyticsWithPricing,
