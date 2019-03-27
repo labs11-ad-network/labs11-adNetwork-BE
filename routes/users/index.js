@@ -19,7 +19,6 @@ cloudinary.config({
 route.get("/", authenticate, async (req, res) => {
   const { id, sub, email, acct_type } = req.decoded;
 
-
   try {
     let users = await db.select().from('users').where({ email }).andWhere({ sub })
     if (users) {
@@ -32,12 +31,7 @@ route.get("/", authenticate, async (req, res) => {
           .where({ affiliate_id: id })
           .andWhere({ offer_id: user.id });
 
-        // check acc_type is affliate return agreements length , '
-        // offers the one they've accpeted
-        // advertiser
-        // how many offers
-        // agreements how many affliate accepted the all offer
-        // how many ads user have 
+
         user.offers = offers.length
         user.ads = ads.length
         user.agreements = acct_type === "affiliate" ? agreements.length : 0
@@ -45,8 +39,6 @@ route.get("/", authenticate, async (req, res) => {
 
         return user
       })
-
-
 
       Promise.all(result).then(completed => {
         users = completed
