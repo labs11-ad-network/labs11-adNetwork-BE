@@ -22,8 +22,8 @@ route.get('/', async (req, res) => {
 })
 
 
-// @route    GET /api/admin/:id
-// @desc     get admin by id
+// @route     /api/admin/:id
+// @desc     GET admin by id
 // @Access   Public
 route.get('/:id', async (req, res) => {
   const id = req.params.id
@@ -55,8 +55,8 @@ route.put('/:id', async (req, res) => {
   }
 })
 
-// @route    DELETE /api/admin/:id
-// @desc     delete admin
+// @route     /api/admin/:id
+// @desc     DELETE admin
 // @Access   Public
 route.delete('/:id', async (req, res) => {
   const id = req.params.id

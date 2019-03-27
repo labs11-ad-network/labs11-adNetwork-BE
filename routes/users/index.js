@@ -15,7 +15,7 @@ cloudinary.config({
 
 
 
-// @route    GET api/users
+// @route     /api/users
 // @desc     Get current user
 // @Access   Private
 route.get("/", authenticate, async (req, res) => {
@@ -55,8 +55,8 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
-// @route    GET api/users
-// @desc     Get user by id 
+// @route     /api/users
+// @desc     GET user by id 
 // @Access   Private
 route.get("/:id", async (req, res) => {
   const { id } = req.params
@@ -73,8 +73,8 @@ route.get("/:id", async (req, res) => {
 });
 
 
-// @route    PUT api/users
-// @desc     update user info
+// @route     /api/users
+// @desc     PUT user info
 // @Access   Private
 route.put("/", authenticate, multipart, async (req, res) => {
   const { id } = req.decoded
@@ -111,11 +111,9 @@ route.put("/", authenticate, multipart, async (req, res) => {
   });
 });
 
-
-
-// @route    GET api/user
-// @desc     delete user account
-// @Access   Public
+// @route    /api/user
+// @desc     Delete user account
+// @Access   Private
 route.delete("/", authenticate, async (req, res) => {
 
   const { id } = req.decoded
