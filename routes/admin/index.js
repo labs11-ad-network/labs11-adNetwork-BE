@@ -1,9 +1,6 @@
 const route = require("express").Router()
 const models = require("../../common/helpers")
 
-
-
-
 // @route    /api/admin 
 // @desc     Get admin
 // @Access   Public
