@@ -1,15 +1,30 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
+
 
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   const { acct_type } = req.decoded;
   try {
     if (acct_type === "affiliate") {
-      const allOffers = await models.get("offers");
+      let allOffers = await models.get("offers");
 
-      return res.json(allOffers);
+      //before reutrnin all offers
+      const results = await allOffers.map(async allOffer => {
+        let agreements = await db.select().from('agreements').where({ affiliate_id: user_id }).andWhere({ offer_id: allOffer.id })
+
+        allOffer.accepted = agreements.length ? true : false
+        return allOffer
+      })
+
+
+      Promise.all(results).then(compeleted => {
+        allOffers = compeleted
+        return res.status(200).json(allOffers);
+      })
+
     } else {
       const offers = await models
         .findAllBy("offers", { user_id })
