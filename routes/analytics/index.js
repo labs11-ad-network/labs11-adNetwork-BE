@@ -1,7 +1,6 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const db = require("../../data/dbConfig");
-const { authenticate } = require('../../common/authentication')
+const { authenticate } = require("../../common/authentication");
 
 route.post("/", async (req, res) => {
   const { action, browser, ip, referrer, agreement_id } = req.body;
@@ -158,42 +157,135 @@ route.get("/:id", authenticate, async (req, res) => {
 });
 
 route.get("/", authenticate, async (req, res) => {
-
   // Current logged in user
-  const affiliate_id = req.decoded.id
-  const { acct_type } = req.decoded
+  const affiliate_id = req.decoded.id;
+  const { acct_type } = req.decoded;
 
   // // destructuring the query
 
   const { action, started_at, ended_at, agreement_id } = req.query;
 
   try {
-
-    if (acct_type === 'affiliate') {
+    if (acct_type === "affiliate") {
       if (action && started_at && ended_at) {
-        const getActions = await models.analyticsWithPricing(affiliate_id)
+        const getActions = await models
+          .analyticsWithPricing(affiliate_id)
           .where("created_at", ">=", started_at)
-          .where("created_at", "<", ended_at);
+          .where("created_at", "<", ended_at)
+          .andWhere("action", action);
         res.json(getActions);
       } else if (!action && started_at && ended_at) {
-        const getActions = await models.analyticsWithPricing(affiliate_id)
+        const getActions = await models
+          .analyticsWithPricing(affiliate_id)
           .where("created_at", ">=", started_at)
           .where("created_at", "<", ended_at);
         res.json(getActions);
       } else if (!started_at && !ended_at && action) {
-        const getActions = await models.analyticsWithPricing(affiliate_id).where({ action });
+        const getActions = await models
+          .analyticsWithPricing(affiliate_id)
+          .where({ action });
         res.json(getActions);
       } else {
-
         // all analytics that match the logged in user
-        const analytics = await models.analyticsWithPricing(affiliate_id)
-        res.json(analytics);
-      }
-    } else if (acct_type === 'advertiser') {
-      const analyticsForAdvertisers = await models.analyticsWithPricingAdvertiser(affiliate_id)
-      res.json(analyticsForAdvertisers)
-    }
 
+        const getAffiliateClicks = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("action", "click");
+
+        const getAffiliateImpressions = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("action", "impression");
+
+        const getAffiliateConversion = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("action", "conversion");
+
+        const chromeAnalytics = await await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Chrome");
+        const safariAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Safari");
+        const edgeAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Edge");
+        const firefoxAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Firefox");
+        const otherAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Other");
+
+        res.json({
+          clicks: getAffiliateClicks,
+          impressions: getAffiliateImpressions,
+          conversions: getAffiliateConversion,
+          actionCount: {
+            impressions: Number(getAffiliateImpressions.length),
+            clicks: Number(getAffiliateClicks.length),
+            conversions: Number(getAffiliateConversion.length)
+          },
+          browserCount: {
+            chrome: chromeAnalytics.length,
+            safari: safariAnalytics.length,
+            edge: edgeAnalytics.length,
+            firefox: firefoxAnalytics.length,
+            other: otherAnalytics.length
+          }
+        });
+      }
+    } else if (acct_type === "advertiser") {
+      const analyticsForAdvertisersClicks = await models
+        .analyticsWithPricingAdvertiser(affiliate_id)
+        .andWhere("action", "click");
+
+      const analyticsForAdvertisersImpressions = await models
+        .analyticsWithPricingAdvertiser(affiliate_id)
+        .andWhere("action", "impression");
+
+      const analyticsForAdvertisersConversions = await models
+        .analyticsWithPricingAdvertiser(affiliate_id)
+        .andWhere("action", "conversion");
+
+      const chromeAnalytics = await models.browserCountAdvertisers(
+        "Chrome",
+        affiliate_id
+      );
+      const safariAnalytics = await models.browserCountAdvertisers(
+        "Safari",
+        affiliate_id
+      );
+      const edgeAnalytics = await models.browserCountAdvertisers(
+        "Edge",
+        affiliate_id
+      );
+      const firefoxAnalytics = await models.browserCountAdvertisers(
+        "Firefox",
+        affiliate_id
+      );
+      const otherAnalytics = await models.browserCountAdvertisers(
+        "Other",
+        affiliate_id
+      );
+
+      res.json({
+        clicks: analyticsForAdvertisersClicks,
+        impressions: analyticsForAdvertisersImpressions,
+        conversions: analyticsForAdvertisersConversions,
+        actionCount: {
+          impressions: Number(analyticsForAdvertisersImpressions.length),
+          clicks: Number(analyticsForAdvertisersClicks.length),
+          conversions: Number(analyticsForAdvertisersConversions.length)
+        },
+        browserCount: {
+          chrome: chromeAnalytics.length,
+          safari: safariAnalytics.length,
+          edge: edgeAnalytics.length,
+          firefox: firefoxAnalytics.length,
+          other: otherAnalytics.length
+        }
+      });
+    }
   } catch ({ message }) {
     res.status(500).json({ message });
   }
