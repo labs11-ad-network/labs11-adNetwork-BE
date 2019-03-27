@@ -34,6 +34,9 @@ route.get("/:id", async (req, res) => {
   }
 });
 
+// @route    GET api/users/:id
+// @desc     update user
+// @Access   Private
 route.put("/:id", authenticate, async (req, res) => {
   const { email, sub } = req.body;
   const { id } = req.params
