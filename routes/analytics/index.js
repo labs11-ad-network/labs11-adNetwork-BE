@@ -92,17 +92,17 @@ route.get("/:id", authenticate, async (req, res) => {
       });
     } else if (acct_type === "advertiser") {
       // send the id of an offer and get the analytics for that offer formatted like below
-      const affiliateAnalyticsClicks = await models.analyticsPerOfferAdvertisers(
+      const advertiserAnalyticsClicks = await models.analyticsPerOfferAdvertisers(
         "click",
         user_id,
         id
       );
-      const affiliateAnalyticsImpressions = await models.analyticsPerOfferAdvertisers(
+      const advertiserAnalyticsImpressions = await models.analyticsPerOfferAdvertisers(
         "impression",
         user_id,
         id
       );
-      const affiliateAnalyticsConversions = await models.analyticsPerOfferAdvertisers(
+      const advertiserAnalyticsConversions = await models.analyticsPerOfferAdvertisers(
         "conversion",
         user_id,
         id
@@ -135,13 +135,13 @@ route.get("/:id", authenticate, async (req, res) => {
       );
 
       res.json({
-        clicks: affiliateAnalyticsClicks,
-        impressions: affiliateAnalyticsImpressions,
-        conversions: affiliateAnalyticsConversions,
+        clicks: advertiserAnalyticsClicks,
+        impressions: advertiserAnalyticsImpressions,
+        conversions: advertiserAnalyticsConversions,
         actionCount: {
-          impressions: Number(affiliateAnalyticsImpressions.length),
-          clicks: Number(affiliateAnalyticsClicks.length),
-          conversions: Number(affiliateAnalyticsConversions.length)
+          impressions: Number(advertiserAnalyticsImpressions.length),
+          clicks: Number(advertiserAnalyticsClicks.length),
+          conversions: Number(advertiserAnalyticsConversions.length)
         },
         browserCount: {
           chrome: chromeCount.length,
@@ -214,34 +214,30 @@ route.get("/", authenticate, async (req, res) => {
           "conversion"
         );
 
-        const chromeAnalytics = await models.browserCountAffiliates(
-          "Chrome",
-          affiliate_id
-        );
-        const safariAnalytics = await models.browserCountAffiliates(
-          "Safari",
-          affiliate_id
-        );
-        const edgeAnalytics = await models.browserCountAffiliates(
-          "Edge",
-          affiliate_id
-        );
-        const firefoxAnalytics = await models.browserCountAffiliates(
-          "Firefox",
-          affiliate_id
-        );
-        const otherAnalytics = await models.browserCountAffiliates(
-          "",
-          affiliate_id
-        );
+        const chromeAnalytics = await await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Chrome");
+        const safariAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Safari");
+        const edgeAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Edge");
+        const firefoxAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Firefox");
+        const otherAnalytics = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Other");
+
         res.json({
           clicks: getAffiliateClicks,
           impressions: getAffiliateImpressions,
           conversions: getAffiliateConversion,
           actionCount: {
-            impressions: Number(analyticsForAffiliateImpressions.length),
-            clicks: Number(analyticsForAffiliateClicks.length),
-            conversions: Number(analyticsForAffiliateConversions.length)
+            impressions: Number(getAffiliateImpressions.length),
+            clicks: Number(getAffiliateClicks.length),
+            conversions: Number(getAffiliateConversion.length)
           },
           browserCount: {
             chrome: chromeAnalytics.length,
@@ -295,9 +291,9 @@ route.get("/", authenticate, async (req, res) => {
         impressions: analyticsForAdvertisersImpressions,
         conversions: analyticsForAdvertisersConversions,
         actionCount: {
-          impressions: Number(impressions.length),
-          clicks: Number(clicks.length),
-          conversions: Number(conversions.length)
+          impressions: Number(analyticsForAdvertisersImpressions.length),
+          clicks: Number(analyticsForAdvertisersImpressions.length),
+          conversions: Number(analyticsForAdvertisersConversions.length)
         },
         browserCount: {
           chrome: chromeAnalytics.length,
