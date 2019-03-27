@@ -57,7 +57,7 @@ route.post("/", async (req, res) => {
       }
     });
     const analytics = await models.findBy("analytics", { id: enterAction });
-    res.json({ analytics, payments });
+    res.json(analytics);
   } catch ({ message }) {
     res.status(500).json({ message });
   }
