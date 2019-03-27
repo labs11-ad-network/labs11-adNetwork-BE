@@ -1,15 +1,19 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const { authenticate } = require('../../common/authentication')
-const db = require('../../data/dbConfig')
-
+const { authenticate } = require("../../common/authentication");
+const db = require("../../data/dbConfig");
 
 route.get("/", authenticate, async (req, res) => {
   const { id, sub, email } = req.decoded;
-  console.log('---- req.decoded ----', req.decoded);
+  console.log("---- req.decoded ----", req.decoded);
 
   try {
-    const users = await db.select().from('users').where({ email }).andWhere({ sub }).first()
+    const users = await db
+      .select()
+      .from("users")
+      .where({ email })
+      .andWhere({ sub })
+      .first();
 
     if (users) {
       res.status(200).json(users);
@@ -38,7 +42,9 @@ route.get("/:id", async (req, res) => {
 route.put("/:id", async (req, res) => {
   const { email, sub } = req.body;
   if (email || sub) {
-    return res.status(500).json({ message: 'updating email and sub is not allowed' })
+    return res
+      .status(500)
+      .json({ message: "updating email and sub is not allowed" });
   }
   const id = req.params.id;
   try {

@@ -24,6 +24,11 @@ const update = (tbl, id, item) =>
     .where({ id })
     .update(item);
 
+const updateStripe = (tbl, filter, item) =>
+  db(tbl)
+    .where(filter)
+    .update(item);
+
 const queryByDate = (tbl, started_at, ended_at) =>
   db(tbl)
     .where("created_at", ">=", started_at)
@@ -127,6 +132,7 @@ module.exports = {
   add,
   remove,
   update,
+  updateStripe,
   findAllBy,
   queryByDate,
   analyticsWithPricing,
