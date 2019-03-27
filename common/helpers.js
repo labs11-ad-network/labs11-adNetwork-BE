@@ -90,7 +90,7 @@ const analyticsPerOfferWithPricing = (filter, id, offer_id) =>
   db("analytics as an")
     .join("agreements as ag", "an.agreement_id", "ag.id")
     .join("offers as o", "o.id", "ag.offer_id")
-    .where("offer_id", offer_id)
+    .where("agreement_id", offer_id)
     .andWhere("affiliate_id", id)
     .andWhere("action", filter)
     .select("an.*", "o.price_per_click", "o.price_per_impression");
