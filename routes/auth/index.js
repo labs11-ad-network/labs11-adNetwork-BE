@@ -12,8 +12,8 @@ const db = require('../../data/dbConfig')
 //error Helper 
 const errorHelper = require('../../error-helper/errorHelper')
 
-// @route    GET api/test
-// @desc     get all user testing
+// @route    /api/test
+// @desc     GET all user testing
 // @Access   Public
 route.get("/", authenticate, async (req, res) => {
   const users = await models.get("users");
@@ -24,8 +24,8 @@ route.get("/", authenticate, async (req, res) => {
 });
 
 
-// @route    GET api/auth
-// @desc     Dis is only for tesitng
+// @route    /api/auth
+// @desc     DELETE is only for tesitng
 // @Access   Public
 route.delete("/", async (req, res) => {
   const removedAllUser = await db.del().from("users");
@@ -36,8 +36,8 @@ route.delete("/", async (req, res) => {
 });
 
 
-// @route    GET api/test
-// @desc     signing up user 
+// @route    /api/test//registerV2
+// @desc     POST signing up user 
 // @Access   Public
 route.post("/registerV2", async (req, res) => {
   const { name, email, image_url, nickname, acct_type, phone, sub, stripe_cust_id } = req.body
@@ -69,8 +69,8 @@ route.post("/registerV2", async (req, res) => {
 });
 
 
-// @route    GET /api/auth/register
-// @desc     register user
+// @route    /api/auth/register
+// @desc     POST register user
 // @Access   Public
 route.post("/register", async (req, res) => {
   const { message, isValid } = validateRegister(req.body);
@@ -121,8 +121,8 @@ route.post("/register", async (req, res) => {
   }
 });
 
-// @route    GET /api/auth/login
-// @desc     login user
+// @route    /api/auth/login
+// @desc     POST login user
 // @Access   Public
 route.post("/login", async (req, res) => {
   const { message, isValid } = validateLogin(req.body);

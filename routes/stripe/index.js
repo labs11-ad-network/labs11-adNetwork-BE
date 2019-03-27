@@ -4,10 +4,18 @@ const models = require("../../common/helpers");
 const pubKey = process.env.PUBLIC_KEY;
 const stripe = require("stripe")(process.env.SECRET_KEY);
 const { authenticate } = require("../../common/authentication");
+
+
+// @route    /api/checkout
+// @desc     GET checkout
+// @Access   Public
 route.get("/", (req, res) => {
   res.render("index.pug", { pubKey });
 });
 
+// @route    /api/checkout/create_customer
+// @desc     Post Cosumter/create
+// @Access   Private
 route.post("/create_customer", authenticate, async (req, res) => {
   // Create a one time use token from User Payment Info entered on front end
   try {
@@ -39,6 +47,9 @@ route.post("/create_customer", authenticate, async (req, res) => {
   }
 });
 
+// @route    /api/checkout/charge_customer
+// @desc     POST charge customer
+// @Access   Private
 route.post("/charge_customer", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
