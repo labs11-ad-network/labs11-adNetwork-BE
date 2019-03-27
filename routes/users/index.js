@@ -57,7 +57,7 @@ route.get("/", authenticate, async (req, res) => {
 // @desc     Get user by id 
 // @Access   Private
 route.get("/:id", async (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params
   try {
     const user = await models.findBy("users", { id });
     if (user) {
@@ -87,8 +87,8 @@ route.get("/:id", async (req, res) => {
 // }
 
 route.put("/", authenticate, multipart, async (req, res) => {
+  const { id } = req.decoded
   const { email, sub } = req.body;
-  const { id } = req.params
 
   if (email || sub) {
     return res.status(500).json({ message: 'updating email and sub is not allowed' })
@@ -106,6 +106,7 @@ route.put("/", authenticate, multipart, async (req, res) => {
         ...req.body,
         image_url: result.secure_url
       });
+
       if (success) {
         const user = await models.findBy("users", { id });
         res.status(200).json({ user, message: "User edited successfully." });
@@ -114,9 +115,8 @@ route.put("/", authenticate, multipart, async (req, res) => {
           .status(404)
           .json({ message: "There was an issue editing this user." });
       }
+
     });
-
-
   } catch ({ message }) {
     res.status(500).json({ message });
   }
