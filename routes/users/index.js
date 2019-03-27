@@ -3,6 +3,7 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require('../../common/authentication')
 const db = require('../../data/dbConfig')
+
 const cloudinary = require("cloudinary");
 const multipart = require("connect-multiparty")();
 
@@ -80,7 +81,9 @@ route.put("/", authenticate, multipart, async (req, res) => {
 
 
   if (email || sub) {
-    return res.status(500).json({ message: 'updating email and sub is not allowed' })
+    return res
+      .status(500)
+      .json({ message: "updating email and sub is not allowed" });
   }
 
   // ------------- cloudinary - ---------
