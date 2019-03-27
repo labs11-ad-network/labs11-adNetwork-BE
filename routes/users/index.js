@@ -36,7 +36,6 @@ route.get("/", authenticate, async (req, res) => {
         user.offers = offers.length
         user.ads = ads.length
         user.agreements = acct_type === "affiliate" ? agreements.length : 0
-        user.agreement_test = agreements
 
         return user
       })
