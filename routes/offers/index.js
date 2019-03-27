@@ -19,6 +19,7 @@ route.get("/", authenticate, async (req, res) => {
           .andWhere({ offer_id: allOffer.id });
 
         allOffer.accepted = agreements.length ? true : false;
+        allOffer.agreement_id = agreements.length > 0 ? agreements[0].id : null;
         return allOffer;
       });
 
