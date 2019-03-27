@@ -91,7 +91,7 @@ route.post("/", authenticate, affiliateCheck, async (req, res) => {
   }
 });
 
-// @route    /api/agreements
+// @route    /api/agreements/:id
 // @desc     PUT agreements
 // @Access   Private
 route.put("/:id", authenticate, async (req, res) => {
@@ -120,7 +120,7 @@ route.put("/:id", authenticate, async (req, res) => {
   }
 });
 
-// @route    /api/agreements
+// @route    /api/agreements/:id
 // @desc     delete agreements
 // @Access   Private
 // Postman TESTED
