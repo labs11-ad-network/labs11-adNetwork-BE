@@ -74,33 +74,19 @@ route.get("/:id", async (req, res) => {
 // @route    GET api/users
 // @desc     update user info
 // @Access   Private
-// {
-//   "id": 5,
-//   "name": "John Benedict Miranda",
-//   "email": "jbmiranda22796@gmail.com",
-//   "image_url": "https://lh5.googleusercontent.com/-WTtT3UkmeXQ/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rfpqZdcTynfeLYXn-0kPGHbeWLerA/mo/photo.jpg",
-//   "nickname": "jbmiranda22796",
-//   "sub": "google-oauth2|114122358554022059970",
-//   "acct_type": "advertiser",
-//   "phone": null,
-//   "stripe_cust_id": null
-// }
-
 route.put("/", authenticate, multipart, async (req, res) => {
   const { id } = req.decoded
   const { email, sub } = req.body;
 
+
   if (email || sub) {
     return res.status(500).json({ message: 'updating email and sub is not allowed' })
   }
-  console.log('req.files.path', req.files.image.path);
 
-  try {
-    // ------------- cloudinary - ---------
-    cloudinary.v2.uploader.upload(req.files.image.path, async (error, result) => {
-      if (error) return res.status(500).json({ message: error });
-      console.log('----- result ------', result);
-
+  // ------------- cloudinary - ---------
+  cloudinary.v2.uploader.upload(req.files.image_url.path, async (error, result) => {
+    if (error) return res.status(500).json({ message: error });
+    try {
       // ------------- update - ---------
       const success = await models.update("users", id, {
         ...req.body,
@@ -115,11 +101,10 @@ route.put("/", authenticate, multipart, async (req, res) => {
           .status(404)
           .json({ message: "There was an issue editing this user." });
       }
-
-    });
-  } catch ({ message }) {
-    res.status(500).json({ message });
-  }
+    } catch ({ message }) {
+      res.status(500).json({ message });
+    }
+  });
 });
 
 
