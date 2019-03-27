@@ -1,6 +1,5 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 
 route.post("/", async (req, res) => {
@@ -201,19 +200,6 @@ route.get("/", authenticate, async (req, res) => {
           .analyticsWithPricing(affiliate_id)
           .where("action", "conversion");
 
-        const analyticsForAffiliateImpressions = await models.actionCountAffiliate(
-          affiliate_id,
-          "impression"
-        );
-        const analyticsForAffiliateClicks = await models.actionCountAffiliate(
-          affiliate_id,
-          "click"
-        );
-        const analyticsForAffiliateConversions = await models.actionCountAffiliate(
-          affiliate_id,
-          "conversion"
-        );
-
         const chromeAnalytics = await await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Chrome");
@@ -261,10 +247,6 @@ route.get("/", authenticate, async (req, res) => {
         .analyticsWithPricingAdvertiser(affiliate_id)
         .andWhere("action", "conversion");
 
-      const impressions = await models.actionCount("impression", affiliate_id);
-      const clicks = await models.actionCount("click", affiliate_id);
-      const conversions = await models.actionCount("conversion", affiliate_id);
-
       const chromeAnalytics = await models.browserCountAdvertisers(
         "Chrome",
         affiliate_id
@@ -292,7 +274,7 @@ route.get("/", authenticate, async (req, res) => {
         conversions: analyticsForAdvertisersConversions,
         actionCount: {
           impressions: Number(analyticsForAdvertisersImpressions.length),
-          clicks: Number(analyticsForAdvertisersImpressions.length),
+          clicks: Number(analyticsForAdvertisersClicks.length),
           conversions: Number(analyticsForAdvertisersConversions.length)
         },
         browserCount: {
