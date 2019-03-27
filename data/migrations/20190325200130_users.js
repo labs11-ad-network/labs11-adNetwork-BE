@@ -1,4 +1,4 @@
-exports.up = function (knex, Promise) {
+exports.up = function(knex, Promise) {
   return knex.schema.createTable("users", tbl => {
     tbl.increments();
     tbl.string("name");
@@ -8,12 +8,14 @@ exports.up = function (knex, Promise) {
     tbl.string("sub");
     tbl.string("acct_type");
     tbl.string("phone");
-    tbl.string("stripe_cust_id", 128)
+    tbl.float("amount").defaultTo(0);
+    tbl
+      .string("stripe_cust_id", 128)
       .nullable()
       .unique();
   });
 };
 
-exports.down = function (knex, Promise) {
+exports.down = function(knex, Promise) {
   return knex.schema.dropTableIfExists("users");
 };
