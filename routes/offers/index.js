@@ -1,5 +1,6 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 
 route.get("/", authenticate, async (req, res) => {
@@ -8,6 +9,17 @@ route.get("/", authenticate, async (req, res) => {
   try {
     if (acct_type === "affiliate") {
       const allOffers = await models.get("offers");
+      const acceptedOffers = await models.findAllBy("agreements", {
+        affiliate_id: user_id
+      });
+
+      // before returning all offers
+
+      // check allOffers to see if the agreement has been made
+
+      // if it has add aproperty true
+
+      /// if not still attach a property but false
 
       return res.json(allOffers);
     } else {

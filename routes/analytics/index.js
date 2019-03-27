@@ -31,14 +31,65 @@ route.get("/:id", authenticate, async (req, res) => {
   try {
     if (acct_type === "affiliate") {
       // send the id of an agreeement and get the analytics for that agreement formatter like below
-      const affiliateAnalytics = await db("analytics as an")
-        .join("agreements as ag", "an.agreement_id", "ag.id")
-        .join("offers as o", "o.id", "ag.offer_id")
-        .where("offer_id", id)
-        .andWhere("affiliate_id", user_id)
-        .select("an.*", "o.price_per_click", "o.price_per_impression");
+      const affiliateAnalyticsClicks = await models.analyticsPerOfferWithPricing(
+        "click",
+        user_id,
+        id
+      );
+      const affiliateAnalyticsImpressions = await models.analyticsPerOfferWithPricing(
+        "impression",
+        user_id,
+        id
+      );
+      const affiliateAnalyticsConversions = await models.analyticsPerOfferWithPricing(
+        "conversion",
+        user_id,
+        id
+      );
 
-      res.json(affiliateAnalytics);
+      const chromeCount = await models.browserCountPerOfferAffiliates(
+        "Chrome",
+        user_id,
+        id
+      );
+      const safariCount = await models.browserCountPerOfferAffiliates(
+        "Safari",
+        user_id,
+        id
+      );
+      const firefoxCount = await models.browserCountPerOfferAffiliates(
+        "Firefox",
+        user_id,
+        id
+      );
+      const edgeCount = await models.browserCountPerOfferAffiliates(
+        "Edge",
+        user_id,
+        id
+      );
+      const otherCount = await models.browserCountPerOfferAffiliates(
+        "Other",
+        user_id,
+        id
+      );
+
+      res.json({
+        clicks: affiliateAnalyticsClicks,
+        impressions: affiliateAnalyticsImpressions,
+        conversions: affiliateAnalyticsConversions,
+        actionCount: {
+          impressions: Number(affiliateAnalyticsImpressions.length),
+          clicks: Number(affiliateAnalyticsClicks.length),
+          conversions: Number(affiliateAnalyticsConversions.length)
+        },
+        browserCount: {
+          chrome: chromeCount.length,
+          safari: safariCount.length,
+          edge: edgeCount.length,
+          firefox: firefoxCount.length,
+          other: otherCount.length
+        }
+      });
     } else if (acct_type === "advertiser") {
       // send the id of an offer and get the analytics for that offer formatted like below
       const advertiserAnalytics = await db("analytics as an")
@@ -184,7 +235,7 @@ route.get("/", authenticate, async (req, res) => {
         affiliate_id
       );
       const otherAnalytics = await models.browserCountAdvertisers(
-        "",
+        "Other",
         affiliate_id
       );
 

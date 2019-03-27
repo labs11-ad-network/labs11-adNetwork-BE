@@ -85,6 +85,25 @@ const browserCountAffiliates = (filter, id) =>
     .join("offers as o", "ag.affiliate_id", id)
     // .where("user_id", id)
     .where("browser", filter);
+
+const analyticsPerOfferWithPricing = (filter, id, offer_id) =>
+  db("analytics as an")
+    .join("agreements as ag", "an.agreement_id", "ag.id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("offer_id", offer_id)
+    .andWhere("affiliate_id", id)
+    .andWhere("action", filter)
+    .select("an.*", "o.price_per_click", "o.price_per_impression");
+
+const browserCountPerOfferAffiliates = (filter, id, offer_id) =>
+  db("analytics as an")
+    .join("agreements as ag", "an.agreement_id", "ag.id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("offer_id", offer_id)
+    .andWhere("affiliate_id", id)
+    .andWhere("browser", filter)
+    .select("an.*", "o.price_per_click", "o.price_per_impression");
+
 module.exports = {
   get,
   findBy,
@@ -99,5 +118,7 @@ module.exports = {
   actionCount,
   actionCountAffiliate,
   browserCountAdvertisers,
-  browserCountAffiliates
+  browserCountAffiliates,
+  analyticsPerOfferWithPricing,
+  browserCountPerOfferAffiliates
 };
