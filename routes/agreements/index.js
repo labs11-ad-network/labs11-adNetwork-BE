@@ -1,15 +1,21 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
-const {affiliateCheck} = require('../../common/roleCheck')
-const emailer = require('../../common/mailer')
+const { affiliateCheck } = require("../../common/roleCheck");
+const emailer = require("../../common/mailer");
 
 // Postman TESTED
 route.get("/", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
 
   try {
-    const agreements = await models.findAllBy("agreements", { affiliate_id });
+    // const agreements = await models.findAllBy("agreements", { affiliate_id });
+    const agreements = await db("agreements as ag")
+      .join("offers as o", "ag.offer_id", "o.id")
+      .where("affiliate_id", affiliate_id)
+      .select("ag.*", "o.name");
+
     if (agreements) {
       res.status(200).json(agreements);
     } else {
@@ -48,9 +54,7 @@ route.post("/", authenticate, affiliateCheck, async (req, res) => {
   const affiliate_id = req.decoded.id;
   if (!req.body.hasOwnProperty("offer_id")) {
     res.status(400).json({ message: "Required information is missing." });
-
   }
-
 
   try {
     const [id] = await models.add("agreements", {
@@ -59,9 +63,11 @@ route.post("/", authenticate, affiliateCheck, async (req, res) => {
     });
     if (id) {
       const agreement = await models.findBy("agreements", { id });
-      const { email } = await models.getAdvertiserEmail(req.body.offer_id).first()
+      const { email } = await models
+        .getAdvertiserEmail(req.body.offer_id)
+        .first();
 
-      emailer(res, email)
+      emailer(res, email);
 
       res.status(201).json(agreement);
     } else {
@@ -76,7 +82,6 @@ route.post("/", authenticate, affiliateCheck, async (req, res) => {
 
 route.put("/:id", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
-
 
   const id = req.params.id;
   try {

@@ -5,7 +5,7 @@ const get = tbl => db(tbl);
 const findBy = (tbl, filter) =>
   db(tbl)
     .where(filter)
-    .first()
+    .first();
 
 const findAllBy = (tbl, filter) => db(tbl).where(filter);
 

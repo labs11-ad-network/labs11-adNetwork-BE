@@ -3,7 +3,6 @@ const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 
-
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   const { acct_type } = req.decoded;
@@ -13,18 +12,21 @@ route.get("/", authenticate, async (req, res) => {
 
       //before reutrnin all offers
       const results = await allOffers.map(async allOffer => {
-        let agreements = await db.select().from('agreements').where({ affiliate_id: user_id }).andWhere({ offer_id: allOffer.id })
+        let agreements = await db
+          .select()
+          .from("agreements")
+          .where({ affiliate_id: user_id })
+          .andWhere({ offer_id: allOffer.id });
 
-        allOffer.accepted = agreements.length ? true : false
-        return allOffer
-      })
-
+        allOffer.accepted = agreements.length ? true : false;
+        allOffer.agreement_id = agreements.length > 0 ? agreements[0].id : null;
+        return allOffer;
+      });
 
       Promise.all(results).then(compeleted => {
-        allOffers = compeleted
+        allOffers = compeleted;
         return res.status(200).json(allOffers);
-      })
-
+      });
     } else {
       const offers = await models
         .findAllBy("offers", { user_id })
