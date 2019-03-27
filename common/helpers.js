@@ -121,7 +121,6 @@ const analyticsPerOfferAdvertisersBrowsers = (filter, id, offer_id) =>
     .andWhere("user_id", id)
     .andWhere("browser", filter)
     .select("an.*", "o.price_per_click", "o.price_per_impression");
-
 module.exports = {
   get,
   findBy,

@@ -8,20 +8,24 @@ route.get("/", authenticate, async (req, res) => {
   const { acct_type } = req.decoded;
   try {
     if (acct_type === "affiliate") {
-      const allOffers = await models.get("offers");
-      const acceptedOffers = await models.findAllBy("agreements", {
-        affiliate_id: user_id
+      let allOffers = await models.get("offers");
+
+      //before reutrnin all offers
+      const results = await allOffers.map(async allOffer => {
+        let agreements = await db
+          .select()
+          .from("agreements")
+          .where({ affiliate_id: user_id })
+          .andWhere({ offer_id: allOffer.id });
+
+        allOffer.accepted = agreements.length ? true : false;
+        return allOffer;
       });
 
-      // before returning all offers
-
-      // check allOffers to see if the agreement has been made
-
-      // if it has add aproperty true
-
-      /// if not still attach a property but false
-
-      return res.json(allOffers);
+      Promise.all(results).then(compeleted => {
+        allOffers = compeleted;
+        return res.status(200).json(allOffers);
+      });
     } else {
       const offers = await models
         .findAllBy("offers", { user_id })
