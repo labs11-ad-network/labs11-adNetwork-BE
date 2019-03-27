@@ -2,6 +2,12 @@ const route = require("express").Router()
 const models = require("../../common/helpers")
 const { authenticate } = require("../../common/authentication");
 
+
+
+
+// @route    /api/advertisers
+// @desc     GET advertiser
+// @Access   Public
 route.get('/', async (req, res) => {
   try {
     const advertisers = await models.findAllBy('users', { acct_type: 'advertiser' })
@@ -15,6 +21,9 @@ route.get('/', async (req, res) => {
   }
 })
 
+// @route    /api/advertisers
+// @desc     GET advertiser by id
+// @Access   private
 route.get('/:id', authenticate, async (req, res) => {
   const id = req.decoded.id
   try {
@@ -31,6 +40,9 @@ route.get('/:id', authenticate, async (req, res) => {
   }
 })
 
+// @route    /api/advertisers/:id
+// @desc     PUT advertiser by id
+// @Access   Public
 route.put('/:id', async (req, res) => {
   const id = req.params.id
   try {
@@ -46,6 +58,9 @@ route.put('/:id', async (req, res) => {
   }
 })
 
+// @route    /api/advertisers/:id
+// @desc     DELETE advertiser by id
+// @Access   Public
 route.delete('/:id', async (req, res) => {
   const id = req.params.id
   try {
