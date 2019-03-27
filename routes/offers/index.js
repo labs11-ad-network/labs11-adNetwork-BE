@@ -1,5 +1,6 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 const db = require('../../data/dbConfig')
 
