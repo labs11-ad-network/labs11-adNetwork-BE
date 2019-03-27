@@ -2,6 +2,11 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
 
+
+
+// @route    /api/offers
+// @desc     GET offers
+// @Access   Private
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   const { acct_type } = req.decoded;
@@ -28,8 +33,9 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
-
-
+// @route    /api/offers/:id
+// @desc     GET offers
+// @Access   Private
 route.get("/:id", authenticate, async (req, res) => {
   const id = req.params.id;
   try {
@@ -44,6 +50,9 @@ route.get("/:id", authenticate, async (req, res) => {
   }
 });
 
+// @route    /api/offers
+// @desc     POST offers
+// @Access   Private
 route.post("/", authenticate, async (req, res) => {
   // Make sure to stop any attempts to create any info with IDs or timestamps
   const user_id = req.decoded.id;
@@ -74,7 +83,9 @@ route.post("/", authenticate, async (req, res) => {
     res.status(500).json({ message });
   }
 });
-
+// @route    /api/offers/:id
+// @desc     PUT offers
+// @Access   Private
 route.put("/:id", authenticate, async (req, res) => {
   const id = req.params.id;
   const user_id = req.decoded.id;
@@ -104,7 +115,9 @@ route.put("/:id", authenticate, async (req, res) => {
     res.status(500).json({ message });
   }
 });
-
+// @route    /api/offers
+// @desc     DELETE offers
+// @Access   Private
 route.delete("/:id", authenticate, async (req, res) => {
   const id = req.params.id;
   const user_id = req.decoded.id;
