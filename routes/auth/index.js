@@ -36,8 +36,6 @@ route.delete("/", async (req, res) => {
 });
 
 
-
-
 // @route    GET api/test
 // @desc     signing up user 
 // @Access   Public
