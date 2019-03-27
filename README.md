@@ -11,6 +11,8 @@
  - [Summary Table of API Endpoints](#summary-table-of-api-endpoints)
    - [Register](#register-schema)
    - [️DB Schema](#️db-schema)
+   - [️Users](#users)
+   - [Offers](#offers)
 
 
 
@@ -18,6 +20,11 @@
 | Type   | Endpoints            | Description   |
 | ------ | -------------------- | ------------- |
 | POST   | /api/auth/registerV2 | Register User |
+| GET    | /api/api/users       | Get User Info |
+| GET    | /api/api/users/:id   | Register User |
+| POST   | /api/api/users       | Register User |
+| PUT    | /api/api/users/:id   | Register User |
+| DELETE | /api/api/users/:id   | Register User |
 | GET    | /api/offers          | Register User |
 | GET    | /api/offers/:id      | Register User |
 | POST   | /api/offers          | Register User |
@@ -42,6 +49,54 @@
 ```
 #### Register and Login Options
 ![](assets/loginoptions.png)
+
+
+
+#### Users
+`GET 200 success ✅`
+```
+{
+    "id": 2,
+    "name": "Lad Network",
+    "email": "LadNetwork@live.com",
+    "image_url": "https://avatars0.githubusercontent.com/u/123323?v=4",
+    "nickname": "Lad",
+    "sub": "github|12533103",
+    "acct_type": "affiliate",
+    "phone": null,
+    "stripe_cust_id": null
+}
+```
+ 
+#### Offers 
+`GET 200 success ✅`
+```
+  [
+    {
+        "id": 1,
+        "price_per_click": 0.05,
+        "price_per_impression": 0.001,
+        "num_applicants": 0,
+        "budget": 56000,
+        "name": "Bananas",
+        "description": "The best bananas in town",
+        "category": "Health + Wellness",
+        "currency": "USD",
+        "status": true,
+        "user_id": 1,
+        "created_at": "2019-03-26T16:47:19.087Z",
+        "updated_at": "2019-03-26T16:47:19.087Z"
+    }
+  ]
+```
+`500 error ❌ `
+```
+  {
+    "message": {
+        "message": "Invalid token specified: Unexpected token \u0007 in JSON at position 278"
+    }
+}
+```
 
 
 #### ️DB Schema
