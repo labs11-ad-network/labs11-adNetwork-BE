@@ -92,14 +92,65 @@ route.get("/:id", authenticate, async (req, res) => {
       });
     } else if (acct_type === "advertiser") {
       // send the id of an offer and get the analytics for that offer formatted like below
-      const advertiserAnalytics = await db("analytics as an")
-        .join("agreements as ag", "an.agreement_id", "ag.id")
-        .join("offers as o", "o.id", "ag.offer_id")
-        .where("offer_id", id)
-        .andWhere("user_id", user_id)
-        .select("an.*", "o.price_per_click", "o.price_per_impression");
+      const affiliateAnalyticsClicks = await models.analyticsPerOfferAdvertisers(
+        "click",
+        user_id,
+        id
+      );
+      const affiliateAnalyticsImpressions = await models.analyticsPerOfferAdvertisers(
+        "impression",
+        user_id,
+        id
+      );
+      const affiliateAnalyticsConversions = await models.analyticsPerOfferAdvertisers(
+        "conversion",
+        user_id,
+        id
+      );
 
-      res.json(advertiserAnalytics);
+      const chromeCount = await models.analyticsPerOfferAdvertisersBrowsers(
+        "Chrome",
+        user_id,
+        id
+      );
+      const safariCount = await models.analyticsPerOfferAdvertisersBrowsers(
+        "Safari",
+        user_id,
+        id
+      );
+      const firefoxCount = await models.analyticsPerOfferAdvertisersBrowsers(
+        "Firefox",
+        user_id,
+        id
+      );
+      const edgeCount = await models.analyticsPerOfferAdvertisersBrowsers(
+        "Edge",
+        user_id,
+        id
+      );
+      const otherCount = await models.analyticsPerOfferAdvertisersBrowsers(
+        "Other",
+        user_id,
+        id
+      );
+
+      res.json({
+        clicks: affiliateAnalyticsClicks,
+        impressions: affiliateAnalyticsImpressions,
+        conversions: affiliateAnalyticsConversions,
+        actionCount: {
+          impressions: Number(affiliateAnalyticsImpressions.length),
+          clicks: Number(affiliateAnalyticsClicks.length),
+          conversions: Number(affiliateAnalyticsConversions.length)
+        },
+        browserCount: {
+          chrome: chromeCount.length,
+          safari: safariCount.length,
+          edge: edgeCount.length,
+          firefox: firefoxCount.length,
+          other: otherCount.length
+        }
+      });
     }
   } catch ({ message }) {
     res.status(500).json({ message });
