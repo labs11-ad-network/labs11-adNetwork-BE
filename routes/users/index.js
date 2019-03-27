@@ -23,6 +23,7 @@ route.get("/", authenticate, async (req, res) => {
 
   try {
     let users = await db.select().from('users').where({ email }).andWhere({ sub })
+
     if (users) {
       const result = await users.map(async (user) => {
         const offers = await db.select().from('offers');
@@ -43,7 +44,7 @@ route.get("/", authenticate, async (req, res) => {
 
       Promise.all(result).then(completed => {
         users = completed
-        res.status(200).json(users);
+        res.status(200).json(users[0]);
       })
 
     } else {
