@@ -2,7 +2,7 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
-const db = require('../../data/dbConfig')
+
 
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
