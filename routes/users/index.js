@@ -6,7 +6,6 @@ const db = require('../../data/dbConfig')
 
 route.get("/", authenticate, async (req, res) => {
   const { id, sub, email } = req.decoded;
-  console.log('---- req.decoded ----', req.decoded);
 
   try {
     const users = await db.select().from('users').where({ email }).andWhere({ sub }).first()
@@ -56,9 +55,12 @@ route.put("/:id", async (req, res) => {
   }
 });
 
-route.delete("/:id", async (req, res) => {
+route.delete("/:id", authenticate, async (req, res) => {
   const id = req.params.id;
   try {
+    if (id !== req.decoded.id) {
+      return res.status(500).json({ message: "You cannot delete someone account" })
+    }
     const success = await models.remove("users", id);
     if (success) {
       res.status(200).json({ message: "User deleted successfully." });
