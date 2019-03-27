@@ -35,12 +35,12 @@ route.get("/:id", async (req, res) => {
   }
 });
 
-route.put("/:id", async (req, res) => {
+route.put("/", async (req, res) => {
   const { email, sub } = req.body;
+  const { id } = req.decoded
   if (email || sub) {
     return res.status(500).json({ message: 'updating email and sub is not allowed' })
   }
-  const id = req.params.id;
   try {
     const success = await models.update("users", id, { ...req.body });
     if (success) {
