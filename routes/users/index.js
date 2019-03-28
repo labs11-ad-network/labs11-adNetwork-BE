@@ -24,16 +24,18 @@ route.get("/", authenticate, async (req, res) => {
       .from("users")
       .where({ email })
       .andWhere({ sub });
+
     if (users) {
       const result = await users.map(async user => {
-        const offers = await db.select().from("offers");
-        const ads = await db.select().from("ads");
-        let agreements = await db
-          .select()
-          .from("agreements")
-          .where({ affiliate_id: id })
-          .andWhere({ offer_id: user.id });
+        let offers = await db.select().from("offers").where({ user_id:user.id });
+        const ads = await db.select().from("ads").where({ user_id:user.id });
+        const agreements = await db.select('ag.*', 'o.id as test_id').from('agreements as ag')
+                                            .join('offers as o','o.id','ag.offer_id' )
+                                            .where({affiliate_id: user.id})
+                                            // .where({offer_id: o.id})
 
+
+        user.agreements = agreements
         user.offers = offers.length;
         user.ads = ads.length;
         user.agreements = acct_type === "affiliate" ? agreements.length : 0;
