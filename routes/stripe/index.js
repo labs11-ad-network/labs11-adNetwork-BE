@@ -52,9 +52,8 @@ route.post("/charge_customer", authenticate, async (req, res) => {
       description: "Your payment receipt from the LAD Network"
     });
 
-    const user = await models.findBy("users", { id: req.decoded.id });
-    const clearBalance = await models.update("users", req.decoded.id, {
-      amount: user.amount + charge.amount
+    await models.update("users", req.decoded.id, {
+      amount: 0
     });
     res.status(200).json(charge);
   } catch ({ message }) {
