@@ -66,6 +66,26 @@
     "stripe_cust_id": null
 }
 ```
+
+`PUT 200 success ✅`
+```
+{
+    "user": {
+        "id": 4,
+        "name": "John Benedict Miranda",
+        "email": "jbmiranda22796@gmail.com",
+        "image_url": "https://res.cloudinary.com/dxvyzmvhi/image/upload/v1553732723/gbztktrfwkdrogomhgle.jpg",
+        "nickname": "jb",
+        "sub": "google-oauth2|114122358554022059970",
+        "acct_type": "affiliate",
+        "phone": null,
+        "amount": 0,
+        "stripe_cust_id": null
+    },
+    "message": "User edited successfully."
+}
+```
+
 #### Offers 
 `GET 200 success ✅`
 ```
