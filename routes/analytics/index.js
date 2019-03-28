@@ -3,6 +3,14 @@ const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 
+
+
+
+
+
+// @route    /api/analytics
+// @desc     POST analytics
+// @Access   Public
 route.post("/", async (req, res) => {
   const { action, browser, ip, referrer, agreement_id } = req.body;
 
@@ -63,6 +71,9 @@ route.post("/", async (req, res) => {
   }
 });
 
+// @route    /api/analytics/:id
+// @desc     GET analytics
+// @Access   Private
 route.get("/:id", authenticate, async (req, res) => {
   const { id } = req.params;
   const user_id = req.decoded.id;
@@ -197,6 +208,9 @@ route.get("/:id", authenticate, async (req, res) => {
   }
 });
 
+// @route    /api/analytics
+// @desc     analytics
+// @Access   Private
 route.get("/", authenticate, async (req, res) => {
   // Current logged in user
   const affiliate_id = req.decoded.id;

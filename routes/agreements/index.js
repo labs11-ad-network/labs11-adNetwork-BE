@@ -5,6 +5,11 @@ const { authenticate } = require("../../common/authentication");
 const { affiliateCheck } = require("../../common/roleCheck");
 const emailer = require("../../common/mailer");
 
+
+
+// @route    /api/agreements
+// @desc     GET agreements
+// @Access   Private
 // Postman TESTED
 route.get("/", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
@@ -28,6 +33,9 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
+// @route    /api/agreements/:id
+// @desc     GET
+// @Access   Private
 // Postman TESTED
 route.get("/:id", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
@@ -50,6 +58,9 @@ route.get("/:id", authenticate, async (req, res) => {
 // whether req.decoded.id is affiliate_id or advertiser_id
 // Postman TESTED
 
+// @route    /api/agreements
+// @desc     post agreements
+// @Access   PRivate
 route.post("/", authenticate, affiliateCheck, async (req, res) => {
   const affiliate_id = req.decoded.id;
   if (!req.body.hasOwnProperty("offer_id")) {
@@ -80,6 +91,9 @@ route.post("/", authenticate, affiliateCheck, async (req, res) => {
   }
 });
 
+// @route    /api/agreements/:id
+// @desc     PUT agreements
+// @Access   Private
 route.put("/:id", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
 
@@ -106,6 +120,9 @@ route.put("/:id", authenticate, async (req, res) => {
   }
 });
 
+// @route    /api/agreements/:id
+// @desc     delete agreements
+// @Access   Private
 // Postman TESTED
 route.delete("/:id", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
