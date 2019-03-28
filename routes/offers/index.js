@@ -33,9 +33,18 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 // @route    /api/offers/:id
 // @desc     GET offers
 // @Access   Private
+=======
+<<<<<<< HEAD
+// @route    /api/offers/:id
+// @desc     GET offers
+// @Access   Private
+=======
+>>>>>>> 44f41ef4a73f02da6c8baf92ffb4cfb502434c2f
+>>>>>>> master
 route.get("/:id", authenticate, async (req, res) => {
   const id = req.params.id;
   try {

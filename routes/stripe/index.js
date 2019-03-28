@@ -6,12 +6,7 @@ const stripe = require("stripe")(process.env.SECRET_KEY);
 const { authenticate } = require("../../common/authentication");
 
 
-// @route    /api/checkout
-// @desc     GET checkout
-// @Access   Public
-route.get("/", (req, res) => {
-  res.render("index.pug", { pubKey });
-});
+
 
 // @route    /api/checkout/create_customer
 // @desc     Post Cosumter/create
@@ -47,6 +42,7 @@ route.post("/create_customer", authenticate, async (req, res) => {
     res.status(404).json({ message });
   }
 });
+
 
 // @route    /api/checkout/charge_customer
 // @desc     POST charge customer
@@ -102,7 +98,7 @@ route.get("/payout", authenticate, async (req, res) => {
   try {
     await stripe.payouts.list(
       {
-        limit: 3
+        limit: 10
       },
       (err, payouts) => {
         if (err) return res.status(500).json({ message: err });
@@ -113,5 +109,28 @@ route.get("/payout", authenticate, async (req, res) => {
   } catch ({ message }) {}
 });
 
+route.get("/payments", authenticate, async (req, res) => {
+  const _customer = await models.findBy("users", { id: req.decoded.id });
+
+  try {
+    await stripe.charges.list(
+      {
+        limit: 10
+      },
+      (err, charges) => {
+        if (err) return res.status(500).json({ message: err });
+        const chargesHolder = [];
+        charges.data.map(charge => {
+          if (charge.customer === _customer.stripe_cust_id) {
+            chargesHolder.push(charge);
+          }
+        });
+        res.json(chargesHolder);
+      }
+    );
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
 //Stripe apparently handles source updating for bank cards on their own so we'll leave that lone
 module.exports = route;

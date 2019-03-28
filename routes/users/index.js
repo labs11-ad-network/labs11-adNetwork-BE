@@ -12,7 +12,10 @@ cloudinary.config({
   api_secret: "Jf7IESazEon7JKlD9dd8fkMgESk"
 });
 
-// @route    GET api/users
+
+
+
+// @route     /api/users
 // @desc     Get current user
 // @Access   Private
 route.get("/", authenticate, async (req, res) => {
@@ -34,6 +37,9 @@ route.get("/", authenticate, async (req, res) => {
                                             .where({affiliate_id: user.id})
                                             // .where({offer_id: o.id})
 
+        user.offers = offers.length;
+        user.ads = ads.length;
+        user.agreements = acct_type === "affiliate" ? agreements.length : 0;
 
         user.agreements = agreements
         user.offers = offers.length;
@@ -72,8 +78,10 @@ route.get("/:id", async (req, res) => {
   }
 });
 
-// @route    GET api/users
-// @desc     update user info
+
+
+// @route     /api/users
+// @desc     PUT user info
 // @Access   Private
 route.put("/", authenticate, multipart, async (req, res) => {
   const { id } = req.decoded;
@@ -126,9 +134,10 @@ route.put("/", authenticate, multipart, async (req, res) => {
   }
 });
 
-// @route    GET api/user
-// @desc     delete user account
-// @Access   Public
+
+// @route    /api/user
+// @desc     Delete user account
+// @Access   Private
 route.delete("/", authenticate, async (req, res) => {
   const { id } = req.decoded;
   try {
