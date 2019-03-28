@@ -16,7 +16,8 @@ route.post("/create_customer", authenticate, async (req, res) => {
       coupon: req.body.coupon || null,
       email: req.body.stripeEmail || req.decoded.email,
       description:
-        req.body.description || `Stripe Account for ${req.body.stripeEmail || req.decoded.email}`,
+        req.body.description ||
+        `Stripe Account for ${req.body.stripeEmail || req.decoded.email}`,
       source: req.body.stripeToken || "tok_visa"
     });
 
@@ -49,6 +50,10 @@ route.post("/charge_customer", authenticate, async (req, res) => {
       customer: _customer.stripe_cust_id,
       receipt_email: _customer.email,
       description: "Your payment receipt from the LAD Network"
+    });
+
+    await models.update("users", req.decoded.id, {
+      amount: 0
     });
     res.status(200).json(charge);
   } catch ({ message }) {
