@@ -61,5 +61,29 @@ route.post("/charge_customer", authenticate, async (req, res) => {
   }
 });
 
+route.post("/payout", authenticate, async (req, res) => {
+  const _customer = await models.findBy("users", { id: req.decoded.id });
+
+  try {
+    await stripe.payouts.create(
+      {
+        amount: Math.floor(_customer.amount * 100) || 0,
+        currency: "usd"
+      },
+      async (err, payout) => {
+        if (err) return res.status(500).json({ message: err });
+
+        const success = await models.update("users", req.decoded.id, {
+          amount: 0
+        });
+
+        res.json(payout);
+      }
+    );
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
+
 //Stripe apparently handles source updating for bank cards on their own so we'll leave that lone
 module.exports = route;
