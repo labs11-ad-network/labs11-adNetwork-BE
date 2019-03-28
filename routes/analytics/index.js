@@ -1,5 +1,6 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 
 
@@ -23,6 +24,46 @@ route.post("/", async (req, res) => {
     });
     if (!enterAction)
       return res.status(400).json({ message: "Failed to add action" });
+
+    const payments = await db("agreements as ag")
+      .join("offers as o", "ag.offer_id", "o.id")
+      .join("analytics as an", "ag.id", "an.agreement_id")
+      .select(
+        "ag.*",
+        "o.user_id",
+        "o.price_per_impression",
+        "o.price_per_click",
+        "an.*"
+      );
+
+    payments.map(async user => {
+      console.log(user);
+
+      const advertiser = await models.findBy("users", { id: user.user_id });
+      const affiliate = await models.findBy("users", { id: user.affiliate_id });
+
+      if (action === "impression") {
+        // advertiser
+        await models.update("users", user.user_id, {
+          amount: advertiser.amount - user.price_per_impression
+        });
+
+        // affiliate
+        await models.update("users", user.affiliate_id, {
+          amount: affiliate.amount + user.price_per_impression
+        });
+      } else if (action === "click") {
+        // advertiser
+        await models.update("users", user.user_id, {
+          amount: advertiser.amount - user.price_per_click
+        });
+
+        // affiliate
+        await models.update("users", user.affiliate_id, {
+          amount: affiliate.amount + user.price_per_click
+        });
+      }
+    });
     const analytics = await models.findBy("analytics", { id: enterAction });
     res.json(analytics);
   } catch ({ message }) {

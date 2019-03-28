@@ -24,7 +24,8 @@ route.post("/create_customer", authenticate, async (req, res) => {
       coupon: req.body.coupon || null,
       email: req.body.stripeEmail || req.decoded.email,
       description:
-        req.body.description || `Stripe Account for ${req.body.stripeEmail || req.decoded.email}`,
+        req.body.description ||
+        `Stripe Account for ${req.body.stripeEmail || req.decoded.email}`,
       source: req.body.stripeToken || "tok_visa"
     });
 
@@ -55,16 +56,61 @@ route.post("/charge_customer", authenticate, async (req, res) => {
 
   try {
     const charge = await stripe.charges.create({
-      amount: req.body.amount || 100,
+      amount: Math.floor(Math.abs(_customer.amount) * 100) || 0,
       currency: "usd",
       customer: _customer.stripe_cust_id,
       receipt_email: _customer.email,
       description: "Your payment receipt from the LAD Network"
     });
+
+    await models.update("users", req.decoded.id, {
+      amount: 0
+    });
     res.status(200).json(charge);
   } catch ({ message }) {
     res.status(500).json({ message });
   }
+});
+
+route.post("/payout", authenticate, async (req, res) => {
+  const _customer = await models.findBy("users", { id: req.decoded.id });
+
+  try {
+    await stripe.payouts.create(
+      {
+        amount: Math.floor(_customer.amount * 100) || 0,
+        currency: "usd"
+      },
+      async (err, payout) => {
+        if (err) return res.status(500).json({ message: err });
+
+        const success = await models.update("users", req.decoded.id, {
+          amount: 0
+        });
+
+        res.json(payout);
+      }
+    );
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
+
+route.get("/payout", authenticate, async (req, res) => {
+  const _customer = await models.findBy("users", { id: req.decoded.id });
+
+  try {
+    await stripe.payouts.list(
+      {
+        limit: 3
+      },
+      (err, payouts) => {
+        if (err) return res.status(500).json({ message: err });
+
+        res.json({ _customer, payouts });
+      }
+    );
+  } catch ({ message }) {}
 });
 
 //Stripe apparently handles source updating for bank cards on their own so we'll leave that lone
