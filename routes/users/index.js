@@ -37,11 +37,7 @@ route.get("/", authenticate, async (req, res) => {
                                             .where({affiliate_id: user.id})
                                             // .where({offer_id: o.id})
 
-        user.offers = offers.length;
-        user.ads = ads.length;
-        user.agreements = acct_type === "affiliate" ? agreements.length : 0;
-
-        user.agreements = agreements
+        
         user.offers = offers.length;
         user.ads = ads.length;
         user.agreements = acct_type === "affiliate" ? agreements.length : 0;
