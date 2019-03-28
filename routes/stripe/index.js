@@ -4,18 +4,24 @@ const models = require("../../common/helpers");
 const pubKey = process.env.PUBLIC_KEY;
 const stripe = require("stripe")(process.env.SECRET_KEY);
 const { authenticate } = require("../../common/authentication");
+<<<<<<< HEAD
 
 
 // @route    /api/checkout
 // @desc     GET checkout
 // @Access   Public
+=======
+>>>>>>> 44f41ef4a73f02da6c8baf92ffb4cfb502434c2f
 route.get("/", (req, res) => {
   res.render("index.pug", { pubKey });
 });
 
+<<<<<<< HEAD
 // @route    /api/checkout/create_customer
 // @desc     Post Cosumter/create
 // @Access   Private
+=======
+>>>>>>> 44f41ef4a73f02da6c8baf92ffb4cfb502434c2f
 route.post("/create_customer", authenticate, async (req, res) => {
   // Create a one time use token from User Payment Info entered on front end
   try {
@@ -48,9 +54,12 @@ route.post("/create_customer", authenticate, async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 // @route    /api/checkout/charge_customer
 // @desc     POST charge customer
 // @Access   Private
+=======
+>>>>>>> 44f41ef4a73f02da6c8baf92ffb4cfb502434c2f
 route.post("/charge_customer", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
@@ -115,5 +124,8 @@ route.get("/payout", authenticate, async (req, res) => {
 
 //Stripe apparently handles source updating for bank cards on their own so we'll leave that lone
 module.exports = route;
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 44f41ef4a73f02da6c8baf92ffb4cfb502434c2f
