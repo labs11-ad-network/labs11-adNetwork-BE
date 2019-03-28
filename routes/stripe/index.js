@@ -45,7 +45,7 @@ route.post("/charge_customer", authenticate, async (req, res) => {
 
   try {
     const charge = await stripe.charges.create({
-      amount: req.body.amount > 0 || 0,
+      amount: req.body.amount || 0,
       currency: "usd",
       customer: _customer.stripe_cust_id,
       receipt_email: _customer.email,
