@@ -1,19 +1,16 @@
-const route = require("express").Router();
-const models = require("../../common/helpers");
-const { authenticate } = require("../../common/authentication");
-const db = require("../../data/dbConfig");
-
 const cloudinary = require("cloudinary");
 const multipart = require("connect-multiparty")();
+const route = require("express").Router();
+const models = require("../../common/helpers");
+const db = require("../../data/dbConfig");
+
+const { authenticate } = require("../../common/authentication");
 
 cloudinary.config({
-  cloud_name: "dxvyzmvhi",
-  api_key: "672796748434519",
-  api_secret: "Jf7IESazEon7JKlD9dd8fkMgESk"
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_PUBKEY,
+  api_secret: process.env.CLOUDINARY_SECRET
 });
-
-
-
 
 // @route     /api/users
 // @desc     Get current user
@@ -33,11 +30,9 @@ route.get("/", authenticate, async (req, res) => {
         let offers = await db.select().from("offers").where({ user_id:user.id });
         const ads = await db.select().from("ads").where({ user_id:user.id });
         const agreements = await db.select('ag.*', 'o.id as test_id').from('agreements as ag')
-                                            .join('offers as o','o.id','ag.offer_id' )
-                                            .where({affiliate_id: user.id})
-                                            // .where({offer_id: o.id})
-
-        
+                                   .join('offers as o','o.id','ag.offer_id' )
+                                   .where({affiliate_id: user.id})
+                                         
         user.offers = offers.length;
         user.ads = ads.length;
         user.agreements = acct_type === "affiliate" ? agreements.length : 0;
@@ -49,6 +44,7 @@ route.get("/", authenticate, async (req, res) => {
         users = completed;
         res.status(200).json(users[0]);
       });
+      
     } else {
       res.status(500).json({ message: "Users do not exist." });
     }
