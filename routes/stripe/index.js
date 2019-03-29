@@ -1,18 +1,15 @@
 require("dotenv").config();
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const pubKey = process.env.PUBLIC_KEY;
 const stripe = require("stripe")(process.env.SECRET_KEY);
+
 const { authenticate } = require("../../common/authentication");
-
-
 
 
 // @route    /api/checkout/create_customer
 // @desc     Post Cosumter/create
 // @Access   Private
 route.post("/create_customer", authenticate, async (req, res) => {
-  // Create a one time use token from User Payment Info entered on front end
   try {
     const customer = await stripe.customers.create({
       account_balance: req.body.amount || 0,
@@ -68,6 +65,9 @@ route.post("/charge_customer", authenticate, async (req, res) => {
   }
 });
 
+// @route    /api/checkout/payout
+// @desc     POST payout customer (affiliate)
+// @Access   Private
 route.post("/payout", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
@@ -92,6 +92,10 @@ route.post("/payout", authenticate, async (req, res) => {
   }
 });
 
+
+// @route    /api/checkout/payout
+// @desc     GET payouts for customer
+// @Access   Private
 route.get("/payout", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
@@ -106,9 +110,15 @@ route.get("/payout", authenticate, async (req, res) => {
         res.json({ _customer, payouts });
       }
     );
-  } catch ({ message }) {}
+  } catch ({ message }) {
+    res.json({ message })
+  }
 });
 
+
+// @route    /api/checkout/payments
+// @desc     GET charge customer (advertiser)
+// @Access   Private
 route.get("/payments", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
@@ -132,5 +142,5 @@ route.get("/payments", authenticate, async (req, res) => {
     res.status(500).json({ message });
   }
 });
-//Stripe apparently handles source updating for bank cards on their own so we'll leave that lone
+
 module.exports = route;
