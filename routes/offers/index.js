@@ -30,6 +30,7 @@ route.get("/", authenticate, async (req, res) => {
         allOffers = compeleted;
         return res.status(200).json(allOffers);
       });
+      
     } else {
       const offers = await models
         .findAllBy("offers", { user_id })
