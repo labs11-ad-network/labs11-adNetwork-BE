@@ -75,7 +75,7 @@ route.delete("/:id", authenticate, async (req, res) => {
   try {
     const adCheck = await models.findBy("ads", { id, user_id });
 
-    if (!adCheck.length)
+    if (!adCheck)
       return res
         .status(401)
         .json({ message: "You can not delete someone else's ad" });
