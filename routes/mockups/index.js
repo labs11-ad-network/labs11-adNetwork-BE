@@ -80,7 +80,7 @@ route.delete("/:id", authenticate, async (req, res) => {
         .status(401)
         .json({ message: "You can not delete someone else's ad" });
 
-    const deleteAd = await models.remove("ads", id);
+    const deleteAd = await models.removeAd("ads", { id, user_id });
     if (!deleteAd)
       return res.status(400).json({ message: "Failed to delete ad" });
     res.json({ success: true, id });
