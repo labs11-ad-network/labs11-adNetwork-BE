@@ -4,6 +4,15 @@ const { authenticate } = require("../../common/authentication");
 const db = require("../../data/dbConfig");
 const cloudinary = require("cloudinary");
 const multipart = require("connect-multiparty")();
+const Pusher = require("pusher");
+
+const pusher = new Pusher({
+  appId: "748991",
+  key: "633e24acba0ede9fb4e7",
+  secret: "68901628f5a92f487c01",
+  cluster: "us2",
+  encrypted: true
+});
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -99,11 +108,14 @@ route.get("/myads", authenticate, async (req, res) => {
 // @Access   Public
 route.get("/:id", async (req, res) => {
   const { id } = req.params;
-
+  pusher.trigger(
+    "offers",
+    "disabled-offer",
+    "Is this where it is coming from?"
+  );
   try {
     // const ad = await db.select('a.*', 'ag.*').from('ads as a').join('agreements as ag', 'ag.offer_id', 'a.offer_id')
     const ad = await models.findBy("ads", { id });
-    console.log({ ad });
     if (!ad) return res.status(404).json({ message: "No ads found" });
     res.json(ad);
   } catch (error) {

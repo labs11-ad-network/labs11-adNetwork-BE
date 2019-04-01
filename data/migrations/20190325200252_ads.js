@@ -4,6 +4,7 @@ exports.up = function(knex, Promise) {
     tbl.string("name").nullable();
     tbl.string("destination_url").nullable();
     tbl.boolean("active").defaultTo(false);
+    tbl.string("size").notNullable();
     tbl
       .integer("offer_id")
       .unsigned()

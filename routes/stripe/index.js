@@ -5,7 +5,6 @@ const stripe = require("stripe")(process.env.SECRET_KEY);
 
 const { authenticate } = require("../../common/authentication");
 
-
 // @route    /api/checkout/create_customer
 // @desc     Post Cosumter/create
 // @Access   Private
@@ -40,7 +39,6 @@ route.post("/create_customer", authenticate, async (req, res) => {
   }
 });
 
-
 // @route    /api/checkout/charge_customer
 // @desc     POST charge customer
 // @Access   Private
@@ -74,24 +72,29 @@ route.post("/payout", authenticate, async (req, res) => {
   try {
     await stripe.payouts.create(
       {
-        amount: Math.floor(_customer.amount * 100) || 0,
+        amount: Math.floor(_customer.amount * 100) || 100,
         currency: "usd"
       },
       async (err, payout) => {
         if (err) return res.status(500).json({ message: err });
-
-        const success = await models.update("users", req.decoded.id, {
-          amount: 0
+        const addDestination = await models.update("users", req.decoded.id, {
+          stripe_payout_id: payout.destination
         });
+        if (addDestination) {
+          const success = await models.update("users", req.decoded.id, {
+            amount: 0
+          });
 
-        res.json(payout);
+          res.json(payout);
+        } else {
+          res.status(500).json({ message: "Failed to payout" });
+        }
       }
     );
   } catch ({ message }) {
     res.status(500).json({ message });
   }
 });
-
 
 // @route    /api/checkout/payout
 // @desc     GET payouts for customer
@@ -106,15 +109,16 @@ route.get("/payout", authenticate, async (req, res) => {
       },
       (err, payouts) => {
         if (err) return res.status(500).json({ message: err });
-
-        res.json({ _customer, payouts });
+        const filteredPayouts = payouts.data.filter(
+          payout => payout.destination === _customer.stripe_payout_id
+        );
+        res.json({ _customer, payouts: filteredPayouts });
       }
     );
   } catch ({ message }) {
-    res.json({ message })
+    res.json({ message });
   }
 });
-
 
 // @route    /api/checkout/payments
 // @desc     GET charge customer (advertiser)
