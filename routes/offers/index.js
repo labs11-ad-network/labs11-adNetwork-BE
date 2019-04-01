@@ -31,7 +31,6 @@ route.get("/", authenticate, async (req, res) => {
         allOffers = compeleted;
         return res.status(200).json(allOffers);
       });
-      
     } else {
       const offers = await models
         .findAllBy("offers", { user_id })
@@ -124,18 +123,18 @@ route.put("/:id", authenticate, async (req, res) => {
     if (success) {
       if (req.body.hasOwnProperty("status")) {
         const affiliates = await models.affiliatesByOfferId(id);
-
-        affiliates.forEach(affiliate => {
-          return pusher.trigger(
-            `${affiliate.id}`,
-            "disable-offer",
-            {
-              message: `${offerCheck.name} is now disabled`,
-              created_at: Date(Date.now())
-            },
-            req.headers["x-socket-id"]
-          );
-        });
+        // console.log(affiliates);
+        // affiliates.forEach(affiliate => {
+        //   return pusher.trigger(
+        //     `${affiliate.id}`,
+        //     "disable-offer",
+        //     {
+        //       message: `${offerCheck.name} is now disabled`,
+        //       created_at: Date(Date.now())
+        //     },
+        //     req.headers["x-socket-id"]
+        //   );
+        // });
       }
 
       const offers = await models
