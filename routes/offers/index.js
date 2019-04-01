@@ -123,18 +123,18 @@ route.put("/:id", authenticate, async (req, res) => {
     if (success) {
       if (req.body.hasOwnProperty("status")) {
         const affiliates = await models.affiliatesByOfferId(id);
-
-        affiliates.forEach(affiliate => {
-          return pusher.trigger(
-            `${affiliate.id}`,
-            "disable-offer",
-            {
-              message: `${offerCheck.name} is now disabled`,
-              created_at: Date(Date.now())
-            },
-            req.headers["x-socket-id"]
-          );
-        });
+        // console.log(affiliates);
+        // affiliates.forEach(affiliate => {
+        //   return pusher.trigger(
+        //     `${affiliate.id}`,
+        //     "disable-offer",
+        //     {
+        //       message: `${offerCheck.name} is now disabled`,
+        //       created_at: Date(Date.now())
+        //     },
+        //     req.headers["x-socket-id"]
+        //   );
+        // });
       }
 
       const offers = await models

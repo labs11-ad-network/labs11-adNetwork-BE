@@ -1,17 +1,10 @@
-exports.up = function (knex, Promise) {
+exports.up = function(knex, Promise) {
   return knex.schema.createTable("ads", tbl => {
     tbl.increments();
-    tbl.string("headline").nullable();
-    tbl.string("tagline").nullable();
-    tbl.string("message").nullable();
-    tbl.string("cta_button").nullable();
+    tbl.string("name").nullable();
     tbl.string("destination_url").nullable();
-    tbl.string("back_img").nullable();
-    tbl.string("size").nullable();
     tbl.boolean("active").defaultTo(false);
-    tbl.string("text_color").nullable();
-    tbl.string("btn_color").nullable();
-    tbl.string("btn_text_color").nullable();
+    tbl.string("size").notNullable();
     tbl
       .integer("offer_id")
       .unsigned()
@@ -23,11 +16,11 @@ exports.up = function (knex, Promise) {
       .integer("user_id")
       .references("id")
       .inTable("users");
+    tbl.text("image").nullable();
     tbl.timestamps(true, true);
   });
 };
 
-exports.down = function (knex, Promise) {
+exports.down = function(knex, Promise) {
   return knex.schema.dropTableIfExists("ads");
 };
-
