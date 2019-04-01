@@ -126,6 +126,13 @@ const analyticsPerOfferAdvertisersBrowsers = (filter, id, offer_id) =>
     .andWhere("user_id", id)
     .andWhere("browser", filter)
     .select("an.*", "o.price_per_click", "o.price_per_impression");
+
+const affiliatesByOfferId = offer_id =>
+  db("agreements as ag")
+    .join("users as u", "ag.affiliate_id", "u.id")
+    .where("offer_id", offer_id)
+    .select("*");
+
 module.exports = {
   get,
   findBy,
@@ -145,5 +152,6 @@ module.exports = {
   analyticsPerOfferWithPricing,
   browserCountPerOfferAffiliates,
   analyticsPerOfferAdvertisers,
-  analyticsPerOfferAdvertisersBrowsers
+  analyticsPerOfferAdvertisersBrowsers,
+  affiliatesByOfferId
 };

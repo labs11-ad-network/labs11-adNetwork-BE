@@ -69,7 +69,7 @@ route.post("/registerV2", async (req, res) => {
 
 
 // @route    /api/auth/register
-// @desc     POST register user
+// @desc     POST register user 
 // @Access   Public
 route.post("/register", async (req, res) => {
   const { message, isValid } = validateRegister(req.body);
