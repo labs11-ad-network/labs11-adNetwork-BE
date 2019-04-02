@@ -150,6 +150,9 @@ route.get("/offers/:id", authenticate, async (req, res) => {
   }
 });
 
+// @route    PUT /api/ads/:id
+// @desc     update ads by id
+// @Access   Private
 route.put("/:id", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   const id = req.params.id;
@@ -176,6 +179,24 @@ route.put("/:id", authenticate, async (req, res) => {
     }
   } catch ({ message }) {
     res.status(500).json({ message });
+  }
+});
+
+// @route    GET /api/ads/allads/:id
+// @desc     get accepted ads by affiliate_id
+// @Access   Public
+route.get("/allads/:id", async (req, res) => {
+  const affiliate_id = req.params.id;
+
+  try {
+    const ads = await db("agreements as ag")
+      .join("ads as ad", "ag.offer_id", "ad.offer_id")
+      .select("ad.*", "ag.id as agreement_id")
+      .where("affiliate_id", affiliate_id);
+
+    res.json(ads);
+  } catch ({ message }) {
+    req.status(500).json({ message });
   }
 });
 
