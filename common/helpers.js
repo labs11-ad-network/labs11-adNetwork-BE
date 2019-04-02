@@ -19,6 +19,11 @@ const remove = (tbl, id) =>
     .where({ id })
     .del();
 
+const removeAd = (tbl, filter) =>
+  db(tbl)
+    .where(filter)
+    .del();
+
 const update = (tbl, id, item) =>
   db(tbl)
     .where({ id })
@@ -138,6 +143,7 @@ module.exports = {
   findBy,
   add,
   remove,
+  removeAd,
   update,
   updateStripe,
   findAllBy,
