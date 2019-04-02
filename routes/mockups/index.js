@@ -132,14 +132,47 @@ route.get("/offers/:id", authenticate, async (req, res) => {
   const { acct_type } = req.decoded;
   try {
     if (acct_type === "affiliate") {
-      const affiliateAds = await models.findAllBy("ads", { offer_id });
+      const affiliateAds = await models
+        .findAllBy("ads", { offer_id })
+        .orderBy("id", "asc");
       if (!affiliateAds.length)
         return res.status(404).json({ message: "No Ads found" });
       return res.json(affiliateAds);
     } else {
-      const ads = await models.findAllBy("ads", { user_id, offer_id });
+      const ads = await models
+        .findAllBy("ads", { user_id, offer_id })
+        .orderBy("id", "asc");
       if (!ads.length) return res.status(404).json({ message: "No Ads found" });
       return res.json(ads);
+    }
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
+
+route.put("/:id", authenticate, async (req, res) => {
+  const user_id = req.decoded.id;
+  const id = req.params.id;
+  const { acct_type } = req.decoded;
+
+  try {
+    if (acct_type === "affiliate") {
+      res.status(401).json({ message: "You can not edit ads" });
+    } else {
+      const ad = await models.findBy("ads", { id, user_id });
+      if (!ad) {
+        res.status(400).json({ message: "you can not edit this ad" });
+      } else {
+        const update = await db("ads")
+          .where({ id, user_id })
+          .update({ ...req.body });
+
+        if (update) {
+          res.json({ message: "Success" });
+        } else {
+          res.status(400).json({ message: "Failed to update" });
+        }
+      }
     }
   } catch ({ message }) {
     res.status(500).json({ message });
