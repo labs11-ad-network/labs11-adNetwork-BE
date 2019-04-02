@@ -109,10 +109,10 @@ route.get("/payout", authenticate, async (req, res) => {
       },
       (err, payouts) => {
         if (err) return res.status(500).json({ message: err });
-        const payouts = payouts.data.filter(
+        const payout = payouts.data.filter(
           payout => payout.destination === _customer.stripe_payout_id
         );
-        res.json(payouts);
+        res.json(payout);
       }
     );
   } catch ({ message }) {
