@@ -112,7 +112,7 @@ route.get("/payout", authenticate, async (req, res) => {
         const filteredPayouts = payouts.data.filter(
           payout => payout.destination === _customer.stripe_payout_id
         );
-        res.json({ _customer, payouts: filteredPayouts });
+        res.json(payouts: filteredPayouts );
       }
     );
   } catch ({ message }) {
