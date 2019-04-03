@@ -13,10 +13,7 @@ exports.up = function(knex, Promise) {
       .string("stripe_cust_id", 128)
       .nullable()
       .unique();
-    tbl
-      .string("stripe_payout_id", 128)
-      .nullable()
-      .unique();
+    tbl.string("stripe_payout_id", 128).nullable();
   });
 };
 

@@ -72,7 +72,7 @@ route.post("/payout", authenticate, async (req, res) => {
   try {
     await stripe.payouts.create(
       {
-        amount: Math.floor(_customer.amount * 100) || 100,
+        amount: Math.floor(_customer.amount * 100) || 0,
         currency: "usd"
       },
       async (err, payout) => {
@@ -112,7 +112,7 @@ route.get("/payout", authenticate, async (req, res) => {
         const payout = payouts.data.filter(
           payout => payout.destination === _customer.stripe_payout_id
         );
-        res.json({ payouts });
+        res.json({ payouts: payout });
       }
     );
   } catch ({ message }) {
@@ -139,7 +139,7 @@ route.get("/payments", authenticate, async (req, res) => {
             chargesHolder.push(charge);
           }
         });
-        res.json(chargesHolder);
+        res.json({ payments: chargesHolder });
       }
     );
   } catch ({ message }) {
