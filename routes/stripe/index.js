@@ -72,7 +72,7 @@ route.post("/payout", authenticate, async (req, res) => {
   try {
     await stripe.payouts.create(
       {
-        amount: Math.floor(_customer.amount * 100) || 100,
+        amount: Math.floor(_customer.amount * 100) || 0,
         currency: "usd"
       },
       async (err, payout) => {
