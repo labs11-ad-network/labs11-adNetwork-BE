@@ -2,7 +2,6 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
-const dns = require("dns");
 const iplocation = require("iplocation").default;
 
 // @route    /api/analytics
@@ -11,63 +10,62 @@ const iplocation = require("iplocation").default;
 route.post("/", async (req, res) => {
   const { action, browser, ip, referrer, agreement_id } = req.body;
   const ipAddr = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-  console.log(ipAddr);
+
   try {
-    // dns.lookup(ip, async (err, result) => {
-    //   if (err) ip = ip;
-    // });
-
-    const [enterAction] = await models.add("analytics", {
-      action,
-      browser,
-      ip: ipAddr,
-      referrer,
-      agreement_id
-    });
-    if (!enterAction)
-      return res.status(400).json({ message: "Failed to add action" });
-
-    const payments = await db("agreements as ag")
-      .join("offers as o", "ag.offer_id", "o.id")
-      .join("analytics as an", "ag.id", "an.agreement_id")
-      .select(
-        "ag.*",
-        "o.user_id",
-        "o.price_per_impression",
-        "o.price_per_click",
-        "an.*"
-      );
-
-    payments.map(async user => {
-      const advertiser = await models.findBy("users", { id: user.user_id });
-      const affiliate = await models.findBy("users", {
-        id: user.affiliate_id
+    iplocation(ipAddr, [], async (error, location) => {
+      console.log(location);
+      const [enterAction] = await models.add("analytics", {
+        action,
+        browser,
+        ip: ipAddr,
+        referrer,
+        agreement_id
       });
+      if (!enterAction)
+        return res.status(400).json({ message: "Failed to add action" });
 
-      if (action === "impression") {
-        // advertiser
-        await models.update("users", user.user_id, {
-          amount: advertiser.amount - user.price_per_impression
+      const payments = await db("agreements as ag")
+        .join("offers as o", "ag.offer_id", "o.id")
+        .join("analytics as an", "ag.id", "an.agreement_id")
+        .select(
+          "ag.*",
+          "o.user_id",
+          "o.price_per_impression",
+          "o.price_per_click",
+          "an.*"
+        );
+
+      payments.map(async user => {
+        const advertiser = await models.findBy("users", { id: user.user_id });
+        const affiliate = await models.findBy("users", {
+          id: user.affiliate_id
         });
 
-        // affiliate
-        await models.update("users", user.affiliate_id, {
-          amount: affiliate.amount + user.price_per_impression
-        });
-      } else if (action === "click") {
-        // advertiser
-        await models.update("users", user.user_id, {
-          amount: advertiser.amount - user.price_per_click
-        });
+        if (action === "impression") {
+          // advertiser
+          await models.update("users", user.user_id, {
+            amount: advertiser.amount - user.price_per_impression
+          });
 
-        // affiliate
-        await models.update("users", user.affiliate_id, {
-          amount: affiliate.amount + user.price_per_click
-        });
-      }
+          // affiliate
+          await models.update("users", user.affiliate_id, {
+            amount: affiliate.amount + user.price_per_impression
+          });
+        } else if (action === "click") {
+          // advertiser
+          await models.update("users", user.user_id, {
+            amount: advertiser.amount - user.price_per_click
+          });
+
+          // affiliate
+          await models.update("users", user.affiliate_id, {
+            amount: affiliate.amount + user.price_per_click
+          });
+        }
+      });
+      const analytics = await models.findBy("analytics", { id: enterAction });
+      res.json(analytics);
     });
-    const analytics = await models.findBy("analytics", { id: enterAction });
-    res.json(analytics);
   } catch ({ message }) {
     res.status(500).json({ message });
   }
