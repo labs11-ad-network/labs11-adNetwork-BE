@@ -86,6 +86,53 @@ route.get("/:id", authenticate, async (req, res) => {
 
   try {
     if (acct_type === "affiliate") {
+      const lastMonthsImpressions = await models.lastMonthAffiliates(
+        user_id,
+        "impression",
+        id
+      );
+      const thisMonthsImpressions = await models.thisMonthAffiliates(
+        user_id,
+        "impression",
+        id
+      );
+      const lastMonthClicks = await models.lastMonthAffiliates(
+        user_id,
+        "click",
+        id
+      );
+      const thisMonthClicks = await models.thisMonthAffiliates(
+        user_id,
+        "click",
+        id
+      );
+
+      const lastMonthConversions = await models.lastMonthAffiliates(
+        user_id,
+        "conversion",
+        id
+      );
+      const thisMonthConversions = await models.thisMonthAffiliates(
+        user_id,
+        "conversion",
+        id
+      );
+
+      const impressionsGrowth =
+        ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+          thisMonthsImpressions.count) *
+        100;
+
+      const clicksGrowth =
+        ((thisMonthClicks.count - lastMonthClicks.count) /
+          thisMonthClicks.count) *
+        100;
+
+      const conversionsGrowth =
+        ((thisMonthConversions.count - lastMonthConversions.count) /
+          thisMonthConversions.count) *
+        100;
+
       const cities = await db.raw(
         `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${user_id} AND ag.id = ${id} GROUP BY city, longitude, latitude`
       );
@@ -149,9 +196,61 @@ route.get("/:id", authenticate, async (req, res) => {
           firefox: firefoxCount.length,
           other: otherCount.length
         },
-        cities: cities.rows
+        cities: cities.rows,
+        growth: {
+          clicks: clicksGrowth,
+          impressions: impressionsGrowth,
+          conversions: conversionsGrowth
+        }
       });
     } else if (acct_type === "advertiser") {
+      const lastMonthsImpressions = await models.lastMonthAdvertiser(
+        user_id,
+        "impression",
+        id
+      );
+      const thisMonthsImpressions = await models.thisMonthAdvertiser(
+        user_id,
+        "impression",
+        id
+      );
+      const lastMonthClicks = await models.lastMonthAdvertiser(
+        user_id,
+        "click",
+        id
+      );
+      const thisMonthClicks = await models.thisMonthAdvertiser(
+        user_id,
+        "click",
+        id
+      );
+
+      const lastMonthConversions = await models.lastMonthAdvertiser(
+        user_id,
+        "conversion",
+        id
+      );
+      const thisMonthConversions = await models.thisMonthAdvertiser(
+        user_id,
+        "conversion",
+        id
+      );
+
+      const impressionsGrowth =
+        ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+          thisMonthsImpressions.count) *
+        100;
+
+      const clicksGrowth =
+        ((thisMonthClicks.count - lastMonthClicks.count) /
+          thisMonthClicks.count) *
+        100;
+
+      const conversionsGrowth =
+        ((thisMonthConversions.count - lastMonthConversions.count) /
+          thisMonthConversions.count) *
+        100;
+
       const cities = await db.raw(
         `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${user_id} AND o.id = ${id} GROUP BY city, longitude, latitude`
       );
@@ -214,7 +313,12 @@ route.get("/:id", authenticate, async (req, res) => {
           firefox: firefoxCount.length,
           other: otherCount.length
         },
-        cities: cities.rows
+        cities: cities.rows,
+        growth: {
+          clicks: clicksGrowth,
+          impressions: impressionsGrowth,
+          conversions: conversionsGrowth
+        }
       });
     }
   } catch ({ message }) {
@@ -236,6 +340,46 @@ route.get("/", authenticate, async (req, res) => {
 
   try {
     if (acct_type === "affiliate") {
+      const lastMonthsImpressions = await models.lastMonthAffiliatesAll(
+        affiliate_id,
+        "impression"
+      );
+      const thisMonthsImpressions = await models.thisMonthAffiliatesAll(
+        affiliate_id,
+        "impression"
+      );
+      const lastMonthClicks = await models.lastMonthAffiliatesAll(
+        affiliate_id,
+        "click"
+      );
+      const thisMonthClicks = await models.thisMonthAffiliatesAll(
+        affiliate_id,
+        "click"
+      );
+
+      const lastMonthConversions = await models.lastMonthAffiliatesAll(
+        affiliate_id,
+        "conversion"
+      );
+      const thisMonthConversions = await models.thisMonthAffiliatesAll(
+        affiliate_id,
+        "conversion"
+      );
+
+      const impressionsGrowth =
+        ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+          thisMonthsImpressions.count) *
+        100;
+
+      const clicksGrowth =
+        ((thisMonthClicks.count - lastMonthClicks.count) /
+          thisMonthClicks.count) *
+        100;
+
+      const conversionsGrowth =
+        ((thisMonthConversions.count - lastMonthConversions.count) /
+          thisMonthConversions.count) *
+        100;
       const cities = await db.raw(
         `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${affiliate_id} GROUP BY city, longitude, latitude`
       );
@@ -304,10 +448,55 @@ route.get("/", authenticate, async (req, res) => {
             firefox: firefoxAnalytics.length,
             other: otherAnalytics.length
           },
-          cities: cities.rows
+          cities: cities.rows,
+          growth: {
+            clicks: clicksGrowth,
+            impressions: impressionsGrowth,
+            conversions: conversionsGrowth
+          }
         });
       }
     } else if (acct_type === "advertiser") {
+      const lastMonthsImpressions = await models.lastMonthAdvertiserAll(
+        affiliate_id,
+        "impression"
+      );
+      const thisMonthsImpressions = await models.thisMonthAdvertiserAll(
+        affiliate_id,
+        "impression"
+      );
+      const lastMonthClicks = await models.lastMonthAdvertiserAll(
+        affiliate_id,
+        "click"
+      );
+      const thisMonthClicks = await models.thisMonthAdvertiserAll(
+        affiliate_id,
+        "click"
+      );
+
+      const lastMonthConversions = await models.lastMonthAdvertiserAll(
+        affiliate_id,
+        "conversion"
+      );
+      const thisMonthConversions = await models.thisMonthAdvertiserAll(
+        affiliate_id,
+        "conversion"
+      );
+
+      const impressionsGrowth =
+        ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+          thisMonthsImpressions.count) *
+        100;
+
+      const clicksGrowth =
+        ((thisMonthClicks.count - lastMonthClicks.count) /
+          thisMonthClicks.count) *
+        100;
+
+      const conversionsGrowth =
+        ((thisMonthConversions.count - lastMonthConversions.count) /
+          thisMonthConversions.count) *
+        100;
       const cities = await db.raw(
         `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${affiliate_id} GROUP BY city, longitude, latitude`
       );
@@ -360,7 +549,12 @@ route.get("/", authenticate, async (req, res) => {
           firefox: firefoxAnalytics.length,
           other: otherAnalytics.length
         },
-        cities: cities.rows
+        cities: cities.rows,
+        growth: {
+          clicks: clicksGrowth,
+          impressions: impressionsGrowth,
+          conversions: conversionsGrowth
+        }
       });
     }
   } catch ({ message }) {
