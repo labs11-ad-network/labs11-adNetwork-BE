@@ -76,6 +76,7 @@ route.post("/payout", authenticate, async (req, res) => {
         currency: "usd"
       },
       async (err, payout) => {
+        console.log(payout);
         if (err) return res.status(500).json({ message: err });
         const addDestination = await models.update("users", req.decoded.id, {
           stripe_payout_id: payout.destination
@@ -107,11 +108,12 @@ route.get("/payout", authenticate, async (req, res) => {
       {
         limit: 10
       },
-      (err, payouts) => {
+      async (err, payouts) => {
         if (err) return res.status(500).json({ message: err });
         const payout = payouts.data.filter(
           payout => payout.destination === _customer.stripe_payout_id
         );
+        const users = await models.get("users");
         res.json({ payouts: payout });
       }
     );
