@@ -10,7 +10,7 @@ const iplocation = require("iplocation").default;
 // @Access   Public
 route.post("/", async (req, res) => {
   const { action, browser, ip, referrer, agreement_id } = req.body;
-  const ipAddr = req.connection.remoteAddress;
+  const ipAddr = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   console.log(ipAddr);
   try {
     // dns.lookup(ip, async (err, result) => {
