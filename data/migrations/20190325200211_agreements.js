@@ -1,9 +1,8 @@
-exports.up = function (knex, Promise) {
+exports.up = function(knex, Promise) {
   return knex.schema.createTable("agreements", t => {
     t.increments();
     t.unique(["offer_id", "affiliate_id"]);
-
-
+    t.boolean("deleted").defaultTo(false);
     t.integer("offer_id")
       .unsigned()
       .notNullable()
@@ -22,6 +21,6 @@ exports.up = function (knex, Promise) {
   });
 };
 
-exports.down = function (knex, Promise) {
+exports.down = function(knex, Promise) {
   return knex.schema.dropTableIfExists("agreements");
 };

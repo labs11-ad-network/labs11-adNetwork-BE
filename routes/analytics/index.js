@@ -2,23 +2,25 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
-
-
-
-
-
+const dns = require("dns");
+const iplocation = require("iplocation").default;
 
 // @route    /api/analytics
 // @desc     POST analytics
 // @Access   Public
 route.post("/", async (req, res) => {
   const { action, browser, ip, referrer, agreement_id } = req.body;
-
+  const ipAddr = req.connection.remoteAddress;
+  console.log(ipAddr);
   try {
+    // dns.lookup(ip, async (err, result) => {
+    //   if (err) ip = ip;
+    // });
+
     const [enterAction] = await models.add("analytics", {
       action,
       browser,
-      ip,
+      ip: ipAddr,
       referrer,
       agreement_id
     });
@@ -37,10 +39,10 @@ route.post("/", async (req, res) => {
       );
 
     payments.map(async user => {
-      console.log(user);
-
       const advertiser = await models.findBy("users", { id: user.user_id });
-      const affiliate = await models.findBy("users", { id: user.affiliate_id });
+      const affiliate = await models.findBy("users", {
+        id: user.affiliate_id
+      });
 
       if (action === "impression") {
         // advertiser
