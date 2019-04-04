@@ -86,6 +86,10 @@ route.get("/:id", authenticate, async (req, res) => {
 
   try {
     if (acct_type === "affiliate") {
+      const cities = await db.raw(
+        `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${user_id} AND ag.id = ${id} GROUP BY city, longitude, latitude`
+      );
+
       // send the id of an agreeement and get the analytics for that agreement formatter like below
       const affiliateAnalyticsClicks = await models.analyticsPerOfferWithPricing(
         "click",
@@ -144,9 +148,13 @@ route.get("/:id", authenticate, async (req, res) => {
           edge: edgeCount.length,
           firefox: firefoxCount.length,
           other: otherCount.length
-        }
+        },
+        cities: cities.rows
       });
     } else if (acct_type === "advertiser") {
+      const cities = await db.raw(
+        `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${user_id} AND o.id = ${id} GROUP BY city, longitude, latitude`
+      );
       // send the id of an offer and get the analytics for that offer formatted like below
       const advertiserAnalyticsClicks = await models.analyticsPerOfferAdvertisers(
         "click",
@@ -205,7 +213,8 @@ route.get("/:id", authenticate, async (req, res) => {
           edge: edgeCount.length,
           firefox: firefoxCount.length,
           other: otherCount.length
-        }
+        },
+        cities: cities.rows
       });
     }
   } catch ({ message }) {
@@ -227,6 +236,9 @@ route.get("/", authenticate, async (req, res) => {
 
   try {
     if (acct_type === "affiliate") {
+      const cities = await db.raw(
+        `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${affiliate_id} GROUP BY city, longitude, latitude`
+      );
       if (action && started_at && ended_at) {
         const getActions = await models
           .analyticsWithPricing(affiliate_id)
@@ -291,10 +303,14 @@ route.get("/", authenticate, async (req, res) => {
             edge: edgeAnalytics.length,
             firefox: firefoxAnalytics.length,
             other: otherAnalytics.length
-          }
+          },
+          cities: cities.rows
         });
       }
     } else if (acct_type === "advertiser") {
+      const cities = await db.raw(
+        `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${affiliate_id} GROUP BY city, longitude, latitude`
+      );
       const analyticsForAdvertisersClicks = await models
         .analyticsWithPricingAdvertiser(affiliate_id)
         .andWhere("action", "click");
@@ -343,7 +359,8 @@ route.get("/", authenticate, async (req, res) => {
           edge: edgeAnalytics.length,
           firefox: firefoxAnalytics.length,
           other: otherAnalytics.length
-        }
+        },
+        cities: cities.rows
       });
     }
   } catch ({ message }) {
