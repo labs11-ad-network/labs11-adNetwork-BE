@@ -10,6 +10,7 @@ const ads = require("../routes/mockups");
 const users = require("../routes/users");
 const analytics = require("../routes/analytics");
 const stripe = require("../routes/stripe");
+const notifications = require("../routes/notifications");
 
 const configureMiddleware = server => {
   server.use(json);
@@ -24,6 +25,7 @@ const configureMiddleware = server => {
   server.use("/api/analytics", analytics);
   server.use("/api/users", users);
   server.use("/api/checkout", stripe);
+  server.use("/api/notifications", notifications);
 };
 
 module.exports = {
