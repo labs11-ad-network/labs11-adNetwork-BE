@@ -5,6 +5,12 @@ exports.up = function(knex, Promise) {
     tbl.string("ip").nullable();
     tbl.string("browser").nullable();
     tbl.string("referrer").nullable();
+    tbl.string("country").nullable();
+    tbl.string("region").nullable();
+    tbl.string("city").nullable();
+    tbl.string("postal").nullable();
+    tbl.string("latitude").nullable();
+    tbl.string("longitude").nullable();
     tbl
       .integer("agreement_id")
       .unsigned()

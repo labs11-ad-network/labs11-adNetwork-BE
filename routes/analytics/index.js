@@ -13,13 +13,18 @@ route.post("/", async (req, res) => {
 
   try {
     iplocation(ipAddr, [], async (error, location) => {
-      console.log(location);
       const [enterAction] = await models.add("analytics", {
         action,
         browser,
         ip: ipAddr,
         referrer,
-        agreement_id
+        agreement_id,
+        country: location.country,
+        region: location.region,
+        city: location.city,
+        postal: location.postal,
+        latitude: location.latitude,
+        longitude: location.longitude
       });
       if (!enterAction)
         return res.status(400).json({ message: "Failed to add action" });
