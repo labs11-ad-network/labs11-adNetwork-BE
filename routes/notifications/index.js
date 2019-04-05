@@ -27,11 +27,13 @@ route.get("/:id", authenticate, async (req, res) => {
 });
 
 route.post("/", authenticate, async (req, res) => {
-  const { recipient, type, entity_id } = req.body;
+
+  const { recipient, type, entity_id, msg_body } = req.body;
   if (
     !(
       req.body.hasOwnProperty("recipient") &&
       req.body.hasOwnProperty("type") &&
+      req.body.hasOwnProperty("msg_body") &&
       req.body.hasOwnProperty("entity_id")
     )
   ) {
@@ -41,9 +43,17 @@ route.post("/", authenticate, async (req, res) => {
       const [id] = await models.add("notifications", {
         recipient,
         type,
-        entity_id
+        entity_id,
+        msg_body
       });
-      res.status(201).json(id);
+      if (id) {
+        const notification = await models.findBy("notifications", { id });
+        res.status(201).json(notification);
+      } else {
+        res.status(404).json({
+          message: "There was an issue adding notification at that ID."
+        });
+      }
     } catch ({ message }) {
       res.status(500).json({ message });
     }

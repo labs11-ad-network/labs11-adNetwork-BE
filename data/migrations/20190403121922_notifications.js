@@ -8,16 +8,16 @@ exports.up = function(knex, Promise) {
       .notNullable()
       .references("id")
       .inTable("users");
-    tbl.string("type").notNullable();
+    tbl.string("type", 255).notNullable();
     tbl
       .integer("entity_id")
       .unsigned()
-      .notNullable()
+      .notNullable();
+    tbl.string("msg_body", 255).notNullable();
     tbl.timestamps(true, true);
-  })
-  
+  });
 };
 
 exports.down = function(knex, Promise) {
-  return knex.schema.dropTableIfExists("notifications")
+  return knex.schema.dropTableIfExists("notifications");
 };
