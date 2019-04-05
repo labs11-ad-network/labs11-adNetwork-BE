@@ -20,10 +20,12 @@ route.get("/", authenticate, async (req, res) => {
           .select()
           .from("agreements")
           .where({ affiliate_id: user_id })
-          .andWhere({ offer_id: allOffer.id });
+          .andWhere({ offer_id: allOffer.id })
+          .first();
 
-        allOffer.accepted = agreements.length ? true : false;
-        allOffer.agreement_id = agreements.length > 0 ? agreements[0].id : null;
+        allOffer.active = agreements.active ? true : false;
+        allOffer.accepted = agreements ? true : false;
+        allOffer.agreement_id = agreements ? agreements.id : null;
         return allOffer;
       });
 
