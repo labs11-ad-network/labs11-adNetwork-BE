@@ -15,10 +15,9 @@ exports.up = function(knex, Promise) {
     tbl
       .integer("agreement_id")
       .unsigned()
-      .nullable()
+      .notNullable()
       .references("id")
-      .inTable("agreements")
-      .onDelete("SET NULL");
+      .inTable("agreements");
 
     tbl.timestamps(true, true);
   });

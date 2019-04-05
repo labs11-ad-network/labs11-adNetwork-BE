@@ -2,7 +2,7 @@ exports.up = function(knex, Promise) {
   return knex.schema.createTable("agreements", t => {
     t.increments();
     t.unique(["offer_id", "affiliate_id"]);
-    t.boolean("deleted").defaultTo(false);
+    t.boolean("active").defaultTo(true);
     t.integer("offer_id")
       .unsigned()
       .notNullable()
