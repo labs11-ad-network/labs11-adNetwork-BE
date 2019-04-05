@@ -29,21 +29,6 @@ route.get("/", authenticate, async (req, res) => {
 // @Access   Private
 route.post("/", authenticate, multipart, async (req, res) => {
   const user_id = req.decoded.id;
-
-  // try {
-  //   const [success] = await models.add("ads", { ...req.body, user_id });
-  //
-  //   if (success) {
-  //     const ad = await models.findBy("ads", { id: success });
-  //
-  //     res.json(ad);
-  //   } else {
-  //     res.status(400).json({ message: "Failed to create ad" });
-  //   }
-  // } catch ({ message }) {
-  //   res.status(500).json({ message: "Server Error" });
-  // }
-
   cloudinary.v2.uploader.upload(req.body.image, async (error, result) => {
     if (error) return res.status(500).json({ message: error });
     try {
