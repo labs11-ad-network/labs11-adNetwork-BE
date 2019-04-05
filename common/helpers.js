@@ -138,8 +138,8 @@ const affiliatesByOfferId = offer_id =>
     .where("offer_id", offer_id)
     .select("*");
 
-const last30 = new Date(new Date().setDate(new Date().getDate() - 30));
-const last60 = new Date(new Date().setDate(new Date().getDate() - 60));
+const last30 = new Date(new Date().setDate(new Date().getDate() - 1 / 24));
+const last60 = new Date(new Date().setDate(new Date().getDate() - 1 / 12));
 
 const lastMonthAffiliates = (user_id, action, id) =>
   db("analytics as an ")

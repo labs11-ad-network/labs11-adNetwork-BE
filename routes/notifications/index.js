@@ -27,6 +27,7 @@ route.get("/:id", authenticate, async (req, res) => {
 });
 
 route.post("/", authenticate, async (req, res) => {
+
   const { recipient, type, entity_id, msg_body } = req.body;
   if (
     !(
