@@ -1,7 +1,7 @@
 exports.up = function(knex, Promise) {
   return knex.schema.createTable("analytics", tbl => {
     tbl.increments();
-    tbl.unique(["action", "ip"]);
+    tbl.unique(["action", "ip", "agreement_id"]);
     tbl.string("action").nullable();
     tbl.string("ip").nullable();
     tbl.string("browser").nullable();
