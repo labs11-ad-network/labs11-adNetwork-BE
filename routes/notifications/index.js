@@ -7,7 +7,8 @@ route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   try {
     const notifications = await models.findAllBy("notifications", {
-      recipient: user_id
+      recipient: user_id,
+      unread: true
     });
     res.status(200).json(notifications);
   } catch ({ message }) {
@@ -27,7 +28,6 @@ route.get("/:id", authenticate, async (req, res) => {
 });
 
 route.post("/", authenticate, async (req, res) => {
-
   const { recipient, type, entity_id, msg_body } = req.body;
   if (
     !(
@@ -85,7 +85,7 @@ route.put("/:id", authenticate, async (req, res) => {
 
       if (success) {
         const notifications = await models
-          .findAllBy("notifications", { recipient: user_id })
+          .findAllBy("notifications", { recipient: user_id, unread: true })
           .orderBy("created_at", "dsc");
 
         res.status(201).json(notifications);
