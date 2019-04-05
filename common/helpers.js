@@ -138,6 +138,92 @@ const affiliatesByOfferId = offer_id =>
     .where("offer_id", offer_id)
     .select("*");
 
+const last30 = new Date(new Date().setDate(new Date().getDate() - 30));
+const last60 = new Date(new Date().setDate(new Date().getDate() - 60));
+
+const lastMonthAffiliates = (user_id, action, id) =>
+  db("analytics as an ")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .where("ag.affiliate_id", user_id)
+    .andWhere("an.created_at", ">=", last60)
+    .andWhere("an.created_at", "<=", last30)
+    .andWhere("an.action", action)
+    .andWhere("ag.agreement_id", id)
+    .count()
+    .first();
+
+const thisMonthAffiliates = (user_id, action, id) =>
+  db("analytics")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .where("ag.affiliate_id", user_id)
+    .andWhere("an.created_at", ">=", last30)
+    .andWhere("an.action", action)
+    .andWhere("an.agreement_id", id)
+    .count()
+    .first();
+
+const lastMonthAdvertiser = (user_id, action, id) =>
+  db("analytics as an")
+    .join("agreements as ag", "an.agreement_id", "ag.id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("o.user_id", user_id)
+    .where("ag.offer_id", id)
+    .andWhere("an.created_at", ">=", last60)
+    .andWhere("an.created_at", "<=", last30)
+    .andWhere("an.action", action)
+    .count()
+    .first();
+
+const thisMonthAdvertiser = (user_id, action, id) =>
+  db("analytics as an")
+    .join("agreements as ag", "an.agreement_id", "ag.id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("o.user_id", user_id)
+    .andWhere("ag.offer_id", id)
+    .andWhere("an.created_at", ">=", last30)
+    .andWhere("an.action", action)
+    .count()
+    .first();
+
+const lastMonthAffiliatesAll = (user_id, action) =>
+  db("analytics as an")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .where("ag.affiliate_id", user_id)
+    .andWhere("an.created_at", ">=", last60)
+    .andWhere("an.created_at", "<=", last30)
+    .count()
+    .first();
+
+const thisMonthAffiliatesAll = (user_id, action) =>
+  db("analytics as an")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .where("ag.affiliate_id", user_id)
+    .andWhere("an.created_at", ">=", last30)
+    .andWhere("an.action", action)
+    .count()
+    .first();
+
+const lastMonthAdvertiserAll = (user_id, action) =>
+  db("analytics as an")
+    .join("agreements as ag", "an.agreement_id", "ag.id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("o.user_id", user_id)
+    .andWhere("an.created_at", ">=", last60)
+    .andWhere("an.created_at", "<=", last30)
+    .andWhere("an.action", action)
+    .count()
+    .first();
+
+const thisMonthAdvertiserAll = (user_id, action) =>
+  db("analytics as an")
+    .join("agreements as ag", "an.agreement_id", "ag.id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("o.user_id", user_id)
+    .andWhere("an.created_at", ">=", last30)
+    .andWhere("an.action", action)
+    .count()
+    .first();
+
 module.exports = {
   get,
   findBy,
@@ -159,5 +245,13 @@ module.exports = {
   browserCountPerOfferAffiliates,
   analyticsPerOfferAdvertisers,
   analyticsPerOfferAdvertisersBrowsers,
-  affiliatesByOfferId
+  affiliatesByOfferId,
+  lastMonthAffiliates,
+  thisMonthAffiliates,
+  lastMonthAdvertiser,
+  thisMonthAdvertiser,
+  lastMonthAffiliatesAll,
+  thisMonthAffiliatesAll,
+  lastMonthAdvertiserAll,
+  thisMonthAdvertiserAll
 };
