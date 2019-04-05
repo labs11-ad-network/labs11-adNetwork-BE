@@ -381,22 +381,141 @@ route.get("/", authenticate, async (req, res) => {
         ((thisMonthConversions.count - lastMonthConversions.count) /
           thisMonthConversions.count) *
         100;
-      const cities = await db.raw(
-        `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${affiliate_id} GROUP BY city, longitude, latitude`
-      );
+
+      const cities = await db("analytics as an")
+        .join("agreements as ag", "ag.id", "an.agreement_id")
+        .where("ag.affiliate_id", affiliate_id)
+        .select("city", "longitude", "latitude")
+        .count("* as num")
+        .groupBy("city", "longitude", "latitude");
+
       if (action && started_at && ended_at) {
         const getActions = await models
           .analyticsWithPricing(affiliate_id)
-          .where("created_at", ">=", started_at)
-          .where("created_at", "<", ended_at)
-          .andWhere("action", action);
+          .where("an.created_at", ">=", started_at)
+          .where("an.created_at", "<", ended_at)
+          .andWhere("an.action", action);
         res.json(getActions);
       } else if (!action && started_at && ended_at) {
-        const getActions = await models
+        const lastMonthsImpressionsFiltered = await models
+          .lastMonthAffiliatesAll(affiliate_id, "impression")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const thisMonthsImpressionsFiltered = await models
+          .thisMonthAffiliatesAll(affiliate_id, "impression")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const lastMonthClicksFiltered = await models
+          .lastMonthAffiliatesAll(affiliate_id, "click")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const thisMonthClicksFiltered = await models
+          .thisMonthAffiliatesAll(affiliate_id, "click")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+
+        const lastMonthConversionsFiltered = await models
+          .lastMonthAffiliatesAll(affiliate_id, "conversion")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const thisMonthConversionsFiltered = await models
+          .thisMonthAffiliatesAll(affiliate_id, "conversion")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+
+        const impressionsGrowthFiltered =
+          ((thisMonthsImpressionsFiltered.count -
+            lastMonthsImpressionsFiltered.count) /
+            thisMonthsImpressionsFiltered.count) *
+          100;
+
+        const clicksGrowthFiltered =
+          ((thisMonthClicksFiltered.count - lastMonthClicksFiltered.count) /
+            thisMonthClicksFiltered.count) *
+          100;
+
+        const conversionsGrowthFiltered =
+          ((thisMonthConversionsFiltered.count -
+            lastMonthConversionsFiltered.count) /
+            thisMonthConversionsFiltered.count) *
+          100;
+
+        const citiesFiltered = await db("analytics as an")
+          .join("agreements as ag", "ag.id", "an.agreement_id")
+          .where("ag.affiliate_id", affiliate_id)
+          .select("city", "longitude", "latitude")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at)
+          .count("* as num")
+          .groupBy("city", "longitude", "latitude");
+
+        const getAffiliateClicksFiltered = await models
           .analyticsWithPricing(affiliate_id)
-          .where("created_at", ">=", started_at)
-          .where("created_at", "<", ended_at);
-        res.json(getActions);
+          .where("action", "click")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+
+        const getAffiliateImpressionsFiltered = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("action", "impression")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+
+        const getAffiliateConversionFiltered = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("action", "conversion")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+
+        const chromeAnalyticsFiltered = await await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Chrome")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const safariAnalyticsFiltered = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Safari")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const edgeAnalyticsFiltered = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Edge")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const firefoxAnalyticsFiltered = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Firefox")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const otherAnalyticsFiltered = await models
+          .analyticsWithPricing(affiliate_id)
+          .where("browser", "Other")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+
+        res.json({
+          clicks: getAffiliateClicksFiltered,
+          impressions: getAffiliateImpressionsFiltered,
+          conversions: getAffiliateConversionFiltered,
+          actionCount: {
+            impressions: Number(getAffiliateImpressionsFiltered.length),
+            clicks: Number(getAffiliateClicksFiltered.length),
+            conversions: Number(getAffiliateConversionFiltered.length)
+          },
+          browserCount: {
+            chrome: chromeAnalyticsFiltered.length,
+            safari: safariAnalyticsFiltered.length,
+            edge: edgeAnalyticsFiltered.length,
+            firefox: firefoxAnalyticsFiltered.length,
+            other: otherAnalyticsFiltered.length
+          },
+          cities: citiesFiltered,
+          growth: {
+            clicks: clicksGrowthFiltered,
+            impressions: impressionsGrowthFiltered,
+            conversions: conversionsGrowthFiltered
+          }
+        });
       } else if (!started_at && !ended_at && action) {
         const getActions = await models
           .analyticsWithPricing(affiliate_id)
