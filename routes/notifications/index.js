@@ -53,7 +53,6 @@ route.post("/", authenticate, async (req, res) => {
           message: "There was an issue adding notification at that ID."
         });
       }
-      res.status(201).json(id);
     } catch ({ message }) {
       res.status(500).json({ message });
     }
