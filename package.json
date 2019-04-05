@@ -45,6 +45,7 @@
     "sqlite3": "^4.0.6",
     "stripe": "^6.28.0",
     "supertest": "^4.0.2",
+    "ua-parser-js": "^0.7.19",
     "validator": "^10.11.0"
   },
   "devDependencies": {

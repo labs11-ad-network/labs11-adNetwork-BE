@@ -3,19 +3,20 @@ const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 const iplocation = require("iplocation").default;
+const UAParser = require("ua-parser-js");
 
 // @route    /api/analytics
 // @desc     POST analytics
 // @Access   Public
 route.post("/", async (req, res) => {
-  const { action, browser, ip, referrer, agreement_id } = req.body;
+  const { action, browser, ip, referrer, agreement_id, userAgent } = req.body;
   const ipAddr = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-
+  const parser = new UAParser(userAgent);
   try {
     iplocation(ipAddr, [], async (error, location) => {
       const [enterAction] = await models.add("analytics", {
         action,
-        browser,
+        browser: parser.getBrowser().name,
         ip: ipAddr,
         referrer,
         agreement_id,
