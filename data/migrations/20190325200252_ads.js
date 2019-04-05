@@ -3,7 +3,7 @@ exports.up = function(knex, Promise) {
     tbl.increments();
     tbl.string("name").nullable();
     tbl.string("destination_url").nullable();
-    tbl.boolean("active").defaultTo(false);
+    tbl.boolean("active").defaultTo(true);
     tbl.string("size").notNullable();
     tbl
       .integer("offer_id")
