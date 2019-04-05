@@ -23,7 +23,7 @@ route.get("/", authenticate, async (req, res) => {
           .andWhere({ offer_id: allOffer.id })
           .first();
 
-        allOffer.active = agreements.active ? true : false;
+        allOffer.active = agreements ? agreements.active : false;
         allOffer.accepted = agreements ? true : false;
         allOffer.agreement_id = agreements ? agreements.id : null;
         return allOffer;
