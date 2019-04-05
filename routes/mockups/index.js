@@ -29,33 +29,21 @@ route.get("/", authenticate, async (req, res) => {
 // @Access   Private
 route.post("/", authenticate, multipart, async (req, res) => {
   const user_id = req.decoded.id;
-
-  try {
-    const [success] = await models.add("ads", { ...req.body, user_id });
-
-    if (success) {
-      const ad = await models.findBy("ads", { id: success });
-
+  cloudinary.v2.uploader.upload(req.body.image, async (error, result) => {
+    if (error) return res.status(500).json({ message: error });
+    try {
+      const [newAd] = await models.add("ads", {
+        ...req.body,
+        image: result.secure_url,
+        user_id
+      });
+      if (!newAd) return res.status(500).json({ message: "Failed to add ad" });
+      const ad = await models.findBy("ads", { id: newAd });
       res.json(ad);
+    } catch ({ message }) {
+      res.status(500).json({ message });
     }
-  } catch ({ message }) {
-    res.status(500).json({ message });
-  }
-  // cloudinary.v2.uploader.upload(req.body.image, async (error, result) => {
-  //   if (error) return res.status(500).json({ message: error });
-  //   try {
-  //     const [newAd] = await models.add("ads", {
-  //       ...req.body,
-  //       back_img: result.secure_url,
-  //       user_id
-  //     });
-  //     if (!newAd) return res.status(500).json({ message: "Failed to add ad" });
-  //     const ad = await models.findBy("ads", { id: newAd });
-  //     res.json(ad);
-  //   } catch ({ message }) {
-  //     res.status(500).json({ message });
-  //   }
-  // });
+  });
 });
 
 // @route    GET /api/ads

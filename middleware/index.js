@@ -1,4 +1,4 @@
-const json = require("express").json();
+const json = require("express").json({ limit: "50mb" });
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require("cors");
