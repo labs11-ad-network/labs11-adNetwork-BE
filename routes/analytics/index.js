@@ -568,7 +568,7 @@ route.get("/", authenticate, async (req, res) => {
             firefox: firefoxAnalytics.length,
             other: otherAnalytics.length
           },
-          cities: cities.rows,
+          cities: cities,
           growth: {
             clicks: clicksGrowth,
             impressions: impressionsGrowth,
