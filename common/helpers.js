@@ -148,12 +148,12 @@ const lastMonthAffiliates = (user_id, action, id) =>
     .andWhere("an.created_at", ">=", last60)
     .andWhere("an.created_at", "<=", last30)
     .andWhere("an.action", action)
-    .andWhere("ag.agreement_id", id)
+    .andWhere("an.agreement_id", id)
     .count()
     .first();
 
 const thisMonthAffiliates = (user_id, action, id) =>
-  db("analytics")
+  db("analytics as an")
     .join("agreements as ag", "ag.id", "an.agreement_id")
     .where("ag.affiliate_id", user_id)
     .andWhere("an.created_at", ">=", last30)
