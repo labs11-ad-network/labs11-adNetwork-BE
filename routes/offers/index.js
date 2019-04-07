@@ -13,9 +13,9 @@ route.get("/", authenticate, async (req, res) => {
   try {
     if (acct_type === "affiliate") {
       const allOffers = await models.get("offers");
-      
-
       return res.json(allOffers);
+
+      
     } else {
       const offers = await models
         .findAllBy("offers", { user_id })
