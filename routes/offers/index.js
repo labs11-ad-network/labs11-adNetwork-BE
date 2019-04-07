@@ -1,8 +1,8 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const pusher = require("../../common/pusher");
+const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
-
-
 
 // @route    /api/offers
 // @desc     GET offers
@@ -12,10 +12,34 @@ route.get("/", authenticate, async (req, res) => {
   const { acct_type } = req.decoded;
   try {
     if (acct_type === "affiliate") {
+<<<<<<< HEAD
       const allOffers = await models.get("offers");
       return res.json(allOffers);
 
       
+=======
+      let allOffers = await models.get("offers");
+
+      //before reutrnin all offers
+      const results = await allOffers.map(async allOffer => {
+        let agreements = await db
+          .select()
+          .from("agreements")
+          .where({ affiliate_id: user_id })
+          .andWhere({ offer_id: allOffer.id })
+          .first();
+
+        allOffer.active = agreements ? agreements.active : false;
+        allOffer.accepted = agreements ? true : false;
+        allOffer.agreement_id = agreements ? agreements.id : null;
+        return allOffer;
+      });
+
+      Promise.all(results).then(compeleted => {
+        allOffers = compeleted;
+        return res.status(200).json(allOffers);
+      });
+>>>>>>> master
     } else {
       const offers = await models
         .findAllBy("offers", { user_id })
@@ -32,8 +56,6 @@ route.get("/", authenticate, async (req, res) => {
     res.status(500).json({ message });
   }
 });
-
-
 
 // @route    /api/offers/:id
 // @desc     GET offers
@@ -103,7 +125,26 @@ route.put("/:id", authenticate, async (req, res) => {
 
     const success = await models.update("offers", id, { ...req.body });
 
+    // List of all users that have that offer
+    // forEach user trigger pusher using that users id as the channel name
+    // front end subscribes to their channel using current user data
+
     if (success) {
+      if (req.body.hasOwnProperty("status")) {
+        const affiliates = await models.affiliatesByOfferId(id);
+        affiliates.forEach(affiliate => {
+          return pusher.trigger(
+            `${affiliate.id}`,
+            "disable-offer",
+            {
+              message: `${offerCheck.name} is now disabled`,
+              created_at: Date(Date.now())
+            },
+            req.headers["x-socket-id"]
+          );
+        });
+      }
+
       const offers = await models
         .findAllBy("offers", { user_id })
         .orderBy("id", "asc");

@@ -1,18 +1,14 @@
 require("dotenv").config();
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const pubKey = process.env.PUBLIC_KEY;
 const stripe = require("stripe")(process.env.SECRET_KEY);
+
 const { authenticate } = require("../../common/authentication");
-
-
-
 
 // @route    /api/checkout/create_customer
 // @desc     Post Cosumter/create
 // @Access   Private
 route.post("/create_customer", authenticate, async (req, res) => {
-  // Create a one time use token from User Payment Info entered on front end
   try {
     const customer = await stripe.customers.create({
       account_balance: req.body.amount || 0,
@@ -43,7 +39,6 @@ route.post("/create_customer", authenticate, async (req, res) => {
   }
 });
 
-
 // @route    /api/checkout/charge_customer
 // @desc     POST charge customer
 // @Access   Private
@@ -68,6 +63,9 @@ route.post("/charge_customer", authenticate, async (req, res) => {
   }
 });
 
+// @route    /api/checkout/payout
+// @desc     POST payout customer (affiliate)
+// @Access   Private
 route.post("/payout", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
@@ -78,13 +76,20 @@ route.post("/payout", authenticate, async (req, res) => {
         currency: "usd"
       },
       async (err, payout) => {
+        console.log(payout);
         if (err) return res.status(500).json({ message: err });
-
-        const success = await models.update("users", req.decoded.id, {
-          amount: 0
+        const addDestination = await models.update("users", req.decoded.id, {
+          stripe_payout_id: payout.destination
         });
+        if (addDestination) {
+          const success = await models.update("users", req.decoded.id, {
+            amount: 0
+          });
 
-        res.json(payout);
+          res.json(payout);
+        } else {
+          res.status(500).json({ message: "Failed to payout" });
+        }
       }
     );
   } catch ({ message }) {
@@ -92,6 +97,9 @@ route.post("/payout", authenticate, async (req, res) => {
   }
 });
 
+// @route    /api/checkout/payout
+// @desc     GET payouts for customer
+// @Access   Private
 route.get("/payout", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
@@ -100,15 +108,23 @@ route.get("/payout", authenticate, async (req, res) => {
       {
         limit: 10
       },
-      (err, payouts) => {
+      async (err, payouts) => {
         if (err) return res.status(500).json({ message: err });
-
-        res.json({ _customer, payouts });
+        const payout = payouts.data.filter(
+          payout => payout.destination === _customer.stripe_payout_id
+        );
+        const users = await models.get("users");
+        res.json({ payouts: payout });
       }
     );
-  } catch ({ message }) {}
+  } catch ({ message }) {
+    res.json({ message });
+  }
 });
 
+// @route    /api/checkout/payments
+// @desc     GET charge customer (advertiser)
+// @Access   Private
 route.get("/payments", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
@@ -125,12 +141,12 @@ route.get("/payments", authenticate, async (req, res) => {
             chargesHolder.push(charge);
           }
         });
-        res.json(chargesHolder);
+        res.json({ payments: chargesHolder });
       }
     );
   } catch ({ message }) {
     res.status(500).json({ message });
   }
 });
-//Stripe apparently handles source updating for bank cards on their own so we'll leave that lone
+
 module.exports = route;

@@ -5,8 +5,6 @@ const { authenticate } = require("../../common/authentication");
 const { affiliateCheck } = require("../../common/roleCheck");
 const emailer = require("../../common/mailer");
 
-
-
 // @route    /api/agreements
 // @desc     GET agreements
 // @Access   Private
@@ -102,8 +100,7 @@ route.put("/:id", authenticate, async (req, res) => {
     const agreement = await models.findBy("agreements", { id, affiliate_id });
     if (agreement) {
       const count = await models.update("agreements", id, {
-        ...req.body,
-        updated_at: Date.now()
+        ...req.body
       });
 
       if (count > 0) {

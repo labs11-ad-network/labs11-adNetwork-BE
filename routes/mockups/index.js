@@ -4,11 +4,12 @@ const { authenticate } = require("../../common/authentication");
 const db = require("../../data/dbConfig");
 const cloudinary = require("cloudinary");
 const multipart = require("connect-multiparty")();
+const moment = require("moment");
 
 cloudinary.config({
-  cloud_name: "dxvyzmvhi",
-  api_key: "672796748434519",
-  api_secret: "Jf7IESazEon7JKlD9dd8fkMgESk"
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_PUBKEY,
+  api_secret: process.env.CLOUDINARY_SECRET
 });
 
 // @route    GET /api/ads
@@ -23,19 +24,17 @@ route.get("/", authenticate, async (req, res) => {
   }
 });
 
-
-// @route    GET /api/ads 
+// @route    GET /api/ads
 // @desc     Post an ads
 // @Access   Private
 route.post("/", authenticate, multipart, async (req, res) => {
   const user_id = req.decoded.id;
-
-  cloudinary.v2.uploader.upload(req.files.image.path, async (error, result) => {
+  cloudinary.v2.uploader.upload(req.body.image, async (error, result) => {
     if (error) return res.status(500).json({ message: error });
     try {
       const [newAd] = await models.add("ads", {
         ...req.body,
-        back_img: result.secure_url,
+        image: result.secure_url,
         user_id
       });
       if (!newAd) return res.status(500).json({ message: "Failed to add ad" });
@@ -56,12 +55,12 @@ route.delete("/:id", authenticate, async (req, res) => {
   try {
     const adCheck = await models.findBy("ads", { id, user_id });
 
-    if (!adCheck.length)
+    if (!adCheck)
       return res
         .status(401)
         .json({ message: "You can not delete someone else's ad" });
 
-    const deleteAd = await models.remove("ads", id);
+    const deleteAd = await models.removeAd("ads", { id, user_id });
     if (!deleteAd)
       return res.status(400).json({ message: "Failed to delete ad" });
     res.json({ success: true, id });
@@ -70,7 +69,7 @@ route.delete("/:id", authenticate, async (req, res) => {
   }
 });
 
-// @route    GET /api/ads/myads 
+// @route    GET /api/ads/myads
 // @desc     get all my ads
 // @Access   Private
 route.get("/myads", authenticate, async (req, res) => {
@@ -84,7 +83,6 @@ route.get("/myads", authenticate, async (req, res) => {
   }
 });
 
-
 // @route    GET /api/ads/:id
 // @desc     Get ads by od
 // @Access   Public
@@ -92,9 +90,7 @@ route.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    // const ad = await db.select('a.*', 'ag.*').from('ads as a').join('agreements as ag', 'ag.offer_id', 'a.offer_id')
     const ad = await models.findBy("ads", { id });
-    console.log({ ad });
     if (!ad) return res.status(404).json({ message: "No ads found" });
     res.json(ad);
   } catch (error) {
@@ -102,21 +98,25 @@ route.get("/:id", async (req, res) => {
   }
 });
 
-// @route    GET /api/ads/offers/:id  
-// @desc     get offers by id 
+// @route    GET /api/ads/offers/:id
+// @desc     get offers by id
 // @Access   Private
 route.get("/offers/:id", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   const offer_id = req.params.id;
-  const { acct_type } = req.decoded
+  const { acct_type } = req.decoded;
   try {
-
-    if (acct_type === 'affiliate') {
-      const affiliateAds = await models.findAllBy("ads", { offer_id });
-      if (!affiliateAds.length) return res.status(404).json({ message: "No Ads found" });
+    if (acct_type === "affiliate") {
+      const affiliateAds = await models
+        .findAllBy("ads", { offer_id })
+        .orderBy("id", "asc");
+      if (!affiliateAds.length)
+        return res.status(404).json({ message: "No Ads found" });
       return res.json(affiliateAds);
     } else {
-      const ads = await models.findAllBy("ads", { user_id, offer_id });
+      const ads = await models
+        .findAllBy("ads", { user_id, offer_id })
+        .orderBy("id", "asc");
       if (!ads.length) return res.status(404).json({ message: "No Ads found" });
       return res.json(ads);
     }
@@ -125,5 +125,54 @@ route.get("/offers/:id", authenticate, async (req, res) => {
   }
 });
 
-module.exports = route;
+// @route    PUT /api/ads/:id
+// @desc     update ads by id
+// @Access   Private
+route.put("/:id", authenticate, async (req, res) => {
+  const user_id = req.decoded.id;
+  const id = req.params.id;
+  const { acct_type } = req.decoded;
 
+  try {
+    if (acct_type === "affiliate") {
+      res.status(401).json({ message: "You can not edit ads" });
+    } else {
+      const ad = await models.findBy("ads", { id, user_id });
+      if (!ad) {
+        res.status(400).json({ message: "you can not edit this ad" });
+      } else {
+        const update = await db("ads")
+          .where({ id, user_id })
+          .update({ ...req.body });
+
+        if (update) {
+          res.json({ message: "Success" });
+        } else {
+          res.status(400).json({ message: "Failed to update" });
+        }
+      }
+    }
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
+
+// @route    GET /api/ads/allads/:id
+// @desc     get accepted ads by affiliate_id
+// @Access   Public
+route.get("/allads/:id", async (req, res) => {
+  const affiliate_id = req.params.id;
+
+  try {
+    const ads = await db("agreements as ag")
+      .join("ads as ad", "ag.offer_id", "ad.offer_id")
+      .select("ad.*", "ag.id as agreement_id")
+      .where("affiliate_id", affiliate_id);
+
+    res.json(ads);
+  } catch ({ message }) {
+    req.status(500).json({ message });
+  }
+});
+
+module.exports = route;
