@@ -3,6 +3,7 @@ const multipart = require("connect-multiparty")();
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
+const stripe = require("stripe")(process.env.SECRET_KEY);
 
 const { authenticate } = require("../../common/authentication");
 
@@ -17,6 +18,7 @@ cloudinary.config({
 // @Access   Private
 route.get("/", authenticate, async (req, res) => {
   const { id, sub, email, acct_type } = req.decoded;
+  const _customer = await models.findBy("users", { id: req.decoded.id });
 
   try {
     let users = await db
@@ -25,29 +27,46 @@ route.get("/", authenticate, async (req, res) => {
       .where({ email })
       .andWhere({ sub });
 
-    if (users) {
-      const result = await users.map(async user => {
-        let offers = await db.select().from("offers").where({ user_id:user.id });
-        const ads = await db.select().from("ads").where({ user_id:user.id });
-        const agreements = await db.select('ag.*', 'o.id as test_id').from('agreements as ag')
-                                   .join('offers as o','o.id','ag.offer_id' )
-                                   .where({affiliate_id: user.id})
-                                         
-        user.offers = offers.length;
-        user.ads = ads.length;
-        user.agreements = acct_type === "affiliate" ? agreements.length : 0;
+    stripe.transfers.list({ limit: 10 }, async (err, transfers) => {
+      if (err) return res.status(500).json({ message: err });
+      const payout = transfers.data.filter(
+        payout => payout.destination === _customer.stripe_payout_id
+      );
 
-        return user;
-      });
+      const total_amount =
+        payout.map(payout => payout.amount).reduce((a, b) => a + b) / 100;
 
-      Promise.all(result).then(completed => {
-        users = completed;
-        res.status(200).json(users[0]);
-      });
-      
-    } else {
-      res.status(500).json({ message: "Users do not exist." });
-    }
+      if (users) {
+        const result = await users.map(async user => {
+          let offers = await db
+            .select()
+            .from("offers")
+            .where({ user_id: user.id });
+          const ads = await db
+            .select()
+            .from("ads")
+            .where({ user_id: user.id });
+          const agreements = await db
+            .select("ag.*", "o.id as test_id")
+            .from("agreements as ag")
+            .join("offers as o", "o.id", "ag.offer_id")
+            .where({ affiliate_id: user.id });
+
+          user.stripe_balance = total_amount;
+          user.offers = offers.length;
+          user.ads = ads.length;
+          user.agreements = acct_type === "affiliate" ? agreements.length : 0;
+          return user;
+        });
+
+        Promise.all(result).then(completed => {
+          users = completed;
+          res.status(200).json(users[0]);
+        });
+      } else {
+        res.status(500).json({ message: "Users do not exist." });
+      }
+    });
   } catch ({ message }) {
     res.status(404).json({ message });
   }
@@ -69,8 +88,6 @@ route.get("/:id", async (req, res) => {
     res.status(404).json({ message });
   }
 });
-
-
 
 // @route     /api/users
 // @desc     PUT user info
@@ -125,7 +142,6 @@ route.put("/", authenticate, multipart, async (req, res) => {
     );
   }
 });
-
 
 // @route    /api/user
 // @desc     Delete user account
