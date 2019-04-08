@@ -148,19 +148,13 @@ route.get("/payout", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
   try {
-    await stripe.payouts.list(
-      {
-        limit: 10
-      },
-      async (err, payouts) => {
-        if (err) return res.status(500).json({ message: err });
-        const payout = payouts.data.filter(
-          payout => payout.destination === _customer.stripe_payout_id
-        );
-        const users = await models.get("users");
-        res.json({ payouts: payout });
-      }
-    );
+    stripe.transfers.list({ limit: 10 }, async (err, transfers) => {
+      if (err) return res.status(500).json({ message: err });
+      const payout = transfers.data.filter(
+        payout => payout.destination === _customer.stripe_payout_id
+      );
+      res.json({ payouts: payout });
+    });
   } catch ({ message }) {
     res.json({ message });
   }
