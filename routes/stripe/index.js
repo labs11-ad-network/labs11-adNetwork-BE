@@ -1,9 +1,57 @@
 require("dotenv").config();
 const route = require("express").Router();
 const models = require("../../common/helpers");
+const request = require("request");
 const stripe = require("stripe")(process.env.SECRET_KEY);
 
 const { authenticate } = require("../../common/authentication");
+
+// @route    /api/checkout/connect_customer
+// @desc     Post StripeConnect/create
+// @Access   Public
+route.post("/connect_customer", authenticate, async (req, res) => {
+  const { code } = req.body;
+  const { id } = req.decoded;
+  if (!code) return res.status(422).json({ message: "Code required" });
+
+  try {
+    const _customer = await models.findBy("users", { id });
+    if (!_customer)
+      return res.status(404).json({ message: "Customer not found" });
+
+    const options = {
+      method: "POST",
+      url: "https://connect.stripe.com/oauth/token",
+      headers: {
+        "cache-control": "no-cache",
+        "content-type":
+          "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"
+      },
+      formData: {
+        client_secret: process.env.SECRET_KEY,
+        code,
+        grant_type: "authorization_code"
+      }
+    };
+
+    request(options, async (error, response, body) => {
+      if (error) throw new Error(error);
+      if (JSON.parse(body).stripe_user_id) {
+        const update = await models.update("users", id, {
+          stripe_payout_id: JSON.parse(body).stripe_user_id
+        });
+
+        if (!update) return res.status(500).json({ message: "server error" });
+        const updatedCustomer = await models.findBy("users", { id });
+        res.json(updatedCustomer);
+      } else {
+        res.status(500).json({ message: "Failed to connect stripe" });
+      }
+    });
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
 
 // @route    /api/checkout/create_customer
 // @desc     Post Cosumter/create
@@ -73,15 +121,14 @@ route.post("/payout", authenticate, async (req, res) => {
     await stripe.payouts.create(
       {
         amount: Math.floor(_customer.amount * 100) || 0,
-        currency: "usd"
+        currency: "usd",
+        source_type: "card"
       },
+      { stripe_account: _customer.stripe_payout_id },
       async (err, payout) => {
-        console.log(payout);
         if (err) return res.status(500).json({ message: err });
-        const addDestination = await models.update("users", req.decoded.id, {
-          stripe_payout_id: payout.destination
-        });
-        if (addDestination) {
+
+        if (payout) {
           const success = await models.update("users", req.decoded.id, {
             amount: 0
           });
