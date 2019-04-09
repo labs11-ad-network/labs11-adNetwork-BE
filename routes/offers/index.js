@@ -1,6 +1,5 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const pusher = require("../../common/pusher");
 const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 
@@ -123,21 +122,21 @@ route.put("/:id", authenticate, async (req, res) => {
     // front end subscribes to their channel using current user data
 
     if (success) {
+      
+      // Notify all affiliates that the offer's status has been updated
       if (req.body.hasOwnProperty("status")) {
         const affiliates = await models.affiliatesByOfferId(id);
-        affiliates.forEach(affiliate => {
-          return pusher.trigger(
-            `${affiliate.id}`,
-            "disable-offer",
-            {
-              message: `${offerCheck.name} is now disabled`,
-              created_at: Date(Date.now())
-            },
-            req.headers["x-socket-id"]
-          );
+        affiliates.forEach(async affiliate => {
+          await models.add("notifications", {
+            recipient: affiliate.id,
+            type: "offer",
+            entity_id: id,
+            msg_body: `${offerCheck.name} is now disabled`
+          });
         });
       }
-
+      
+      // Send back all offers
       const offers = await models
         .findAllBy("offers", { user_id })
         .orderBy("id", "asc");
