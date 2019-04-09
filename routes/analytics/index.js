@@ -20,12 +20,12 @@ route.post("/", async (req, res) => {
         ip: ipAddr,
         referrer,
         agreement_id,
-        country: location.country,
-        region: location.region,
-        city: location.city,
-        postal: location.postal,
-        latitude: location.latitude,
-        longitude: location.longitude
+        country: location.country || "",
+        region: location.region || "",
+        city: location.city || "",
+        postal: location.postal || "",
+        latitude: location.latitude || "",
+        longitude: location.longitude || ""
       });
       if (!enterAction)
         return res.status(400).json({ message: "Failed to add action" });
@@ -413,7 +413,6 @@ route.get("/", authenticate, async (req, res) => {
           .thisMonthAffiliatesAll(affiliate_id, "click")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
-
         const lastMonthConversionsFiltered = await models
           .lastMonthAffiliatesAll(affiliate_id, "conversion")
           .where("an.created_at", ">=", started_at)
@@ -422,24 +421,20 @@ route.get("/", authenticate, async (req, res) => {
           .thisMonthAffiliatesAll(affiliate_id, "conversion")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
-
         const impressionsGrowthFiltered =
           ((thisMonthsImpressionsFiltered.count -
             lastMonthsImpressionsFiltered.count) /
             thisMonthsImpressionsFiltered.count) *
           100;
-
         const clicksGrowthFiltered =
           ((thisMonthClicksFiltered.count - lastMonthClicksFiltered.count) /
             thisMonthClicksFiltered.count) *
           100;
-
         const conversionsGrowthFiltered =
           ((thisMonthConversionsFiltered.count -
             lastMonthConversionsFiltered.count) /
             thisMonthConversionsFiltered.count) *
           100;
-
         const citiesFiltered = await db("analytics as an")
           .join("agreements as ag", "ag.id", "an.agreement_id")
           .where("ag.affiliate_id", affiliate_id)
@@ -448,25 +443,21 @@ route.get("/", authenticate, async (req, res) => {
           .andWhere("an.created_at", "<", ended_at)
           .count("* as num")
           .groupBy("city", "longitude", "latitude");
-
         const getAffiliateClicksFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "click")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
-
         const getAffiliateImpressionsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "impression")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
-
         const getAffiliateConversionFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "conversion")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
-
         const chromeAnalyticsFiltered = await await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Chrome")
@@ -523,19 +514,15 @@ route.get("/", authenticate, async (req, res) => {
         res.json(getActions);
       } else {
         // all analytics that match the logged in user
-
         const getAffiliateClicks = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "click");
-
         const getAffiliateImpressions = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "impression");
-
         const getAffiliateConversion = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "conversion");
-
         const chromeAnalytics = await await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Chrome");
