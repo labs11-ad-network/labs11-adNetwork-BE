@@ -1,6 +1,5 @@
 const route = require("express").Router();
 const models = require("../../common/helpers.js");
-const db = require("../../data/dbConfig.js");
 const { authenticate } = require("../../common/authentication");
 
 route.get("/", authenticate, async (req, res) => {
