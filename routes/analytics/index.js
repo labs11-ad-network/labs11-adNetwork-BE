@@ -84,243 +84,486 @@ route.get("/:id", authenticate, async (req, res) => {
   const { id } = req.params;
   const user_id = req.decoded.id;
   const { acct_type } = req.decoded;
-
+  const { started_at, ended_at } = req.query;
   try {
     if (acct_type === "affiliate") {
-      const lastMonthsImpressions = await models.lastMonthAffiliates(
-        user_id,
-        "impression",
-        id
-      );
-      const thisMonthsImpressions = await models.thisMonthAffiliates(
-        user_id,
-        "impression",
-        id
-      );
-      const lastMonthClicks = await models.lastMonthAffiliates(
-        user_id,
-        "click",
-        id
-      );
-      const thisMonthClicks = await models.thisMonthAffiliates(
-        user_id,
-        "click",
-        id
-      );
+      if (started_at && ended_at) {
+        const lastMonthsImpressions = await models.lastMonthAffiliates(
+          user_id,
+          "impression",
+          id
+        );
+        const thisMonthsImpressions = await models.thisMonthAffiliates(
+          user_id,
+          "impression",
+          id
+        );
+        const lastMonthClicks = await models.lastMonthAffiliates(
+          user_id,
+          "click",
+          id
+        );
+        const thisMonthClicks = await models.thisMonthAffiliates(
+          user_id,
+          "click",
+          id
+        );
 
-      const lastMonthConversions = await models.lastMonthAffiliates(
-        user_id,
-        "conversion",
-        id
-      );
-      const thisMonthConversions = await models.thisMonthAffiliates(
-        user_id,
-        "conversion",
-        id
-      );
+        const lastMonthConversions = await models.lastMonthAffiliates(
+          user_id,
+          "conversion",
+          id
+        );
+        const thisMonthConversions = await models.thisMonthAffiliates(
+          user_id,
+          "conversion",
+          id
+        );
 
-      const impressionsGrowth =
-        ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
-          thisMonthsImpressions.count) *
-        100;
+        const impressionsGrowth =
+          ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+            thisMonthsImpressions.count) *
+          100;
 
-      const clicksGrowth =
-        ((thisMonthClicks.count - lastMonthClicks.count) /
-          thisMonthClicks.count) *
-        100;
+        const clicksGrowth =
+          ((thisMonthClicks.count - lastMonthClicks.count) /
+            thisMonthClicks.count) *
+          100;
 
-      const conversionsGrowth =
-        ((thisMonthConversions.count - lastMonthConversions.count) /
-          thisMonthConversions.count) *
-        100;
+        const conversionsGrowth =
+          ((thisMonthConversions.count - lastMonthConversions.count) /
+            thisMonthConversions.count) *
+          100;
 
-      const cities = await db.raw(
-        `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${user_id} AND ag.id = ${id} GROUP BY city, longitude, latitude`
-      );
+        // const cities = await db.raw(
+        //   `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${user_id} AND ag.id = ${id} GROUP BY city, longitude, latitude`
+        // );
 
-      // send the id of an agreeement and get the analytics for that agreement formatter like below
-      const affiliateAnalyticsClicks = await models.analyticsPerOfferWithPricing(
-        "click",
-        user_id,
-        id
-      );
-      const affiliateAnalyticsImpressions = await models.analyticsPerOfferWithPricing(
-        "impression",
-        user_id,
-        id
-      );
-      const affiliateAnalyticsConversions = await models.analyticsPerOfferWithPricing(
-        "conversion",
-        user_id,
-        id
-      );
+        const cities = await db("analytics as an")
+          .join("agreements as ag", "ag.id", "an.agreement_id")
+          .where("an.agreement_id", id)
+          .select("city", "longitude", "latitude")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at)
+          .count("* as num")
+          .groupBy("city", "longitude", "latitude");
 
-      const chromeCount = await models.browserCountPerOfferAffiliates(
-        "Chrome",
-        user_id,
-        id
-      );
-      const safariCount = await models.browserCountPerOfferAffiliates(
-        "Safari",
-        user_id,
-        id
-      );
-      const firefoxCount = await models.browserCountPerOfferAffiliates(
-        "Firefox",
-        user_id,
-        id
-      );
-      const edgeCount = await models.browserCountPerOfferAffiliates(
-        "Edge",
-        user_id,
-        id
-      );
-      const otherCount = await models.browserCountPerOfferAffiliates(
-        "Other",
-        user_id,
-        id
-      );
+        // send the id of an agreeement and get the analytics for that agreement formatter like below
+        const affiliateAnalyticsClicks = await models
+          .analyticsPerOfferWithPricing("click", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const affiliateAnalyticsImpressions = await models
+          .analyticsPerOfferWithPricing("impression", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const affiliateAnalyticsConversions = await models
+          .analyticsPerOfferWithPricing("conversion", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
 
-      res.json({
-        clicks: affiliateAnalyticsClicks,
-        impressions: affiliateAnalyticsImpressions,
-        conversions: affiliateAnalyticsConversions,
-        actionCount: {
-          impressions: Number(affiliateAnalyticsImpressions.length),
-          clicks: Number(affiliateAnalyticsClicks.length),
-          conversions: Number(affiliateAnalyticsConversions.length)
-        },
-        browserCount: {
-          chrome: chromeCount.length,
-          safari: safariCount.length,
-          edge: edgeCount.length,
-          firefox: firefoxCount.length,
-          other: otherCount.length
-        },
-        cities: cities.rows,
-        growth: {
-          clicks: clicksGrowth,
-          impressions: impressionsGrowth,
-          conversions: conversionsGrowth
-        }
-      });
+        const chromeCount = await models
+          .browserCountPerOfferAffiliates("Chrome", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const safariCount = await models
+          .browserCountPerOfferAffiliates("Safari", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const firefoxCount = await models
+          .browserCountPerOfferAffiliates("Firefox", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const edgeCount = await models
+          .browserCountPerOfferAffiliates("Edge", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const otherCount = await models
+          .browserCountPerOfferAffiliates("Other", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+
+        res.json({
+          clicks: affiliateAnalyticsClicks,
+          impressions: affiliateAnalyticsImpressions,
+          conversions: affiliateAnalyticsConversions,
+          actionCount: {
+            impressions: Number(affiliateAnalyticsImpressions.length),
+            clicks: Number(affiliateAnalyticsClicks.length),
+            conversions: Number(affiliateAnalyticsConversions.length)
+          },
+          browserCount: {
+            chrome: chromeCount.length,
+            safari: safariCount.length,
+            edge: edgeCount.length,
+            firefox: firefoxCount.length,
+            other: otherCount.length
+          },
+          cities: cities,
+          growth: {
+            clicks: clicksGrowth,
+            impressions: impressionsGrowth,
+            conversions: conversionsGrowth
+          }
+        });
+      } else {
+        const lastMonthsImpressions = await models.lastMonthAffiliates(
+          user_id,
+          "impression",
+          id
+        );
+        const thisMonthsImpressions = await models.thisMonthAffiliates(
+          user_id,
+          "impression",
+          id
+        );
+        const lastMonthClicks = await models.lastMonthAffiliates(
+          user_id,
+          "click",
+          id
+        );
+        const thisMonthClicks = await models.thisMonthAffiliates(
+          user_id,
+          "click",
+          id
+        );
+
+        const lastMonthConversions = await models.lastMonthAffiliates(
+          user_id,
+          "conversion",
+          id
+        );
+        const thisMonthConversions = await models.thisMonthAffiliates(
+          user_id,
+          "conversion",
+          id
+        );
+
+        const impressionsGrowth =
+          ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+            thisMonthsImpressions.count) *
+          100;
+
+        const clicksGrowth =
+          ((thisMonthClicks.count - lastMonthClicks.count) /
+            thisMonthClicks.count) *
+          100;
+
+        const conversionsGrowth =
+          ((thisMonthConversions.count - lastMonthConversions.count) /
+            thisMonthConversions.count) *
+          100;
+
+        const cities = await db.raw(
+          `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${user_id} AND ag.id = ${id} GROUP BY city, longitude, latitude`
+        );
+
+        // send the id of an agreeement and get the analytics for that agreement formatter like below
+        const affiliateAnalyticsClicks = await models.analyticsPerOfferWithPricing(
+          "click",
+          user_id,
+          id
+        );
+        const affiliateAnalyticsImpressions = await models.analyticsPerOfferWithPricing(
+          "impression",
+          user_id,
+          id
+        );
+        const affiliateAnalyticsConversions = await models.analyticsPerOfferWithPricing(
+          "conversion",
+          user_id,
+          id
+        );
+
+        const chromeCount = await models.browserCountPerOfferAffiliates(
+          "Chrome",
+          user_id,
+          id
+        );
+        const safariCount = await models.browserCountPerOfferAffiliates(
+          "Safari",
+          user_id,
+          id
+        );
+        const firefoxCount = await models.browserCountPerOfferAffiliates(
+          "Firefox",
+          user_id,
+          id
+        );
+        const edgeCount = await models.browserCountPerOfferAffiliates(
+          "Edge",
+          user_id,
+          id
+        );
+        const otherCount = await models.browserCountPerOfferAffiliates(
+          "Other",
+          user_id,
+          id
+        );
+
+        res.json({
+          clicks: affiliateAnalyticsClicks,
+          impressions: affiliateAnalyticsImpressions,
+          conversions: affiliateAnalyticsConversions,
+          actionCount: {
+            impressions: Number(affiliateAnalyticsImpressions.length),
+            clicks: Number(affiliateAnalyticsClicks.length),
+            conversions: Number(affiliateAnalyticsConversions.length)
+          },
+          browserCount: {
+            chrome: chromeCount.length,
+            safari: safariCount.length,
+            edge: edgeCount.length,
+            firefox: firefoxCount.length,
+            other: otherCount.length
+          },
+          cities: cities.rows,
+          growth: {
+            clicks: clicksGrowth,
+            impressions: impressionsGrowth,
+            conversions: conversionsGrowth
+          }
+        });
+      }
     } else if (acct_type === "advertiser") {
-      const lastMonthsImpressions = await models.lastMonthAdvertiser(
-        user_id,
-        "impression",
-        id
-      );
-      const thisMonthsImpressions = await models.thisMonthAdvertiser(
-        user_id,
-        "impression",
-        id
-      );
-      const lastMonthClicks = await models.lastMonthAdvertiser(
-        user_id,
-        "click",
-        id
-      );
-      const thisMonthClicks = await models.thisMonthAdvertiser(
-        user_id,
-        "click",
-        id
-      );
+      if (started_at && ended_at) {
+        const lastMonthsImpressions = await models.lastMonthAdvertiser(
+          user_id,
+          "impression",
+          id
+        );
+        const thisMonthsImpressions = await models.thisMonthAdvertiser(
+          user_id,
+          "impression",
+          id
+        );
+        const lastMonthClicks = await models.lastMonthAdvertiser(
+          user_id,
+          "click",
+          id
+        );
+        const thisMonthClicks = await models.thisMonthAdvertiser(
+          user_id,
+          "click",
+          id
+        );
 
-      const lastMonthConversions = await models.lastMonthAdvertiser(
-        user_id,
-        "conversion",
-        id
-      );
-      const thisMonthConversions = await models.thisMonthAdvertiser(
-        user_id,
-        "conversion",
-        id
-      );
+        const lastMonthConversions = await models.lastMonthAdvertiser(
+          user_id,
+          "conversion",
+          id
+        );
+        const thisMonthConversions = await models.thisMonthAdvertiser(
+          user_id,
+          "conversion",
+          id
+        );
 
-      const impressionsGrowth =
-        ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
-          thisMonthsImpressions.count) *
-        100;
+        const impressionsGrowth =
+          ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+            thisMonthsImpressions.count) *
+          100;
 
-      const clicksGrowth =
-        ((thisMonthClicks.count - lastMonthClicks.count) /
-          thisMonthClicks.count) *
-        100;
+        const clicksGrowth =
+          ((thisMonthClicks.count - lastMonthClicks.count) /
+            thisMonthClicks.count) *
+          100;
 
-      const conversionsGrowth =
-        ((thisMonthConversions.count - lastMonthConversions.count) /
-          thisMonthConversions.count) *
-        100;
+        const conversionsGrowth =
+          ((thisMonthConversions.count - lastMonthConversions.count) /
+            thisMonthConversions.count) *
+          100;
 
-      const cities = await db.raw(
-        `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${user_id} AND o.id = ${id} GROUP BY city, longitude, latitude`
-      );
-      // send the id of an offer and get the analytics for that offer formatted like below
-      const advertiserAnalyticsClicks = await models.analyticsPerOfferAdvertisers(
-        "click",
-        user_id,
-        id
-      );
-      const advertiserAnalyticsImpressions = await models.analyticsPerOfferAdvertisers(
-        "impression",
-        user_id,
-        id
-      );
-      const advertiserAnalyticsConversions = await models.analyticsPerOfferAdvertisers(
-        "conversion",
-        user_id,
-        id
-      );
+        // const cities = await db.raw(
+        //   `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${user_id} AND o.id = ${id} GROUP BY city, longitude, latitude`
+        // );
+        const cities = await db("analytics as an")
+          .join("agreements as ag", "ag.id", "an.agreement_id")
+          .join("offers as o", "ag.offer_id", "o.id")
+          .where("o.user_id", user_id)
+          .andWhere("o.id", id)
+          .select("city", "longitude", "latitude")
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at)
+          .count("* as num")
+          .groupBy("city", "longitude", "latitude");
 
-      const chromeCount = await models.analyticsPerOfferAdvertisersBrowsers(
-        "Chrome",
-        user_id,
-        id
-      );
-      const safariCount = await models.analyticsPerOfferAdvertisersBrowsers(
-        "Safari",
-        user_id,
-        id
-      );
-      const firefoxCount = await models.analyticsPerOfferAdvertisersBrowsers(
-        "Firefox",
-        user_id,
-        id
-      );
-      const edgeCount = await models.analyticsPerOfferAdvertisersBrowsers(
-        "Edge",
-        user_id,
-        id
-      );
-      const otherCount = await models.analyticsPerOfferAdvertisersBrowsers(
-        "Other",
-        user_id,
-        id
-      );
+        // send the id of an offer and get the analytics for that offer formatted like below
+        const advertiserAnalyticsClicks = await models
+          .analyticsPerOfferAdvertisers("click", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const advertiserAnalyticsImpressions = await models
+          .analyticsPerOfferAdvertisers("impression", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const advertiserAnalyticsConversions = await models
+          .analyticsPerOfferAdvertisers("conversion", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
 
-      res.json({
-        clicks: advertiserAnalyticsClicks,
-        impressions: advertiserAnalyticsImpressions,
-        conversions: advertiserAnalyticsConversions,
-        actionCount: {
-          impressions: Number(advertiserAnalyticsImpressions.length),
-          clicks: Number(advertiserAnalyticsClicks.length),
-          conversions: Number(advertiserAnalyticsConversions.length)
-        },
-        browserCount: {
-          chrome: chromeCount.length,
-          safari: safariCount.length,
-          edge: edgeCount.length,
-          firefox: firefoxCount.length,
-          other: otherCount.length
-        },
-        cities: cities.rows,
-        growth: {
-          clicks: clicksGrowth,
-          impressions: impressionsGrowth,
-          conversions: conversionsGrowth
-        }
-      });
+        const chromeCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Chrome", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const safariCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Safari", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const firefoxCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Firefox", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const edgeCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Edge", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+        const otherCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Other", user_id, id)
+          .where("an.created_at", ">=", started_at)
+          .andWhere("an.created_at", "<", ended_at);
+
+        res.json({
+          clicks: advertiserAnalyticsClicks,
+          impressions: advertiserAnalyticsImpressions,
+          conversions: advertiserAnalyticsConversions,
+          actionCount: {
+            impressions: Number(advertiserAnalyticsImpressions.length),
+            clicks: Number(advertiserAnalyticsClicks.length),
+            conversions: Number(advertiserAnalyticsConversions.length)
+          },
+          browserCount: {
+            chrome: chromeCount.length,
+            safari: safariCount.length,
+            edge: edgeCount.length,
+            firefox: firefoxCount.length,
+            other: otherCount.length
+          },
+          cities: cities,
+          growth: {
+            clicks: clicksGrowth,
+            impressions: impressionsGrowth,
+            conversions: conversionsGrowth
+          }
+        });
+      } else {
+        const lastMonthsImpressions = await models.lastMonthAdvertiser(
+          user_id,
+          "impression",
+          id
+        );
+        const thisMonthsImpressions = await models.thisMonthAdvertiser(
+          user_id,
+          "impression",
+          id
+        );
+        const lastMonthClicks = await models.lastMonthAdvertiser(
+          user_id,
+          "click",
+          id
+        );
+        const thisMonthClicks = await models.thisMonthAdvertiser(
+          user_id,
+          "click",
+          id
+        );
+
+        const lastMonthConversions = await models.lastMonthAdvertiser(
+          user_id,
+          "conversion",
+          id
+        );
+        const thisMonthConversions = await models.thisMonthAdvertiser(
+          user_id,
+          "conversion",
+          id
+        );
+
+        const impressionsGrowth =
+          ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+            thisMonthsImpressions.count) *
+          100;
+
+        const clicksGrowth =
+          ((thisMonthClicks.count - lastMonthClicks.count) /
+            thisMonthClicks.count) *
+          100;
+
+        const conversionsGrowth =
+          ((thisMonthConversions.count - lastMonthConversions.count) /
+            thisMonthConversions.count) *
+          100;
+
+        const cities = await db.raw(
+          `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${user_id} AND o.id = ${id} GROUP BY city, longitude, latitude`
+        );
+        // send the id of an offer and get the analytics for that offer formatted like below
+        const advertiserAnalyticsClicks = await models.analyticsPerOfferAdvertisers(
+          "click",
+          user_id,
+          id
+        );
+        const advertiserAnalyticsImpressions = await models.analyticsPerOfferAdvertisers(
+          "impression",
+          user_id,
+          id
+        );
+        const advertiserAnalyticsConversions = await models.analyticsPerOfferAdvertisers(
+          "conversion",
+          user_id,
+          id
+        );
+
+        const chromeCount = await models.analyticsPerOfferAdvertisersBrowsers(
+          "Chrome",
+          user_id,
+          id
+        );
+        const safariCount = await models.analyticsPerOfferAdvertisersBrowsers(
+          "Safari",
+          user_id,
+          id
+        );
+        const firefoxCount = await models.analyticsPerOfferAdvertisersBrowsers(
+          "Firefox",
+          user_id,
+          id
+        );
+        const edgeCount = await models.analyticsPerOfferAdvertisersBrowsers(
+          "Edge",
+          user_id,
+          id
+        );
+        const otherCount = await models.analyticsPerOfferAdvertisersBrowsers(
+          "Other",
+          user_id,
+          id
+        );
+
+        res.json({
+          clicks: advertiserAnalyticsClicks,
+          impressions: advertiserAnalyticsImpressions,
+          conversions: advertiserAnalyticsConversions,
+          actionCount: {
+            impressions: Number(advertiserAnalyticsImpressions.length),
+            clicks: Number(advertiserAnalyticsClicks.length),
+            conversions: Number(advertiserAnalyticsConversions.length)
+          },
+          browserCount: {
+            chrome: chromeCount.length,
+            safari: safariCount.length,
+            edge: edgeCount.length,
+            firefox: firefoxCount.length,
+            other: otherCount.length
+          },
+          cities: cities.rows,
+          growth: {
+            clicks: clicksGrowth,
+            impressions: impressionsGrowth,
+            conversions: conversionsGrowth
+          }
+        });
+      }
     }
   } catch ({ message }) {
     res.status(500).json({ message });
