@@ -52,7 +52,7 @@ route.get("/", authenticate, async (req, res) => {
             .join("offers as o", "o.id", "ag.offer_id")
             .where({ affiliate_id: user.id });
 
-          user.stripe_balance = total_amount;
+          user.total_amount = total_amount;
           user.offers = offers.length;
           user.ads = ads.length;
           user.agreements = acct_type === "affiliate" ? agreements.length : 0;
