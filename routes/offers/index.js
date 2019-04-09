@@ -117,26 +117,21 @@ route.put("/:id", authenticate, async (req, res) => {
 
     const success = await models.update("offers", id, { ...req.body });
 
-    // List of all users that have that offer
-    // forEach user trigger pusher using that users id as the channel name
-    // front end subscribes to their channel using current user data
-
     if (success) {
-      
       // Notify all affiliates that the offer's status has been updated
       if (req.body.hasOwnProperty("status")) {
+        const status_text = !req.body.status ? "disabled" : "enabled";
         const affiliates = await models.affiliatesByOfferId(id);
         affiliates.forEach(async affiliate => {
           await models.add("notifications", {
             recipient: affiliate.id,
             type: "offer",
             entity_id: id,
-            msg_body: `${offerCheck.name} is now disabled`
+            msg_body: `Offer "${offerCheck.name}" is now ${status_text}`
           });
         });
       }
-      
-      // Send back all offers
+
       const offers = await models
         .findAllBy("offers", { user_id })
         .orderBy("id", "asc");
