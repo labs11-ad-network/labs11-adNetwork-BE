@@ -34,7 +34,7 @@ route.get("/", authenticate, async (req, res) => {
       );
 
       const total_amount =
-        payout.map(payout => payout.amount).reduce((a, b) => a + b) / 100;
+        payout.map(payout => payout.amount).reduce((a, b) => a + b, 0) / 100;
 
       if (users) {
         const result = await users.map(async user => {
