@@ -1,5 +1,6 @@
 const cloudinary = require("cloudinary");
 const multipart = require("connect-multiparty")();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const db = require("../../data/dbConfig");
