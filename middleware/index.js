@@ -11,6 +11,7 @@ const users = require("../routes/users");
 const analytics = require("../routes/analytics");
 const stripe = require("../routes/stripe");
 const notifications = require("../routes/notifications");
+const contactform = require("../routes/contactForm/contactForm");
 
 const configureMiddleware = server => {
   server.use(json);
@@ -26,6 +27,7 @@ const configureMiddleware = server => {
   server.use("/api/users", users);
   server.use("/api/checkout", stripe);
   server.use("/api/notifications", notifications);
+  server.use("/api/contactform", contactform);
 };
 
 module.exports = {
