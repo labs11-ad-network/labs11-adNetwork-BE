@@ -1,6 +1,7 @@
 const route = require("express").Router();
 const models = require("../../common/helpers.js");
-const { authenticate } = require("../../common/authentication");
+const { authenticate } = require("../../common/authentication.js");
+const { adminCheck } = require("../../common/roleCheck.js");
 
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
@@ -26,7 +27,7 @@ route.get("/:id", authenticate, async (req, res) => {
   }
 });
 
-route.post("/", authenticate, async (req, res) => {
+route.post("/", authenticate, adminCheck, async (req, res) => {
   const { recipient, type, entity_id, msg_body } = req.body;
   if (
     !(
@@ -59,7 +60,7 @@ route.post("/", authenticate, async (req, res) => {
   }
 });
 
-route.put("/:id", authenticate, async (req, res) => {
+route.put("/:id", authenticate, adminCheck, async (req, res) => {
   const { unread } = req.body;
   const id = req.params.id;
   const user_id = req.decoded.id;
