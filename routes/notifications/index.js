@@ -7,8 +7,7 @@ route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   try {
     const notifications = await models.findAllBy("notifications", {
-      recipient: user_id,
-      unread: true
+      recipient: user_id
     });
     res.status(200).json(notifications);
   } catch ({ message }) {
