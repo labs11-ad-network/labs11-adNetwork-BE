@@ -12,23 +12,26 @@ route.post("/", async (req, res) => {
   const { action, browser, ip, referrer, agreement_id, userAgent } = req.body;
   const ipAddr = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const parser = new UAParser(userAgent);
+
   try {
     iplocation(ipAddr, [], async (error, location) => {
-      const [enterAction] = await models.add("analytics", {
-        action,
-        browser: parser.getBrowser().name,
-        ip: ipAddr,
-        referrer,
-        agreement_id,
-        country: location.country || "",
-        region: location.region || "",
-        city: location.city || "",
-        postal: location.postal || "",
-        latitude: location.latitude || "",
-        longitude: location.longitude || ""
-      });
-      if (!enterAction)
-        return res.status(400).json({ message: "Failed to add action" });
+      const enterAction = await models
+        .add("analytics", {
+          action,
+          browser: parser.getBrowser().name,
+          ip: ipAddr,
+          referrer,
+          agreement_id,
+          country: location.country || "",
+          region: location.region || "",
+          city: location.city || "",
+          postal: location.postal || "",
+          latitude: location.latitude || "",
+          longitude: location.longitude || ""
+        })
+        .catch(() => {
+          return res.json({ message: "Failed to add action" });
+        });
 
       const payments = await db("agreements as ag")
         .join("offers as o", "ag.offer_id", "o.id")
@@ -69,8 +72,7 @@ route.post("/", async (req, res) => {
           });
         }
       });
-      const analytics = await models.findBy("analytics", { id: enterAction });
-      res.json(analytics);
+      res.end();
     });
   } catch ({ message }) {
     res.status(500).json({ message });
