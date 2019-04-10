@@ -95,16 +95,19 @@ route.get("/:id", authenticate, async (req, res) => {
           "impression",
           id
         );
+
         const thisMonthsImpressions = await models.thisMonthAffiliates(
           user_id,
           "impression",
           id
         );
+
         const lastMonthClicks = await models.lastMonthAffiliates(
           user_id,
           "click",
           id
         );
+
         const thisMonthClicks = await models.thisMonthAffiliates(
           user_id,
           "click",
@@ -116,6 +119,7 @@ route.get("/:id", authenticate, async (req, res) => {
           "conversion",
           id
         );
+
         const thisMonthConversions = await models.thisMonthAffiliates(
           user_id,
           "conversion",
@@ -137,10 +141,6 @@ route.get("/:id", authenticate, async (req, res) => {
             thisMonthConversions.count) *
           100;
 
-        // const cities = await db.raw(
-        //   `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${user_id} AND ag.id = ${id} GROUP BY city, longitude, latitude`
-        // );
-
         const cities = await db("analytics as an")
           .join("agreements as ag", "ag.id", "an.agreement_id")
           .where("an.agreement_id", id)
@@ -154,36 +154,44 @@ route.get("/:id", authenticate, async (req, res) => {
         const affiliateAnalyticsClicks = await models
           .analyticsPerOfferWithPricing("click", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const affiliateAnalyticsImpressions = await models
           .analyticsPerOfferWithPricing("impression", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const affiliateAnalyticsConversions = await models
           .analyticsPerOfferWithPricing("conversion", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
 
         const chromeCount = await models
           .browserCountPerOfferAffiliates("Chrome", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const safariCount = await models
           .browserCountPerOfferAffiliates("Safari", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const firefoxCount = await models
           .browserCountPerOfferAffiliates("Firefox", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const edgeCount = await models
           .browserCountPerOfferAffiliates("Edge", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const otherCount = await models
           .browserCountPerOfferAffiliates("Other", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
 
         res.json({
           clicks: affiliateAnalyticsClicks,
@@ -214,16 +222,19 @@ route.get("/:id", authenticate, async (req, res) => {
           "impression",
           id
         );
+
         const thisMonthsImpressions = await models.thisMonthAffiliates(
           user_id,
           "impression",
           id
         );
+
         const lastMonthClicks = await models.lastMonthAffiliates(
           user_id,
           "click",
           id
         );
+
         const thisMonthClicks = await models.thisMonthAffiliates(
           user_id,
           "click",
@@ -235,6 +246,7 @@ route.get("/:id", authenticate, async (req, res) => {
           "conversion",
           id
         );
+
         const thisMonthConversions = await models.thisMonthAffiliates(
           user_id,
           "conversion",
@@ -261,47 +273,31 @@ route.get("/:id", authenticate, async (req, res) => {
         );
 
         // send the id of an agreeement and get the analytics for that agreement formatter like below
-        const affiliateAnalyticsClicks = await models.analyticsPerOfferWithPricing(
-          "click",
-          user_id,
-          id
-        );
-        const affiliateAnalyticsImpressions = await models.analyticsPerOfferWithPricing(
-          "impression",
-          user_id,
-          id
-        );
-        const affiliateAnalyticsConversions = await models.analyticsPerOfferWithPricing(
-          "conversion",
-          user_id,
-          id
-        );
+        const affiliateAnalyticsClicks = await models
+          .analyticsPerOfferWithPricing("click", user_id, id)
+          .orderBy("an.id", "desc");
+        const affiliateAnalyticsImpressions = await models
+          .analyticsPerOfferWithPricing("impression", user_id, id)
+          .orderBy("an.id", "desc");
+        const affiliateAnalyticsConversions = await models
+          .analyticsPerOfferWithPricing("conversion", user_id, id)
+          .orderBy("an.id", "desc");
 
-        const chromeCount = await models.browserCountPerOfferAffiliates(
-          "Chrome",
-          user_id,
-          id
-        );
-        const safariCount = await models.browserCountPerOfferAffiliates(
-          "Safari",
-          user_id,
-          id
-        );
-        const firefoxCount = await models.browserCountPerOfferAffiliates(
-          "Firefox",
-          user_id,
-          id
-        );
-        const edgeCount = await models.browserCountPerOfferAffiliates(
-          "Edge",
-          user_id,
-          id
-        );
-        const otherCount = await models.browserCountPerOfferAffiliates(
-          "Other",
-          user_id,
-          id
-        );
+        const chromeCount = await models
+          .browserCountPerOfferAffiliates("Chrome", user_id, id)
+          .orderBy("an.id", "desc");
+        const safariCount = await models
+          .browserCountPerOfferAffiliates("Safari", user_id, id)
+          .orderBy("an.id", "desc");
+        const firefoxCount = await models
+          .browserCountPerOfferAffiliates("Firefox", user_id, id)
+          .orderBy("an.id", "desc");
+        const edgeCount = await models
+          .browserCountPerOfferAffiliates("Edge", user_id, id)
+          .orderBy("an.id", "desc");
+        const otherCount = await models
+          .browserCountPerOfferAffiliates("Other", user_id, id)
+          .orderBy("an.id", "desc");
 
         res.json({
           clicks: affiliateAnalyticsClicks,
@@ -334,16 +330,19 @@ route.get("/:id", authenticate, async (req, res) => {
           "impression",
           id
         );
+
         const thisMonthsImpressions = await models.thisMonthAdvertiser(
           user_id,
           "impression",
           id
         );
+
         const lastMonthClicks = await models.lastMonthAdvertiser(
           user_id,
           "click",
           id
         );
+
         const thisMonthClicks = await models.thisMonthAdvertiser(
           user_id,
           "click",
@@ -355,6 +354,7 @@ route.get("/:id", authenticate, async (req, res) => {
           "conversion",
           id
         );
+
         const thisMonthConversions = await models.thisMonthAdvertiser(
           user_id,
           "conversion",
@@ -394,36 +394,44 @@ route.get("/:id", authenticate, async (req, res) => {
         const advertiserAnalyticsClicks = await models
           .analyticsPerOfferAdvertisers("click", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const advertiserAnalyticsImpressions = await models
           .analyticsPerOfferAdvertisers("impression", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const advertiserAnalyticsConversions = await models
           .analyticsPerOfferAdvertisers("conversion", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
 
         const chromeCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Chrome", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const safariCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Safari", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const firefoxCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Firefox", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const edgeCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Edge", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const otherCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Other", user_id, id)
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
 
         res.json({
           clicks: advertiserAnalyticsClicks,
@@ -454,16 +462,19 @@ route.get("/:id", authenticate, async (req, res) => {
           "impression",
           id
         );
+
         const thisMonthsImpressions = await models.thisMonthAdvertiser(
           user_id,
           "impression",
           id
         );
+
         const lastMonthClicks = await models.lastMonthAdvertiser(
           user_id,
           "click",
           id
         );
+
         const thisMonthClicks = await models.thisMonthAdvertiser(
           user_id,
           "click",
@@ -475,6 +486,7 @@ route.get("/:id", authenticate, async (req, res) => {
           "conversion",
           id
         );
+
         const thisMonthConversions = await models.thisMonthAdvertiser(
           user_id,
           "conversion",
@@ -500,47 +512,31 @@ route.get("/:id", authenticate, async (req, res) => {
           `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${user_id} AND o.id = ${id} GROUP BY city, longitude, latitude`
         );
         // send the id of an offer and get the analytics for that offer formatted like below
-        const advertiserAnalyticsClicks = await models.analyticsPerOfferAdvertisers(
-          "click",
-          user_id,
-          id
-        );
-        const advertiserAnalyticsImpressions = await models.analyticsPerOfferAdvertisers(
-          "impression",
-          user_id,
-          id
-        );
-        const advertiserAnalyticsConversions = await models.analyticsPerOfferAdvertisers(
-          "conversion",
-          user_id,
-          id
-        );
+        const advertiserAnalyticsClicks = await models
+          .analyticsPerOfferAdvertisers("click", user_id, id)
+          .orderBy("an.id", "desc");
+        const advertiserAnalyticsImpressions = await models
+          .analyticsPerOfferAdvertisers("impression", user_id, id)
+          .orderBy("an.id", "desc");
+        const advertiserAnalyticsConversions = await models
+          .analyticsPerOfferAdvertisers("conversion", user_id, id)
+          .orderBy("an.id", "desc");
 
-        const chromeCount = await models.analyticsPerOfferAdvertisersBrowsers(
-          "Chrome",
-          user_id,
-          id
-        );
-        const safariCount = await models.analyticsPerOfferAdvertisersBrowsers(
-          "Safari",
-          user_id,
-          id
-        );
-        const firefoxCount = await models.analyticsPerOfferAdvertisersBrowsers(
-          "Firefox",
-          user_id,
-          id
-        );
-        const edgeCount = await models.analyticsPerOfferAdvertisersBrowsers(
-          "Edge",
-          user_id,
-          id
-        );
-        const otherCount = await models.analyticsPerOfferAdvertisersBrowsers(
-          "Other",
-          user_id,
-          id
-        );
+        const chromeCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Chrome", user_id, id)
+          .orderBy("an.id", "desc");
+        const safariCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Safari", user_id, id)
+          .orderBy("an.id", "desc");
+        const firefoxCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Firefox", user_id, id)
+          .orderBy("an.id", "desc");
+        const edgeCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Edge", user_id, id)
+          .orderBy("an.id", "desc");
+        const otherCount = await models
+          .analyticsPerOfferAdvertisersBrowsers("Other", user_id, id)
+          .orderBy("an.id", "desc");
 
         res.json({
           clicks: advertiserAnalyticsClicks,
@@ -590,14 +586,17 @@ route.get("/", authenticate, async (req, res) => {
         affiliate_id,
         "impression"
       );
+
       const thisMonthsImpressions = await models.thisMonthAffiliatesAll(
         affiliate_id,
         "impression"
       );
+
       const lastMonthClicks = await models.lastMonthAffiliatesAll(
         affiliate_id,
         "click"
       );
+
       const thisMonthClicks = await models.thisMonthAffiliatesAll(
         affiliate_id,
         "click"
@@ -607,6 +606,7 @@ route.get("/", authenticate, async (req, res) => {
         affiliate_id,
         "conversion"
       );
+
       const thisMonthConversions = await models.thisMonthAffiliatesAll(
         affiliate_id,
         "conversion"
@@ -646,26 +646,32 @@ route.get("/", authenticate, async (req, res) => {
           .lastMonthAffiliatesAll(affiliate_id, "impression")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const thisMonthsImpressionsFiltered = await models
           .thisMonthAffiliatesAll(affiliate_id, "impression")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const lastMonthClicksFiltered = await models
           .lastMonthAffiliatesAll(affiliate_id, "click")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const thisMonthClicksFiltered = await models
           .thisMonthAffiliatesAll(affiliate_id, "click")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const lastMonthConversionsFiltered = await models
           .lastMonthAffiliatesAll(affiliate_id, "conversion")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const thisMonthConversionsFiltered = await models
           .thisMonthAffiliatesAll(affiliate_id, "conversion")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const citiesFiltered = await db("analytics as an")
           .join("agreements as ag", "ag.id", "an.agreement_id")
           .where("ag.affiliate_id", affiliate_id)
@@ -678,42 +684,50 @@ route.get("/", authenticate, async (req, res) => {
           .analyticsWithPricing(affiliate_id)
           .where("action", "click")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const getAffiliateImpressionsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "impression")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const getAffiliateConversionFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "conversion")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const chromeAnalyticsFiltered = await await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Chrome")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const safariAnalyticsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Safari")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const edgeAnalyticsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Edge")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const firefoxAnalyticsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Firefox")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const otherAnalyticsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Other")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
 
         const impressionsGrowthFiltered =
           ((thisMonthsImpressionsFiltered.count -
@@ -762,28 +776,36 @@ route.get("/", authenticate, async (req, res) => {
         // all analytics that match the logged in user
         const getAffiliateClicks = await models
           .analyticsWithPricing(affiliate_id)
-          .where("action", "click");
+          .where("action", "click")
+          .orderBy("an.id", "desc");
         const getAffiliateImpressions = await models
           .analyticsWithPricing(affiliate_id)
-          .where("action", "impression");
+          .where("action", "impression")
+          .orderBy("an.id", "desc");
         const getAffiliateConversion = await models
           .analyticsWithPricing(affiliate_id)
-          .where("action", "conversion");
+          .where("action", "conversion")
+          .orderBy("an.id", "desc");
         const chromeAnalytics = await await models
           .analyticsWithPricing(affiliate_id)
-          .where("browser", "Chrome");
+          .where("browser", "Chrome")
+          .orderBy("an.id", "desc");
         const safariAnalytics = await models
           .analyticsWithPricing(affiliate_id)
-          .where("browser", "Safari");
+          .where("browser", "Safari")
+          .orderBy("an.id", "desc");
         const edgeAnalytics = await models
           .analyticsWithPricing(affiliate_id)
-          .where("browser", "Edge");
+          .where("browser", "Edge")
+          .orderBy("an.id", "desc");
         const firefoxAnalytics = await models
           .analyticsWithPricing(affiliate_id)
-          .where("browser", "Firefox");
+          .where("browser", "Firefox")
+          .orderBy("an.id", "desc");
         const otherAnalytics = await models
           .analyticsWithPricing(affiliate_id)
-          .where("browser", "Other");
+          .where("browser", "Other")
+          .orderBy("an.id", "desc");
 
         res.json({
           clicks: getAffiliateClicks,
@@ -815,26 +837,32 @@ route.get("/", authenticate, async (req, res) => {
           .lastMonthAdvertiserAll(affiliate_id, "impression")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const thisMonthsImpressionsFiltered = await models
           .thisMonthAdvertiserAll(affiliate_id, "impression")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const lastMonthClicksFiltered = await models
           .lastMonthAdvertiserAll(affiliate_id, "click")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const thisMonthClicksFiltered = await models
           .thisMonthAdvertiserAll(affiliate_id, "click")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const lastMonthConversionsFiltered = await models
           .lastMonthAdvertiserAll(affiliate_id, "conversion")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const thisMonthConversionsFiltered = await models
           .thisMonthAdvertiserAll(affiliate_id, "conversion")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
+
         const citiesFiltered = await db("analytics as an")
           .join("agreements as ag", "ag.id", "an.agreement_id")
           .join("offers as o", "ag.offer_id", "o.id")
@@ -848,42 +876,50 @@ route.get("/", authenticate, async (req, res) => {
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("action", "click")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const getAdvertisersImpressionsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("action", "impression")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const getAdvertisersConversionFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("action", "conversion")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const chromeAnalyticsFiltered = await await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Chrome")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const safariAnalyticsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Safari")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const edgeAnalyticsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Edge")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const firefoxAnalyticsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Firefox")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
         const otherAnalyticsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Other")
           .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at);
+          .andWhere("an.created_at", "<", ended_at)
+          .orderBy("an.id", "desc");
 
         const impressionsGrowthFiltered =
           ((thisMonthsImpressionsFiltered.count -
@@ -928,14 +964,17 @@ route.get("/", authenticate, async (req, res) => {
           affiliate_id,
           "impression"
         );
+
         const thisMonthsImpressions = await models.thisMonthAdvertiserAll(
           affiliate_id,
           "impression"
         );
+
         const lastMonthClicks = await models.lastMonthAdvertiserAll(
           affiliate_id,
           "click"
         );
+
         const thisMonthClicks = await models.thisMonthAdvertiserAll(
           affiliate_id,
           "click"
@@ -945,6 +984,7 @@ route.get("/", authenticate, async (req, res) => {
           affiliate_id,
           "conversion"
         );
+
         const thisMonthConversions = await models.thisMonthAdvertiserAll(
           affiliate_id,
           "conversion"
@@ -969,36 +1009,34 @@ route.get("/", authenticate, async (req, res) => {
         );
         const analyticsForAdvertisersClicks = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
-          .andWhere("action", "click");
+          .andWhere("action", "click")
+          .orderBy("an.id", "desc");
 
         const analyticsForAdvertisersImpressions = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
-          .andWhere("action", "impression");
+          .andWhere("action", "impression")
+          .orderBy("an.id", "desc");
 
         const analyticsForAdvertisersConversions = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
-          .andWhere("action", "conversion");
+          .andWhere("action", "conversion")
+          .orderBy("an.id", "desc");
 
-        const chromeAnalytics = await models.browserCountAdvertisers(
-          "Chrome",
-          affiliate_id
-        );
-        const safariAnalytics = await models.browserCountAdvertisers(
-          "Safari",
-          affiliate_id
-        );
-        const edgeAnalytics = await models.browserCountAdvertisers(
-          "Edge",
-          affiliate_id
-        );
-        const firefoxAnalytics = await models.browserCountAdvertisers(
-          "Firefox",
-          affiliate_id
-        );
-        const otherAnalytics = await models.browserCountAdvertisers(
-          "Other",
-          affiliate_id
-        );
+        const chromeAnalytics = await models
+          .browserCountAdvertisers("Chrome", affiliate_id)
+          .orderBy("an.id", "desc");
+        const safariAnalytics = await models
+          .browserCountAdvertisers("Safari", affiliate_id)
+          .orderBy("an.id", "desc");
+        const edgeAnalytics = await models
+          .browserCountAdvertisers("Edge", affiliate_id)
+          .orderBy("an.id", "desc");
+        const firefoxAnalytics = await models
+          .browserCountAdvertisers("Firefox", affiliate_id)
+          .orderBy("an.id", "desc");
+        const otherAnalytics = await models
+          .browserCountAdvertisers("Other", affiliate_id)
+          .orderBy("an.id", "desc");
 
         res.json({
           clicks: analyticsForAdvertisersClicks,
