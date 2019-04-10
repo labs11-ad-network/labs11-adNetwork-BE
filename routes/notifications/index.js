@@ -57,7 +57,7 @@ route.post("/", authenticate, adminCheck, async (req, res) => {
   }
 });
 
-route.put("/:id", authenticate, adminCheck, async (req, res) => {
+route.put("/:id", authenticate, async (req, res) => {
   const { unread } = req.body;
   const id = req.params.id;
   const user_id = req.decoded.id;
