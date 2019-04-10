@@ -6,7 +6,12 @@ const { adminCheck } = require("../../common/roleCheck.js");
 route.get("/", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   try {
-    const notifications = await models.findAllBy("notifications", { recipient: user_id });
+    const notifications = await models
+      .findAllBy("notifications", {
+        recipient: user_id
+      })
+      .orderBy("created_at", "desc")
+      .limit(10);
     res.status(200).json(notifications);
   } catch ({ message }) {
     res.status(500).json({ message });
@@ -82,8 +87,11 @@ route.put("/:id", authenticate, async (req, res) => {
 
       if (success) {
         const notifications = await models
-          .findAllBy("notifications", { recipient: user_id })
-          .orderBy("created_at", "dsc");
+          .findAllBy("notifications", {
+            recipient: user_id
+          })
+          .orderBy("created_at", "desc")
+          .limit(10);
 
         res.status(201).json(notifications);
       } else {
