@@ -121,7 +121,7 @@ route.post("/payout", authenticate, async (req, res) => {
   try {
     stripe.transfers
       .create({
-        amount: Math.floor(_customer.amount * 100) || 100,
+        amount: Math.floor(_customer.amount * 100) || 0,
         currency: "usd",
         destination: _customer.stripe_payout_id
       })
