@@ -32,46 +32,47 @@ route.post("/", async (req, res) => {
         .catch(() => {
           return res.json({ message: "Failed to add action" });
         });
+      if (enterAction[0]) {
+        const payments = await db("agreements as ag")
+          .join("offers as o", "ag.offer_id", "o.id")
+          .join("analytics as an", "ag.id", "an.agreement_id")
+          .select(
+            "ag.*",
+            "o.user_id",
+            "o.price_per_impression",
+            "o.price_per_click",
+            "an.*"
+          );
 
-      const payments = await db("agreements as ag")
-        .join("offers as o", "ag.offer_id", "o.id")
-        .join("analytics as an", "ag.id", "an.agreement_id")
-        .select(
-          "ag.*",
-          "o.user_id",
-          "o.price_per_impression",
-          "o.price_per_click",
-          "an.*"
-        );
+        payments.map(async user => {
+          const advertiser = await models.findBy("users", { id: user.user_id });
+          const affiliate = await models.findBy("users", {
+            id: user.affiliate_id
+          });
 
-      payments.map(async user => {
-        const advertiser = await models.findBy("users", { id: user.user_id });
-        const affiliate = await models.findBy("users", {
-          id: user.affiliate_id
+          if (action === "impression") {
+            // advertiser
+            await models.update("users", user.user_id, {
+              amount: advertiser.amount - user.price_per_impression
+            });
+
+            // affiliate
+            await models.update("users", user.affiliate_id, {
+              amount: affiliate.amount + user.price_per_impression
+            });
+          } else if (action === "click") {
+            // advertiser
+            await models.update("users", user.user_id, {
+              amount: advertiser.amount - user.price_per_click
+            });
+
+            // affiliate
+            await models.update("users", user.affiliate_id, {
+              amount: affiliate.amount + user.price_per_click
+            });
+          }
         });
-
-        if (action === "impression") {
-          // advertiser
-          await models.update("users", user.user_id, {
-            amount: advertiser.amount - user.price_per_impression
-          });
-
-          // affiliate
-          await models.update("users", user.affiliate_id, {
-            amount: affiliate.amount + user.price_per_impression
-          });
-        } else if (action === "click") {
-          // advertiser
-          await models.update("users", user.user_id, {
-            amount: advertiser.amount - user.price_per_click
-          });
-
-          // affiliate
-          await models.update("users", user.affiliate_id, {
-            amount: affiliate.amount + user.price_per_click
-          });
-        }
-      });
+      }
       res.end();
     });
   } catch ({ message }) {
