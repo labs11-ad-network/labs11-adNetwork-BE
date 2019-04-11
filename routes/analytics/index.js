@@ -350,6 +350,31 @@ route.get("/:id", authenticate, async (req, res) => {
         });
       }
     } else if (acct_type === "advertiser") {
+      const offersRanking = await db("offers")
+        .where({ user_id })
+        .map(async offer => {
+          const offersClick = await db("offers as o")
+            .join("agreements as ag", "ag.offer_id", offer.id)
+            .join("analytics as an", "ag.id", "an.agreement_id")
+            .select("o.*", "an.*")
+            .groupBy("o.id", "an.id", "an.action")
+            .where("action", "click");
+
+          const offersImpression = await db("offers as o")
+            .join("agreements as ag", "ag.offer_id", offer.id)
+            .join("analytics as an", "ag.id", "an.agreement_id")
+            .select("o.*", "an.*")
+            .groupBy("o.id", "an.id", "an.action")
+            .where("action", "impression");
+
+          offer.ctr =
+            Math.floor(
+              (offersClick.length / offersImpression.length) * 100 * 100
+            ) / 100 || 0;
+
+          return offer;
+        });
+
       if (started_at && ended_at) {
         const lastMonthsImpressions = await models.lastMonthAdvertiser(
           user_id,
@@ -480,7 +505,8 @@ route.get("/:id", authenticate, async (req, res) => {
             clicks: clicksGrowth,
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
-          }
+          },
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
         });
       } else {
         const lastMonthsImpressions = await models.lastMonthAdvertiser(
@@ -585,7 +611,8 @@ route.get("/:id", authenticate, async (req, res) => {
             clicks: clicksGrowth,
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
-          }
+          },
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
         });
       }
     }
@@ -883,6 +910,31 @@ route.get("/", authenticate, async (req, res) => {
         });
       }
     } else if (acct_type === "advertiser") {
+      const offersRanking = await db("offers")
+        .where({ user_id: affiliate_id })
+        .map(async offer => {
+          const offersClick = await db("offers as o")
+            .join("agreements as ag", "ag.offer_id", offer.id)
+            .join("analytics as an", "ag.id", "an.agreement_id")
+            .select("o.*", "an.*")
+            .groupBy("o.id", "an.id", "an.action")
+            .where("action", "click");
+
+          const offersImpression = await db("offers as o")
+            .join("agreements as ag", "ag.offer_id", offer.id)
+            .join("analytics as an", "ag.id", "an.agreement_id")
+            .select("o.*", "an.*")
+            .groupBy("o.id", "an.id", "an.action")
+            .where("action", "impression");
+
+          offer.ctr =
+            Math.floor(
+              (offersClick.length / offersImpression.length) * 100 * 100
+            ) / 100 || 0;
+
+          return offer;
+        });
+
       if (started_at && ended_at) {
         const lastMonthsImpressionsFiltered = await models
           .lastMonthAdvertiserAll(affiliate_id, "impression")
@@ -1008,7 +1060,8 @@ route.get("/", authenticate, async (req, res) => {
             clicks: clicksGrowthFiltered,
             impressions: impressionsGrowthFiltered,
             conversions: conversionsGrowthFiltered
-          }
+          },
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
         });
       } else {
         const lastMonthsImpressions = await models.lastMonthAdvertiserAll(
@@ -1110,7 +1163,8 @@ route.get("/", authenticate, async (req, res) => {
             clicks: clicksGrowth,
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
-          }
+          },
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
         });
       }
     }
