@@ -480,8 +480,7 @@ route.get("/:id", authenticate, async (req, res) => {
             clicks: clicksGrowth,
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          }
         });
       } else {
         const lastMonthsImpressions = await models.lastMonthAdvertiser(
@@ -586,8 +585,7 @@ route.get("/:id", authenticate, async (req, res) => {
             clicks: clicksGrowth,
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          }
         });
       }
     }
@@ -1010,8 +1008,7 @@ route.get("/", authenticate, async (req, res) => {
             clicks: clicksGrowthFiltered,
             impressions: impressionsGrowthFiltered,
             conversions: conversionsGrowthFiltered
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          }
         });
       } else {
         const lastMonthsImpressions = await models.lastMonthAdvertiserAll(
@@ -1113,8 +1110,7 @@ route.get("/", authenticate, async (req, res) => {
             clicks: clicksGrowth,
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          }
         });
       }
     }
