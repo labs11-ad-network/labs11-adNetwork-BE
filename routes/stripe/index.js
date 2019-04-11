@@ -119,23 +119,28 @@ route.post("/payout", authenticate, async (req, res) => {
   if (_customer.acct_type !== "affiliate")
     return res.status(400).json({ message: "You must be an affiliate" });
   try {
-    stripe.transfers
-      .create({
-        amount: Math.floor(_customer.amount * 100) || 100,
-        currency: "usd",
-        destination: _customer.stripe_payout_id
-      })
-      .then(async transfer => {
-        if (transfer) {
-          const success = await models.update("users", req.decoded.id, {
-            amount: 0
-          });
-
-          res.json(transfer);
-        } else {
-          res.status(500).json({ message: "Failed to payout" });
-        }
-      });
+    if (_customer.amount === 0) {
+      return res
+        .status(400)
+        .json({ message: "You can not receive an amount of 0" });
+    } else {
+      stripe.transfers
+        .create({
+          amount: Math.floor(_customer.amount * 100),
+          currency: "usd",
+          destination: _customer.stripe_payout_id
+        })
+        .then(async transfer => {
+          if (transfer) {
+            const success = await models.update("users", req.decoded.id, {
+              amount: 0
+            });
+            res.json(transfer);
+          } else {
+            res.status(500).json({ message: "Failed to payout" });
+          }
+        });
+    }
   } catch ({ message }) {
     res.status(500).json({ message });
   }
