@@ -9,6 +9,7 @@ exports.up = function(knex, Promise) {
     tbl.string("acct_type");
     tbl.string("phone");
     tbl.float("amount").defaultTo(0);
+    tbl.boolean("show_tour").defaultTo(true);
     tbl
       .string("stripe_cust_id", 128)
       .nullable()
