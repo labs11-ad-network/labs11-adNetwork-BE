@@ -15,7 +15,7 @@ cloudinary.config({
 
 // @route     /api/users
 // @desc     Get current user
-// @Access   Private
+// @Access   Privat
 route.get("/", authenticate, async (req, res) => {
   const { sub, email } = req.decoded;
   const _customer = await models.findBy("users", { id: req.decoded.id });
