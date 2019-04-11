@@ -90,27 +90,6 @@ route.get("/myads", authenticate, async (req, res) => {
 route.get("/:id", async (req, res) => {
   const { id } = req.params;
 
-  const offers = await db("offers as o").map(async offer => {
-    const allOffersClicks = await models
-      .actionCount("click", 1)
-      .count()
-      .first();
-    const allOffersImpressions = await models
-      .actionCount("impression", 1)
-      .count()
-      .first();
-    console.log(allOffersClicks);
-    offer.ctr =
-      Math.round(
-        (Number(allOffersClicks.count) / Number(allOffersImpressions.count)) *
-          100 *
-          100
-      ) / 100;
-    return offer;
-  });
-
-  console.log(offers);
-
   try {
     const ad = await models.findBy("ads", { id });
     if (!ad) return res.status(404).json({ message: "No ads found" });
