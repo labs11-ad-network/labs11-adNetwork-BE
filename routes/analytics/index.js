@@ -22,6 +22,7 @@ route.post("/", async (req, res) => {
           ip: ipAddr,
           referrer,
           agreement_id,
+          device: parser.getDevice().model || "unknown",
           country: location.country || "",
           region: location.region || "",
           city: location.city || "",
@@ -174,6 +175,16 @@ route.get("/:id", authenticate, async (req, res) => {
           .count("* as num")
           .groupBy("city", "longitude", "latitude");
 
+        const devices = await db("analytics as an")
+          .select("device")
+          .count("device")
+          .from("analytics")
+          .join("agreements as ag", "ag.id", "analytics.agreement_id")
+          .where("ag.affiliate_id", user_id)
+          .andWhere("o.id", id)
+          .andWhere("analytics.created_at", ">=", started_at)
+          .andWhere("analytics.created_at", "<", ended_at)
+          .groupBy("analytics.device");
         // send the id of an agreeement and get the analytics for that agreement formatter like below
         const affiliateAnalyticsClicks = await models
           .analyticsPerOfferWithPricing("click", user_id, id)
@@ -239,7 +250,8 @@ route.get("/:id", authenticate, async (req, res) => {
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
           },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+          devices
         });
       } else {
         const lastMonthsImpressions = await models.lastMonthAffiliates(
@@ -297,6 +309,15 @@ route.get("/:id", authenticate, async (req, res) => {
           `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${user_id} AND ag.id = ${id} GROUP BY city, longitude, latitude`
         );
 
+        const devices = await db("analytics as an")
+          .select("device")
+          .count("device")
+          .from("analytics")
+          .join("agreements as ag", "ag.id", "analytics.agreement_id")
+          .where("ag.affiliate_id", user_id)
+          .andWhere("ag.id", id)
+          .groupBy("analytics.device");
+
         // send the id of an agreeement and get the analytics for that agreement formatter like below
         const affiliateAnalyticsClicks = await models
           .analyticsPerOfferWithPricing("click", user_id, id)
@@ -346,7 +367,8 @@ route.get("/:id", authenticate, async (req, res) => {
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
           },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+          devices
         });
       }
     } else if (acct_type === "advertiser") {
@@ -441,6 +463,17 @@ route.get("/:id", authenticate, async (req, res) => {
           .count("* as num")
           .groupBy("city", "longitude", "latitude");
 
+        const devices = await db("analytics as an")
+          .select("device")
+          .count("device")
+          .from("analytics")
+          .join("agreements as ag", "ag.id", "analytics.agreement_id")
+          .join("offers as o", "o.id", "ag.offer_id")
+          .where("o.user_id", user_id)
+          .andWhere("o.id", id)
+          .where("analytics.created_at", ">=", started_at)
+          .andWhere("analytics.created_at", "<", ended_at)
+          .groupBy("analytics.device");
         // send the id of an offer and get the analytics for that offer formatted like below
         const advertiserAnalyticsClicks = await models
           .analyticsPerOfferAdvertisers("click", user_id, id)
@@ -506,9 +539,20 @@ route.get("/:id", authenticate, async (req, res) => {
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
           },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+          devices
         });
       } else {
+        const devices = await db("analytics as an")
+          .select("device")
+          .count("device")
+          .from("analytics")
+          .join("agreements as ag", "ag.id", "analytics.agreement_id")
+          .join("offers as o", "o.id", "ag.offer_id")
+          .where("o.user_id", user_id)
+          .andWhere("o.id", id)
+          .groupBy("analytics.device");
+
         const lastMonthsImpressions = await models.lastMonthAdvertiser(
           user_id,
           "impression",
@@ -612,7 +656,8 @@ route.get("/:id", authenticate, async (req, res) => {
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
           },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+          devices
         });
       }
     }
@@ -718,6 +763,16 @@ route.get("/", authenticate, async (req, res) => {
           .andWhere("an.action", action);
         res.json(getActions);
       } else if (!action && started_at && ended_at) {
+        const devices = await db("analytics as an")
+          .select("device")
+          .count("device")
+          .from("analytics")
+          .join("agreements as ag", "ag.id", "analytics.agreement_id")
+          .where("ag.affiliate_id", affiliate_id)
+          .andWhere("analytics.created_at", ">=", started_at)
+          .andWhere("analytics.created_at", "<", ended_at)
+          .groupBy("analytics.device");
+
         const lastMonthsImpressionsFiltered = await models
           .lastMonthAffiliatesAll(affiliate_id, "impression")
           .where("an.created_at", ">=", started_at)
@@ -842,7 +897,8 @@ route.get("/", authenticate, async (req, res) => {
             impressions: impressionsGrowthFiltered,
             conversions: conversionsGrowthFiltered
           },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+          devices
         });
       } else if (!started_at && !ended_at && action) {
         const getActions = await models
@@ -850,6 +906,14 @@ route.get("/", authenticate, async (req, res) => {
           .where({ action });
         res.json(getActions);
       } else {
+        const devices = await db("analytics as an")
+          .select("device")
+          .count("device")
+          .from("analytics")
+          .join("agreements as ag", "ag.id", "analytics.agreement_id")
+          .where("ag.affiliate_id", affiliate_id)
+          .groupBy("analytics.device");
+
         // all analytics that match the logged in user
         const getAffiliateClicks = await models
           .analyticsWithPricing(affiliate_id)
@@ -906,7 +970,8 @@ route.get("/", authenticate, async (req, res) => {
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
           },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+          devices
         });
       }
     } else if (acct_type === "advertiser") {
@@ -936,6 +1001,17 @@ route.get("/", authenticate, async (req, res) => {
         });
 
       if (started_at && ended_at) {
+        const devices = await db("analytics as an")
+          .select("device")
+          .count("device")
+          .from("analytics")
+          .join("agreements as ag", "ag.id", "analytics.agreement_id")
+          .join("offers as o", "o.id", "ag.offer_id")
+          .where("o.user_id", affiliate_id)
+          .where("analytics.created_at", ">=", started_at)
+          .andWhere("analytics.created_at", "<", ended_at)
+          .groupBy("analytics.device");
+
         const lastMonthsImpressionsFiltered = await models
           .lastMonthAdvertiserAll(affiliate_id, "impression")
           .where("an.created_at", ">=", started_at)
@@ -1061,7 +1137,8 @@ route.get("/", authenticate, async (req, res) => {
             impressions: impressionsGrowthFiltered,
             conversions: conversionsGrowthFiltered
           },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+          devices
         });
       } else {
         const lastMonthsImpressions = await models.lastMonthAdvertiserAll(
@@ -1111,6 +1188,15 @@ route.get("/", authenticate, async (req, res) => {
         const cities = await db.raw(
           `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${affiliate_id} GROUP BY city, longitude, latitude`
         );
+        const devices = await db("analytics as an")
+          .select("device")
+          .count("device")
+          .from("analytics")
+          .join("agreements as ag", "ag.id", "analytics.agreement_id")
+          .join("offers as o", "o.id", "ag.offer_id")
+          .where("o.user_id", affiliate_id)
+          .groupBy("analytics.device");
+
         const analyticsForAdvertisersClicks = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .andWhere("action", "click")
@@ -1164,7 +1250,8 @@ route.get("/", authenticate, async (req, res) => {
             impressions: impressionsGrowth,
             conversions: conversionsGrowth
           },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr)
+          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+          devices
         });
       }
     }

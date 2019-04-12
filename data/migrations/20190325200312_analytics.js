@@ -12,6 +12,7 @@ exports.up = function(knex, Promise) {
     tbl.string("postal").nullable();
     tbl.string("latitude").nullable();
     tbl.string("longitude").nullable();
+    tbl.string("device").nullable();
     tbl
       .integer("agreement_id")
       .unsigned()
