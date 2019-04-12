@@ -1007,7 +1007,7 @@ route.get("/", authenticate, async (req, res) => {
           .from("analytics")
           .join("agreements as ag", "ag.id", "analytics.agreement_id")
           .join("offers as o", "o.id", "ag.offer_id")
-          .where("o.user_id", user_id)
+          .where("o.user_id", affiliate_id)
           .where("analytics.created_at", ">=", started_at)
           .andWhere("analytics.created_at", "<", ended_at)
           .groupBy("analytics.device");
@@ -1194,7 +1194,7 @@ route.get("/", authenticate, async (req, res) => {
           .from("analytics")
           .join("agreements as ag", "ag.id", "analytics.agreement_id")
           .join("offers as o", "o.id", "ag.offer_id")
-          .where("o.user_id", user_id)
+          .where("o.user_id", affiliate_id)
           .groupBy("analytics.device");
 
         const analyticsForAdvertisersClicks = await models
