@@ -22,7 +22,7 @@ route.post("/", async (req, res) => {
           ip: ipAddr,
           referrer,
           agreement_id,
-          device: parser.getDevice().model || "unknown",
+          device: parser.getDevice().model || "desktop",
           country: location.country || "",
           region: location.region || "",
           city: location.city || "",
@@ -181,7 +181,7 @@ route.get("/:id", authenticate, async (req, res) => {
           .from("analytics")
           .join("agreements as ag", "ag.id", "analytics.agreement_id")
           .where("ag.affiliate_id", user_id)
-          .andWhere("o.id", id)
+          .andWhere("ag.id", id)
           .andWhere("analytics.created_at", ">=", started_at)
           .andWhere("analytics.created_at", "<", ended_at)
           .groupBy("analytics.device");
