@@ -22,7 +22,7 @@ route.post("/", async (req, res) => {
           ip: ipAddr,
           referrer,
           agreement_id,
-          device: parser.getDevice().model || "unknown",
+          device: parser.getDevice().model || "desktop",
           country: location.country || "",
           region: location.region || "",
           city: location.city || "",
