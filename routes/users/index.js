@@ -24,44 +24,83 @@ route.get("/", authenticate, async (req, res) => {
       .where({ email })
       .andWhere({ sub });
 
-    stripe.transfers.list({ limit: 10 }, async (err, transfers) => {
-      if (err) {
-        return res.status(500).json({ err });
-      }
+    if (_customer.acct_type === "affiliate") {
+      stripe.transfers.list({ limit: 10 }, async (err, transfers) => {
+        if (err) {
+          return res.status(500).json({ err });
+        }
 
-      const payout = transfers.data.filter(
-        payout => payout.destination === _customer.stripe_payout_id
+        const payout = transfers.data.filter(
+          payout => payout.destination === _customer.stripe_payout_id
+        );
+
+        const total_amount =
+          payout.map(payout => payout.amount).reduce((a, b) => a + b, 0) / 100;
+
+        if (users) {
+          const result = await users.map(async user => {
+            const offers = await db("offers").where({ user_id: user.id });
+            const ads = await db("ads").where({ user_id: user.id });
+            const agreements = await db
+              .select("ag.*", "o.id as test_id")
+              .from("agreements as ag")
+              .join("offers as o", "o.id", "ag.offer_id")
+              .where({ affiliate_id: user.id });
+
+            user.stripe_balance = total_amount;
+            user.offers = offers.length;
+            user.ads = ads.length;
+            user.agreements = agreements.length;
+
+            return user;
+          });
+
+          Promise.all(result).then(completed => {
+            users = completed;
+            res.status(200).json(users[0]);
+          });
+        } else {
+          res.status(500).json({ message: "Users do not exist." });
+        }
+      });
+    } else {
+      stripe.charges.list(
+        { customer: _customer.stripe_user_id },
+        async function(err, charges) {
+          if (err) return res.status(500).json({ message: "Server error" });
+          const mycharges = charges.data.filter(
+            charge => charge.customer !== _customer.stripe_user_id
+          );
+          const total_amount =
+            mycharges.map(charge => charge.amount).reduce((a, b) => a + b, 0) /
+            100;
+
+          if (users) {
+            const result = await users.map(async user => {
+              const offers = await db("offers").where({ user_id: user.id });
+              const ads = await db("ads").where({ user_id: user.id });
+              const agreements = await db
+                .select("ag.*", "o.id as test_id")
+                .from("agreements as ag")
+                .join("offers as o", "o.id", "ag.offer_id")
+                .where({ affiliate_id: user.id });
+
+              user.stripe_balance = total_amount;
+              user.offers = offers.length;
+              user.ads = ads.length;
+              user.agreements = agreements.length;
+
+              return user;
+            });
+
+            Promise.all(result).then(completed => {
+              users = completed;
+              res.status(200).json(users[0]);
+            });
+          }
+        }
       );
-
-      const total_amount =
-        payout.map(payout => payout.amount).reduce((a, b) => a + b, 0) / 100;
-
-      if (users) {
-        const result = await users.map(async user => {
-          const offers = await db("offers").where({ user_id: user.id });
-          const ads = await db("ads").where({ user_id: user.id });
-          const agreements = await db
-            .select("ag.*", "o.id as test_id")
-            .from("agreements as ag")
-            .join("offers as o", "o.id", "ag.offer_id")
-            .where({ affiliate_id: user.id });
-
-          user.stripe_balance = total_amount;
-          user.offers = offers.length;
-          user.ads = ads.length;
-          user.agreements = agreements.length;
-
-          return user;
-        });
-
-        Promise.all(result).then(completed => {
-          users = completed;
-          res.status(200).json(users[0]);
-        });
-      } else {
-        res.status(500).json({ message: "Users do not exist." });
-      }
-    });
+    }
   } catch ({ message }) {
     res.status(404).json({ message });
   }
