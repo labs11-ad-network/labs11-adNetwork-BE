@@ -185,6 +185,7 @@ route.get("/:id", authenticate, async (req, res) => {
           .andWhere("analytics.created_at", ">=", started_at)
           .andWhere("analytics.created_at", "<", ended_at)
           .groupBy("analytics.device");
+
         // send the id of an agreeement and get the analytics for that agreement formatter like below
         const affiliateAnalyticsClicks = await models
           .analyticsPerOfferWithPricing("click", user_id, id)
