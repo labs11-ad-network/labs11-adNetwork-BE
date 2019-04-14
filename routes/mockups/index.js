@@ -97,6 +97,16 @@ route.get("/myads", authenticate, async (req, res) => {
 route.get("/:id", async (req, res) => {
   const { id } = req.params;
 
+  const categories = await db
+    .select("category")
+    .count("category")
+    .from("analytics")
+    .join("agreements as ag", "ag.id", "analytics.agreement_id")
+    .join("offers as o", "ag.offer_id", "o.id")
+    .groupBy("o.category");
+
+  console.log(categories);
+
   try {
     const ad = await models.findBy("ads", { id });
     if (!ad) return res.status(404).json({ message: "No ads found" });
