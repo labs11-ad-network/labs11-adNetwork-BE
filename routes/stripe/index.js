@@ -176,7 +176,7 @@ route.get("/payments", authenticate, async (req, res) => {
 
   try {
     await stripe.charges.list(
-      { customer: _customer.stripe_user_id },
+      { customer: _customer.stripe_cust_id },
       (err, charges) => {
         if (err) return res.status(500).json({ message: err });
         res.json({ payments: charges.data });
