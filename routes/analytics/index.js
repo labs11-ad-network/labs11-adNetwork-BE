@@ -1,6 +1,5 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 const iplocation = require("iplocation").default;
 const UAParser = require("ua-parser-js");
@@ -34,16 +33,7 @@ route.post("/", async (req, res) => {
           return res.json({ message: "Failed to add action" });
         });
       if (enterAction[0]) {
-        const payments = await db("agreements as ag")
-          .join("offers as o", "ag.offer_id", "o.id")
-          .join("analytics as an", "ag.id", "an.agreement_id")
-          .select(
-            "ag.*",
-            "o.user_id",
-            "o.price_per_impression",
-            "o.price_per_click",
-            "an.*"
-          );
+        const payments = await models.addPricingForAnalytics();
 
         payments.map(async user => {
           const advertiser = await models.findBy("users", { id: user.user_id });
@@ -91,20 +81,13 @@ route.get("/:id", authenticate, async (req, res) => {
   const { started_at, ended_at } = req.query;
   try {
     if (acct_type === "affiliate") {
-      const offersRanking = await db("offers").map(async offer => {
-        const offersClick = await db("offers as o")
-          .join("agreements as ag", "ag.offer_id", offer.id)
-          .join("analytics as an", "ag.id", "an.agreement_id")
-          .select("o.*", "an.*")
-          .groupBy("o.id", "an.id", "an.action")
-          .where("action", "click");
+      const offersRanking = await models.get("offers").map(async offer => {
+        const offersClick = await models.offersActionByOfferId(offer, "click");
 
-        const offersImpression = await db("offers as o")
-          .join("agreements as ag", "ag.offer_id", offer.id)
-          .join("analytics as an", "ag.id", "an.agreement_id")
-          .select("o.*", "an.*")
-          .groupBy("o.id", "an.id", "an.action")
-          .where("action", "impression");
+        const offersImpression = await models.offersActionByOfferId(
+          offer,
+          "impression"
+        );
 
         offer.ctr =
           Math.floor(
@@ -166,25 +149,14 @@ route.get("/:id", authenticate, async (req, res) => {
             thisMonthConversions.count) *
           100;
 
-        const cities = await db("analytics as an")
-          .join("agreements as ag", "ag.id", "an.agreement_id")
-          .where("an.agreement_id", id)
-          .select("city", "longitude", "latitude")
-          .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at)
-          .count("* as num")
-          .groupBy("city", "longitude", "latitude");
+        const cities = await models.allCitiesFiltered(id, started_at, ended_at);
 
-        const devices = await db("analytics as an")
-          .select("device")
-          .count("device")
-          .from("analytics")
-          .join("agreements as ag", "ag.id", "analytics.agreement_id")
-          .where("ag.affiliate_id", user_id)
-          .andWhere("ag.id", id)
-          .andWhere("analytics.created_at", ">=", started_at)
-          .andWhere("analytics.created_at", "<", ended_at)
-          .groupBy("analytics.device");
+        const devices = await models.filteredDevicesById(
+          user_id,
+          id,
+          started_at,
+          ended_at
+        );
 
         // send the id of an agreeement and get the analytics for that agreement formatter like below
         const affiliateAnalyticsClicks = await models
@@ -192,11 +164,13 @@ route.get("/:id", authenticate, async (req, res) => {
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const affiliateAnalyticsImpressions = await models
           .analyticsPerOfferWithPricing("impression", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const affiliateAnalyticsConversions = await models
           .analyticsPerOfferWithPricing("conversion", user_id, id)
           .where("an.created_at", ">=", started_at)
@@ -208,21 +182,25 @@ route.get("/:id", authenticate, async (req, res) => {
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const safariCount = await models
           .browserCountPerOfferAffiliates("Safari", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const firefoxCount = await models
           .browserCountPerOfferAffiliates("Firefox", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const edgeCount = await models
           .browserCountPerOfferAffiliates("Edge", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const otherCount = await models
           .browserCountPerOfferAffiliates("Other", user_id, id)
           .where("an.created_at", ">=", started_at)
@@ -306,26 +284,19 @@ route.get("/:id", authenticate, async (req, res) => {
             thisMonthConversions.count) *
           100;
 
-        const cities = await db.raw(
-          `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id WHERE ag.affiliate_id = ${user_id} AND ag.id = ${id} GROUP BY city, longitude, latitude`
-        );
+        const cities = await models.citiesFilteredById(user_id, id);
 
-        const devices = await db("analytics as an")
-          .select("device")
-          .count("device")
-          .from("analytics")
-          .join("agreements as ag", "ag.id", "analytics.agreement_id")
-          .where("ag.affiliate_id", user_id)
-          .andWhere("ag.id", id)
-          .groupBy("analytics.device");
+        const devices = await models.affiliateDevicesById(user_id, id);
 
         // send the id of an agreeement and get the analytics for that agreement formatter like below
         const affiliateAnalyticsClicks = await models
           .analyticsPerOfferWithPricing("click", user_id, id)
           .orderBy("an.id", "desc");
+
         const affiliateAnalyticsImpressions = await models
           .analyticsPerOfferWithPricing("impression", user_id, id)
           .orderBy("an.id", "desc");
+
         const affiliateAnalyticsConversions = await models
           .analyticsPerOfferWithPricing("conversion", user_id, id)
           .orderBy("an.id", "desc");
@@ -333,15 +304,19 @@ route.get("/:id", authenticate, async (req, res) => {
         const chromeCount = await models
           .browserCountPerOfferAffiliates("Chrome", user_id, id)
           .orderBy("an.id", "desc");
+
         const safariCount = await models
           .browserCountPerOfferAffiliates("Safari", user_id, id)
           .orderBy("an.id", "desc");
+
         const firefoxCount = await models
           .browserCountPerOfferAffiliates("Firefox", user_id, id)
           .orderBy("an.id", "desc");
+
         const edgeCount = await models
           .browserCountPerOfferAffiliates("Edge", user_id, id)
           .orderBy("an.id", "desc");
+
         const otherCount = await models
           .browserCountPerOfferAffiliates("Other", user_id, id)
           .orderBy("an.id", "desc");
@@ -373,22 +348,18 @@ route.get("/:id", authenticate, async (req, res) => {
         });
       }
     } else if (acct_type === "advertiser") {
-      const offersRanking = await db("offers")
-        .where({ user_id })
+      const offersRanking = await models
+        .findAllBy("offers", { user_id })
         .map(async offer => {
-          const offersClick = await db("offers as o")
-            .join("agreements as ag", "ag.offer_id", offer.id)
-            .join("analytics as an", "ag.id", "an.agreement_id")
-            .select("o.*", "an.*")
-            .groupBy("o.id", "an.id", "an.action")
-            .where("action", "click");
+          const offersClick = await models.offersActionByOfferId(
+            offer,
+            "click"
+          );
 
-          const offersImpression = await db("offers as o")
-            .join("agreements as ag", "ag.offer_id", offer.id)
-            .join("analytics as an", "ag.id", "an.agreement_id")
-            .select("o.*", "an.*")
-            .groupBy("o.id", "an.id", "an.action")
-            .where("action", "impression");
+          const offersImpression = await models.offersActionByOfferId(
+            offer,
+            "impression"
+          );
 
           offer.ctr =
             Math.floor(
@@ -450,42 +421,33 @@ route.get("/:id", authenticate, async (req, res) => {
             thisMonthConversions.count) *
           100;
 
-        // const cities = await db.raw(
-        //   `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${user_id} AND o.id = ${id} GROUP BY city, longitude, latitude`
-        // );
-        const cities = await db("analytics as an")
-          .join("agreements as ag", "ag.id", "an.agreement_id")
-          .join("offers as o", "ag.offer_id", "o.id")
-          .where("o.user_id", user_id)
-          .andWhere("o.id", id)
-          .select("city", "longitude", "latitude")
-          .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at)
-          .count("* as num")
-          .groupBy("city", "longitude", "latitude");
+        const cities = await models.citiesFilteredByIdandUser(
+          user_id,
+          id,
+          started_at,
+          ended_at
+        );
 
-        const devices = await db("analytics as an")
-          .select("device")
-          .count("device")
-          .from("analytics")
-          .join("agreements as ag", "ag.id", "analytics.agreement_id")
-          .join("offers as o", "o.id", "ag.offer_id")
-          .where("o.user_id", user_id)
-          .andWhere("o.id", id)
-          .where("analytics.created_at", ">=", started_at)
-          .andWhere("analytics.created_at", "<", ended_at)
-          .groupBy("analytics.device");
+        const devices = await models.filteredDevicesByIdandUser(
+          user_id,
+          id,
+          started_at,
+          ended_at
+        );
+
         // send the id of an offer and get the analytics for that offer formatted like below
         const advertiserAnalyticsClicks = await models
           .analyticsPerOfferAdvertisers("click", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const advertiserAnalyticsImpressions = await models
           .analyticsPerOfferAdvertisers("impression", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const advertiserAnalyticsConversions = await models
           .analyticsPerOfferAdvertisers("conversion", user_id, id)
           .where("an.created_at", ">=", started_at)
@@ -497,21 +459,25 @@ route.get("/:id", authenticate, async (req, res) => {
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const safariCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Safari", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const firefoxCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Firefox", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const edgeCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Edge", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const otherCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Other", user_id, id)
           .where("an.created_at", ">=", started_at)
@@ -544,15 +510,7 @@ route.get("/:id", authenticate, async (req, res) => {
           devices
         });
       } else {
-        const devices = await db("analytics as an")
-          .select("device")
-          .count("device")
-          .from("analytics")
-          .join("agreements as ag", "ag.id", "analytics.agreement_id")
-          .join("offers as o", "o.id", "ag.offer_id")
-          .where("o.user_id", user_id)
-          .andWhere("o.id", id)
-          .groupBy("analytics.device");
+        const devices = await models.devicesByIdandUser(user_id, id);
 
         const lastMonthsImpressions = await models.lastMonthAdvertiser(
           user_id,
@@ -605,16 +563,16 @@ route.get("/:id", authenticate, async (req, res) => {
             thisMonthConversions.count) *
           100;
 
-        const cities = await db.raw(
-          `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${user_id} AND o.id = ${id} GROUP BY city, longitude, latitude`
-        );
+        const cities = await models.citiesFilteredByIdAdvertiser(user_id, id);
         // send the id of an offer and get the analytics for that offer formatted like below
         const advertiserAnalyticsClicks = await models
           .analyticsPerOfferAdvertisers("click", user_id, id)
           .orderBy("an.id", "desc");
+
         const advertiserAnalyticsImpressions = await models
           .analyticsPerOfferAdvertisers("impression", user_id, id)
           .orderBy("an.id", "desc");
+
         const advertiserAnalyticsConversions = await models
           .analyticsPerOfferAdvertisers("conversion", user_id, id)
           .orderBy("an.id", "desc");
@@ -622,15 +580,19 @@ route.get("/:id", authenticate, async (req, res) => {
         const chromeCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Chrome", user_id, id)
           .orderBy("an.id", "desc");
+
         const safariCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Safari", user_id, id)
           .orderBy("an.id", "desc");
+
         const firefoxCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Firefox", user_id, id)
           .orderBy("an.id", "desc");
+
         const edgeCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Edge", user_id, id)
           .orderBy("an.id", "desc");
+
         const otherCount = await models
           .analyticsPerOfferAdvertisersBrowsers("Other", user_id, id)
           .orderBy("an.id", "desc");
@@ -681,20 +643,13 @@ route.get("/", authenticate, async (req, res) => {
 
   try {
     if (acct_type === "affiliate") {
-      const offersRanking = await db("offers").map(async offer => {
-        const offersClick = await db("offers as o")
-          .join("agreements as ag", "ag.offer_id", offer.id)
-          .join("analytics as an", "ag.id", "an.agreement_id")
-          .select("o.*", "an.*")
-          .groupBy("o.id", "an.id", "an.action")
-          .where("action", "click");
+      const offersRanking = await models.get("offers").map(async offer => {
+        const offersClick = await models.offersActionByOfferId(offer, "click");
 
-        const offersImpression = await db("offers as o")
-          .join("agreements as ag", "ag.offer_id", offer.id)
-          .join("analytics as an", "ag.id", "an.agreement_id")
-          .select("o.*", "an.*")
-          .groupBy("o.id", "an.id", "an.action")
-          .where("action", "impression");
+        const offersImpression = await models.offersActionByOfferId(
+          offer,
+          "impression"
+        );
 
         offer.ctr =
           Math.floor(
@@ -749,30 +704,14 @@ route.get("/", authenticate, async (req, res) => {
           thisMonthConversions.count) *
         100;
 
-      const cities = await db("analytics as an")
-        .join("agreements as ag", "ag.id", "an.agreement_id")
-        .where("ag.affiliate_id", affiliate_id)
-        .select("city", "longitude", "latitude")
-        .count("* as num")
-        .groupBy("city", "longitude", "latitude");
+      const cities = await models.citiesByAffiliateId(affiliate_id);
 
-      if (action && started_at && ended_at) {
-        const getActions = await models
-          .analyticsWithPricing(affiliate_id)
-          .where("an.created_at", ">=", started_at)
-          .where("an.created_at", "<", ended_at)
-          .andWhere("an.action", action);
-        res.json(getActions);
-      } else if (!action && started_at && ended_at) {
-        const devices = await db("analytics as an")
-          .select("device")
-          .count("device")
-          .from("analytics")
-          .join("agreements as ag", "ag.id", "analytics.agreement_id")
-          .where("ag.affiliate_id", affiliate_id)
-          .andWhere("analytics.created_at", ">=", started_at)
-          .andWhere("analytics.created_at", "<", ended_at)
-          .groupBy("analytics.device");
+      if (!action && started_at && ended_at) {
+        const devices = await models.filteredDevicesByUserId(
+          affiliate_id,
+          started_at,
+          ended_at
+        );
 
         const lastMonthsImpressionsFiltered = await models
           .lastMonthAffiliatesAll(affiliate_id, "impression")
@@ -804,56 +743,61 @@ route.get("/", authenticate, async (req, res) => {
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
 
-        const citiesFiltered = await db("analytics as an")
-          .join("agreements as ag", "ag.id", "an.agreement_id")
-          .where("ag.affiliate_id", affiliate_id)
-          .select("city", "longitude", "latitude")
-          .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at)
-          .count("* as num")
-          .groupBy("city", "longitude", "latitude");
+        const citiesFiltered = await models.citiesFilteredByAffiliateId(
+          affiliate_id,
+          started_at,
+          ended_at
+        );
+
         const getAffiliateClicksFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "click")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const getAffiliateImpressionsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "impression")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const getAffiliateConversionFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "conversion")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const chromeAnalyticsFiltered = await await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Chrome")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const safariAnalyticsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Safari")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const edgeAnalyticsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Edge")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const firefoxAnalyticsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Firefox")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const otherAnalyticsFiltered = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Other")
@@ -901,49 +845,45 @@ route.get("/", authenticate, async (req, res) => {
           offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
           devices
         });
-      } else if (!started_at && !ended_at && action) {
-        const getActions = await models
-          .analyticsWithPricing(affiliate_id)
-          .where({ action });
-        res.json(getActions);
       } else {
-        const devices = await db("analytics as an")
-          .select("device")
-          .count("device")
-          .from("analytics")
-          .join("agreements as ag", "ag.id", "analytics.agreement_id")
-          .where("ag.affiliate_id", affiliate_id)
-          .groupBy("analytics.device");
+        const devices = await models.affiliateDevices(affiliate_id);
 
         // all analytics that match the logged in user
         const getAffiliateClicks = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "click")
           .orderBy("an.id", "desc");
+
         const getAffiliateImpressions = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "impression")
           .orderBy("an.id", "desc");
+
         const getAffiliateConversion = await models
           .analyticsWithPricing(affiliate_id)
           .where("action", "conversion")
           .orderBy("an.id", "desc");
+
         const chromeAnalytics = await await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Chrome")
           .orderBy("an.id", "desc");
+
         const safariAnalytics = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Safari")
           .orderBy("an.id", "desc");
+
         const edgeAnalytics = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Edge")
           .orderBy("an.id", "desc");
+
         const firefoxAnalytics = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Firefox")
           .orderBy("an.id", "desc");
+
         const otherAnalytics = await models
           .analyticsWithPricing(affiliate_id)
           .where("browser", "Other")
@@ -976,22 +916,18 @@ route.get("/", authenticate, async (req, res) => {
         });
       }
     } else if (acct_type === "advertiser") {
-      const offersRanking = await db("offers")
-        .where({ user_id: affiliate_id })
+      const offersRanking = await models
+        .findAllBy("offers", { user_id: affiliate_id })
         .map(async offer => {
-          const offersClick = await db("offers as o")
-            .join("agreements as ag", "ag.offer_id", offer.id)
-            .join("analytics as an", "ag.id", "an.agreement_id")
-            .select("o.*", "an.*")
-            .groupBy("o.id", "an.id", "an.action")
-            .where("action", "click");
+          const offersClick = await models.offersActionByOfferId(
+            offer,
+            "click"
+          );
 
-          const offersImpression = await db("offers as o")
-            .join("agreements as ag", "ag.offer_id", offer.id)
-            .join("analytics as an", "ag.id", "an.agreement_id")
-            .select("o.*", "an.*")
-            .groupBy("o.id", "an.id", "an.action")
-            .where("action", "impression");
+          const offersImpression = await models.offersActionByOfferId(
+            offer,
+            "impression"
+          );
 
           offer.ctr =
             Math.floor(
@@ -1002,16 +938,11 @@ route.get("/", authenticate, async (req, res) => {
         });
 
       if (started_at && ended_at) {
-        const devices = await db("analytics as an")
-          .select("device")
-          .count("device")
-          .from("analytics")
-          .join("agreements as ag", "ag.id", "analytics.agreement_id")
-          .join("offers as o", "o.id", "ag.offer_id")
-          .where("o.user_id", affiliate_id)
-          .where("analytics.created_at", ">=", started_at)
-          .andWhere("analytics.created_at", "<", ended_at)
-          .groupBy("analytics.device");
+        const devices = await models.filteredDevicesByUser(
+          affiliate_id,
+          started_at,
+          ended_at
+        );
 
         const lastMonthsImpressionsFiltered = await models
           .lastMonthAdvertiserAll(affiliate_id, "impression")
@@ -1043,57 +974,61 @@ route.get("/", authenticate, async (req, res) => {
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at);
 
-        const citiesFiltered = await db("analytics as an")
-          .join("agreements as ag", "ag.id", "an.agreement_id")
-          .join("offers as o", "ag.offer_id", "o.id")
-          .where("o.user_id", affiliate_id)
-          .select("city", "longitude", "latitude")
-          .where("an.created_at", ">=", started_at)
-          .andWhere("an.created_at", "<", ended_at)
-          .count("* as num")
-          .groupBy("city", "longitude", "latitude");
+        const citiesFiltered = await models.allCitiesFilteredAdvertiser(
+          affiliate_id,
+          started_at,
+          ended_at
+        );
+
         const getAdvertisersClicksFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("action", "click")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const getAdvertisersImpressionsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("action", "impression")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const getAdvertisersConversionFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("action", "conversion")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const chromeAnalyticsFiltered = await await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Chrome")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const safariAnalyticsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Safari")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const edgeAnalyticsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Edge")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const firefoxAnalyticsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Firefox")
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
+
         const otherAnalyticsFiltered = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
           .where("browser", "Other")
@@ -1186,17 +1121,10 @@ route.get("/", authenticate, async (req, res) => {
           ((thisMonthConversions.count - lastMonthConversions.count) /
             thisMonthConversions.count) *
           100;
-        const cities = await db.raw(
-          `SELECT city, longitude, latitude,  count(*) as NUM FROM analytics JOIN agreements as ag ON ag.id = analytics.agreement_id JOIN offers as o ON ag.offer_id = o.id WHERE o.user_id = ${affiliate_id} GROUP BY city, longitude, latitude`
-        );
-        const devices = await db("analytics as an")
-          .select("device")
-          .count("device")
-          .from("analytics")
-          .join("agreements as ag", "ag.id", "analytics.agreement_id")
-          .join("offers as o", "o.id", "ag.offer_id")
-          .where("o.user_id", affiliate_id)
-          .groupBy("analytics.device");
+
+        const cities = await models.citiesFilteredByUser(affiliate_id);
+
+        const devices = await models.deviceByUser(affiliate_id);
 
         const analyticsForAdvertisersClicks = await models
           .analyticsWithPricingAdvertiser(affiliate_id)
