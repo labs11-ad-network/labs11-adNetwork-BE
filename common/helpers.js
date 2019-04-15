@@ -268,7 +268,7 @@ const addPricingForAnalytics = () =>
       "an.*"
     );
 
-offersActionByOfferId = (offer, action) =>
+const offersActionByOfferId = (offer, action) =>
   db("offers as o")
     .join("agreements as ag", "ag.offer_id", offer.id)
     .join("analytics as an", "ag.id", "an.agreement_id")
@@ -276,7 +276,7 @@ offersActionByOfferId = (offer, action) =>
     .groupBy("o.id", "an.id", "an.action")
     .where("action", action);
 
-citiesFilteredById = (user_id, id) =>
+const citiesFilteredById = (user_id, id) =>
   db.raw(
     `SELECT city, longitude, latitude,  count(*) as NUM
     FROM analytics
@@ -286,7 +286,7 @@ citiesFilteredById = (user_id, id) =>
     GROUP BY city, longitude, latitude`
   );
 
-citiesByAffiliateId = affiliate_id =>
+const citiesByAffiliateId = affiliate_id =>
   db("analytics as an")
     .join("agreements as ag", "ag.id", "an.agreement_id")
     .where("ag.affiliate_id", affiliate_id)
@@ -294,7 +294,7 @@ citiesByAffiliateId = affiliate_id =>
     .count("* as num")
     .groupBy("city", "longitude", "latitude");
 
-citiesFilteredByAffiliateId = (affiliate_id, started_at, ended_at) =>
+const citiesFilteredByAffiliateId = (affiliate_id, started_at, ended_at) =>
   db("analytics as an")
     .join("agreements as ag", "ag.id", "an.agreement_id")
     .where("ag.affiliate_id", affiliate_id)
@@ -304,7 +304,7 @@ citiesFilteredByAffiliateId = (affiliate_id, started_at, ended_at) =>
     .count("* as num")
     .groupBy("city", "longitude", "latitude");
 
-citiesFilteredByIdAdvertiser = (user_id, id) =>
+const citiesFilteredByIdAdvertiser = (user_id, id) =>
   db.raw(
     `SELECT city, longitude, latitude,  count(*) as NUM
   FROM analytics
@@ -315,7 +315,7 @@ citiesFilteredByIdAdvertiser = (user_id, id) =>
   GROUP BY city, longitude, latitude`
   );
 
-allCitiesFiltered = (id, started_at, ended_at) =>
+const allCitiesFiltered = (id, started_at, ended_at) =>
   db("analytics as an")
     .join("agreements as ag", "ag.id", "an.agreement_id")
     .where("an.agreement_id", id)
@@ -325,7 +325,7 @@ allCitiesFiltered = (id, started_at, ended_at) =>
     .count("* as num")
     .groupBy("city", "longitude", "latitude");
 
-allCitiesFilteredAdvertiser = (affiliate_id, started_at, ended_at) =>
+const allCitiesFilteredAdvertiser = (affiliate_id, started_at, ended_at) =>
   db("analytics as an")
     .join("agreements as ag", "ag.id", "an.agreement_id")
     .join("offers as o", "ag.offer_id", "o.id")
@@ -336,7 +336,7 @@ allCitiesFilteredAdvertiser = (affiliate_id, started_at, ended_at) =>
     .count("* as num")
     .groupBy("city", "longitude", "latitude");
 
-citiesFilteredByIdandUser = (user_id, id, started_at, ended_at) =>
+const citiesFilteredByIdandUser = (user_id, id, started_at, ended_at) =>
   db("analytics as an")
     .join("agreements as ag", "ag.id", "an.agreement_id")
     .join("offers as o", "ag.offer_id", "o.id")
@@ -348,7 +348,7 @@ citiesFilteredByIdandUser = (user_id, id, started_at, ended_at) =>
     .count("* as num")
     .groupBy("city", "longitude", "latitude");
 
-citiesFilteredByUser = affiliate_id =>
+const citiesFilteredByUser = affiliate_id =>
   db.raw(
     `SELECT city, longitude, latitude,  count(*) as NUM
   FROM analytics
@@ -357,7 +357,7 @@ citiesFilteredByUser = affiliate_id =>
   WHERE o.user_id = ${affiliate_id} GROUP BY city, longitude, latitude`
   );
 
-filteredDevicesById = (user_id, id, started_at, ended_at) =>
+const filteredDevicesById = (user_id, id, started_at, ended_at) =>
   db("analytics as an")
     .select("device")
     .count("device")
@@ -369,7 +369,7 @@ filteredDevicesById = (user_id, id, started_at, ended_at) =>
     .andWhere("analytics.created_at", "<", ended_at)
     .groupBy("analytics.device");
 
-filteredDevicesByIdandUser = (user_id, id, started_at, ended_at) =>
+const filteredDevicesByIdandUser = (user_id, id, started_at, ended_at) =>
   db("analytics as an")
     .select("device")
     .count("device")
@@ -382,7 +382,7 @@ filteredDevicesByIdandUser = (user_id, id, started_at, ended_at) =>
     .andWhere("analytics.created_at", "<", ended_at)
     .groupBy("analytics.device");
 
-filteredDevicesByUser = (affiliate_id, started_at, ended_at) =>
+const filteredDevicesByUser = (affiliate_id, started_at, ended_at) =>
   db("analytics as an")
     .select("device")
     .count("device")
@@ -394,7 +394,7 @@ filteredDevicesByUser = (affiliate_id, started_at, ended_at) =>
     .andWhere("analytics.created_at", "<", ended_at)
     .groupBy("analytics.device");
 
-deviceByUser = affiliate_id =>
+const deviceByUser = affiliate_id =>
   db("analytics as an")
     .select("device")
     .count("device")
@@ -404,7 +404,7 @@ deviceByUser = affiliate_id =>
     .where("o.user_id", affiliate_id)
     .groupBy("analytics.device");
 
-devicesByIdandUser = (user_id, id) =>
+const devicesByIdandUser = (user_id, id) =>
   db("analytics as an")
     .select("device")
     .count("device")
@@ -415,7 +415,7 @@ devicesByIdandUser = (user_id, id) =>
     .andWhere("o.id", id)
     .groupBy("analytics.device");
 
-affiliateDevicesById = (user_id, id) =>
+const affiliateDevicesById = (user_id, id) =>
   db("analytics as an")
     .select("device")
     .count("device")
@@ -425,7 +425,7 @@ affiliateDevicesById = (user_id, id) =>
     .andWhere("ag.id", id)
     .groupBy("analytics.device");
 
-affiliateDevices = affiliate_id =>
+const affiliateDevices = affiliate_id =>
   db("analytics as an")
     .select("device")
     .count("device")
@@ -434,7 +434,7 @@ affiliateDevices = affiliate_id =>
     .where("ag.affiliate_id", affiliate_id)
     .groupBy("analytics.device");
 
-filteredDevicesByUserId = (affiliate_id, started_at, ended_at) =>
+const filteredDevicesByUserId = (affiliate_id, started_at, ended_at) =>
   db("analytics as an")
     .select("device")
     .count("device")
