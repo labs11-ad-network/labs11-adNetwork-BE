@@ -307,12 +307,12 @@ const citiesFilteredByAffiliateId = (affiliate_id, started_at, ended_at) =>
 const citiesFilteredByIdAdvertiser = (user_id, id) =>
   db.raw(
     `SELECT city, longitude, latitude,  count(*) as NUM
-  FROM analytics
-  JOIN agreements as ag ON ag.id = analytics.agreement_id
-  JOIN offers as o ON ag.offer_id = o.id
-  WHERE o.user_id = ${user_id}
-  AND o.id = ${id}
-  GROUP BY city, longitude, latitude`
+      FROM analytics
+      JOIN agreements as ag ON ag.id = analytics.agreement_id
+      JOIN offers as o ON ag.offer_id = o.id
+      WHERE o.user_id = ${user_id}
+      AND o.id = ${id}
+      GROUP BY city, longitude, latitude`
   );
 
 const allCitiesFiltered = (id, started_at, ended_at) =>

@@ -704,7 +704,7 @@ route.get("/", authenticate, async (req, res) => {
           thisMonthConversions.count) *
         100;
 
-      const cities = await models.citiesFilteredByAffiliateId(affiliate_id);
+      const cities = await models.citiesByAffiliateId(affiliate_id);
 
       if (!action && started_at && ended_at) {
         const devices = await models.filteredDevicesByUserId(
