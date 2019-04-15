@@ -41,26 +41,34 @@ route.post("/", async (req, res) => {
             id: user.affiliate_id
           });
 
-          if (action === "impression") {
-            // advertiser
-            await models.update("users", user.user_id, {
-              amount: advertiser.amount - user.price_per_impression
-            });
+          if (user.budget > 0) {
+            if (action === "impression") {
+              // advertiser
+              await models.update("users", user.user_id, {
+                amount: advertiser.amount - user.price_per_impression
+              });
 
-            // affiliate
-            await models.update("users", user.affiliate_id, {
-              amount: affiliate.amount + user.price_per_impression
-            });
-          } else if (action === "click") {
-            // advertiser
-            await models.update("users", user.user_id, {
-              amount: advertiser.amount - user.price_per_click
-            });
+              await models.update("users", user.user_id, {
+                budget: user.budget - user.price_per_impression
+              });
 
-            // affiliate
-            await models.update("users", user.affiliate_id, {
-              amount: affiliate.amount + user.price_per_click
-            });
+              // affiliate
+              await models.update("users", user.affiliate_id, {
+                amount: affiliate.amount + user.price_per_impression
+              });
+            } else if (action === "click") {
+              // advertiser
+              await models.update("users", user.user_id, {
+                amount: advertiser.amount - user.price_per_click
+              });
+
+              // affiliate
+              await models.update("users", user.affiliate_id, {
+                amount: affiliate.amount + user.price_per_click
+              });
+            }
+          } else {
+            await models.update("offers", user.offer_id, { status: false });
           }
         });
       }
