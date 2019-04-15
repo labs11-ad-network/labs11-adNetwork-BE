@@ -12,6 +12,7 @@ const { authenticate } = require("../../common/authentication");
 route.post("/connect_customer", authenticate, async (req, res) => {
   const { code } = req.body;
   const { id } = req.decoded;
+
   if (!code) return res.status(422).json({ message: "Code required" });
 
   try {
@@ -116,8 +117,10 @@ route.post("/charge_customer", authenticate, async (req, res) => {
 // @Access   Private
 route.post("/payout", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
+
   if (_customer.acct_type !== "affiliate")
     return res.status(400).json({ message: "You must be an affiliate" });
+
   try {
     if (_customer.amount === 0) {
       return res
