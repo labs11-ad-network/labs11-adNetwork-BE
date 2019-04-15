@@ -153,13 +153,13 @@ route.get("/payout", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
   try {
-    stripe.transfers.list(async (err, transfers) => {
-      if (err) return res.status(500).json({ message: err });
-      const payout = transfers.data.filter(
-        payout => payout.destination === _customer.stripe_payout_id
-      );
-      res.json({ payouts: payout });
-    });
+    stripe.transfers.list(
+      { customer: _customer.stripe_user_id },
+      async (err, transfers) => {
+        if (err) return res.status(500).json({ message: err });
+        res.json({ payouts: transfers.data });
+      }
+    );
   } catch ({ message }) {
     res.json({ message });
   }
