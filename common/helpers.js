@@ -235,6 +235,13 @@ const getAgreementsByAffiliate = affiliate_id =>
     .where("affiliate_id", affiliate_id)
     .select("ag.*", "o.name");
 
+const agreementsByUserId = user =>
+  db
+    .select("ag.*", "o.id as test_id")
+    .from("agreements as ag")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where({ affiliate_id: user.id });
+
 const allAdsByAffiliateId = affiliate_id =>
   db("agreements as ag")
     .join("ads as ad", "ag.offer_id", "ad.offer_id")
@@ -282,5 +289,6 @@ module.exports = {
   thisMonthAdvertiserAll,
   getAgreementsByAffiliate,
   allAdsByAffiliateId,
-  offerAgreementsAffiliates
+  offerAgreementsAffiliates,
+  agreementsByUserId
 };

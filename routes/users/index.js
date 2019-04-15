@@ -20,49 +20,47 @@ route.get("/", authenticate, async (req, res) => {
   const { sub, email } = req.decoded;
   const _customer = await models.findBy("users", { id: req.decoded.id });
   try {
-    let users = await db("users")
-      .where({ email })
-      .andWhere({ sub });
+    let users = await models.findBy("users", { email, sub });
 
     if (_customer.acct_type === "affiliate") {
-      stripe.transfers.list({ limit: 10 }, async (err, transfers) => {
-        if (err) {
-          return res.status(500).json({ err });
+      stripe.transfers.list(
+        { destination: _customer.stripe_payout_id },
+        async (err, transfers) => {
+          if (err) {
+            return res.status(500).json({ err });
+          }
+
+          const total_amount =
+            transfers.data
+              .map(payout => payout.amount)
+              .reduce((a, b) => a + b, 0) / 100;
+
+          if (users) {
+            const result = await users.map(async user => {
+              const offers = await models.findAllBy("offers", {
+                user_id: user.id
+              });
+              const ads = await models.findAllBy("ads", { user_id: user.id });
+
+              const agreements = await models.agreementsByUserId(user);
+
+              user.stripe_balance = total_amount;
+              user.offers = offers.length;
+              user.ads = ads.length;
+              user.agreements = agreements.length;
+
+              return user;
+            });
+
+            Promise.all(result).then(completed => {
+              users = completed;
+              res.status(200).json(users[0]);
+            });
+          } else {
+            res.status(500).json({ message: "Users do not exist." });
+          }
         }
-
-        const payout = transfers.data.filter(
-          payout => payout.destination === _customer.stripe_payout_id
-        );
-
-        const total_amount =
-          payout.map(payout => payout.amount).reduce((a, b) => a + b, 0) / 100;
-
-        if (users) {
-          const result = await users.map(async user => {
-            const offers = await db("offers").where({ user_id: user.id });
-            const ads = await db("ads").where({ user_id: user.id });
-            const agreements = await db
-              .select("ag.*", "o.id as test_id")
-              .from("agreements as ag")
-              .join("offers as o", "o.id", "ag.offer_id")
-              .where({ affiliate_id: user.id });
-
-            user.stripe_balance = total_amount;
-            user.offers = offers.length;
-            user.ads = ads.length;
-            user.agreements = agreements.length;
-
-            return user;
-          });
-
-          Promise.all(result).then(completed => {
-            users = completed;
-            res.status(200).json(users[0]);
-          });
-        } else {
-          res.status(500).json({ message: "Users do not exist." });
-        }
-      });
+      );
     } else {
       stripe.charges.list(
         { customer: _customer.stripe_user_id },
@@ -77,13 +75,12 @@ route.get("/", authenticate, async (req, res) => {
 
           if (users) {
             const result = await users.map(async user => {
-              const offers = await db("offers").where({ user_id: user.id });
-              const ads = await db("ads").where({ user_id: user.id });
-              const agreements = await db
-                .select("ag.*", "o.id as test_id")
-                .from("agreements as ag")
-                .join("offers as o", "o.id", "ag.offer_id")
-                .where({ affiliate_id: user.id });
+              const offers = await models.findAllBy("offers", {
+                user_id: user.id
+              });
+              const ads = await models.findAllBy("ads", { user_id: user.id });
+
+              const agreements = await models.agreementsByUserId(user);
 
               user.stripe_balance = total_amount;
               user.offers = offers.length;
