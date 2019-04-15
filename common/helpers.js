@@ -29,6 +29,11 @@ const update = (tbl, id, item) =>
     .where({ id })
     .update(item);
 
+const updateAdByUser = (id, user_id, items) =>
+  db("ads")
+    .where({ id, user_id })
+    .update({ ...items });
+
 const updateStripe = (tbl, filter, item) =>
   db(tbl)
     .where(filter)
@@ -230,6 +235,12 @@ const getAgreementsByAffiliate = affiliate_id =>
     .where("affiliate_id", affiliate_id)
     .select("ag.*", "o.name");
 
+const allAdsByAffiliateId = affiliate_id =>
+  db("agreements as ag")
+    .join("ads as ad", "ag.offer_id", "ad.offer_id")
+    .select("ad.*", "ag.id as agreement_id")
+    .where("affiliate_id", affiliate_id);
+
 module.exports = {
   get,
   findBy,
@@ -237,6 +248,7 @@ module.exports = {
   remove,
   removeAd,
   update,
+  updateAdByUser,
   updateStripe,
   findAllBy,
   queryByDate,
@@ -260,5 +272,6 @@ module.exports = {
   thisMonthAffiliatesAll,
   lastMonthAdvertiserAll,
   thisMonthAdvertiserAll,
-  getAgreementsByAffiliate
+  getAgreementsByAffiliate,
+  allAdsByAffiliateId
 };

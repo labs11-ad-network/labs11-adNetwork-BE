@@ -1,11 +1,8 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
-const db = require("../../data/dbConfig");
 const cloudinary = require("cloudinary");
 const multipart = require("connect-multiparty")();
-const moment = require("moment");
-const request = require("request");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -30,14 +27,17 @@ route.get("/", authenticate, async (req, res) => {
 // @Access   Private
 route.post("/", authenticate, multipart, async (req, res) => {
   const user_id = req.decoded.id;
-  console.log(req.decoded);
-  if (!req.decoded.stripe_cust_id) {
+  const stripe_cust_id = req.decoded.stripe_cust_id;
+  const image = req.body.image;
+
+  if (!stripe_cust_id) {
     return res.status(400).json({
       message: "You need to connect stripe before creating an Advertisement"
     });
   }
 
-  cloudinary.v2.uploader.upload(req.body.image, async (error, result) => {
+  // cloudinary image uploading
+  cloudinary.v2.uploader.upload(image, async (error, result) => {
     if (error) return res.status(500).json({ message: error });
     try {
       const [newAd] = await models.add("ads", {
@@ -60,6 +60,7 @@ route.post("/", authenticate, multipart, async (req, res) => {
 route.delete("/:id", authenticate, async (req, res) => {
   const { id } = req.params;
   const user_id = req.decoded.id;
+
   try {
     const adCheck = await models.findBy("ads", { id, user_id });
 
@@ -69,23 +70,11 @@ route.delete("/:id", authenticate, async (req, res) => {
         .json({ message: "You can not delete someone else's ad" });
 
     const deleteAd = await models.removeAd("ads", { id, user_id });
+
     if (!deleteAd)
       return res.status(400).json({ message: "Failed to delete ad" });
+
     res.json({ success: true, id });
-  } catch ({ message }) {
-    res.status(500).json({ message });
-  }
-});
-
-// @route    GET /api/ads/myads
-// @desc     get all my ads
-// @Access   Private
-route.get("/myads", authenticate, async (req, res) => {
-  const user_id = req.decoded.id;
-
-  try {
-    const myAds = await models.findAllBy("ads", { user_id });
-    res.json(myAds);
   } catch ({ message }) {
     res.status(500).json({ message });
   }
@@ -96,16 +85,6 @@ route.get("/myads", authenticate, async (req, res) => {
 // @Access   Public
 route.get("/:id", async (req, res) => {
   const { id } = req.params;
-
-  const categories = await db
-    .select("category")
-    .count("category")
-    .from("analytics")
-    .join("agreements as ag", "ag.id", "analytics.agreement_id")
-    .join("offers as o", "ag.offer_id", "o.id")
-    .groupBy("o.category");
-
-  console.log(categories);
 
   try {
     const ad = await models.findBy("ads", { id });
@@ -123,19 +102,24 @@ route.get("/offers/:id", authenticate, async (req, res) => {
   const user_id = req.decoded.id;
   const offer_id = req.params.id;
   const { acct_type } = req.decoded;
+
   try {
     if (acct_type === "affiliate") {
       const affiliateAds = await models
         .findAllBy("ads", { offer_id })
         .orderBy("id", "asc");
+
       if (!affiliateAds.length)
         return res.status(404).json({ message: "No Ads found" });
+
       return res.json(affiliateAds);
     } else {
       const ads = await models
         .findAllBy("ads", { user_id, offer_id })
         .orderBy("id", "asc");
+
       if (!ads.length) return res.status(404).json({ message: "No Ads found" });
+
       return res.json(ads);
     }
   } catch ({ message }) {
@@ -159,9 +143,7 @@ route.put("/:id", authenticate, async (req, res) => {
       if (!ad) {
         res.status(400).json({ message: "you can not edit this ad" });
       } else {
-        const update = await db("ads")
-          .where({ id, user_id })
-          .update({ ...req.body });
+        const update = await models.updateAdByUser(id, user_id, req.body);
 
         if (update) {
           res.json({ message: "Success" });
@@ -182,10 +164,7 @@ route.get("/allads/:id", async (req, res) => {
   const affiliate_id = req.params.id;
 
   try {
-    const ads = await db("agreements as ag")
-      .join("ads as ad", "ag.offer_id", "ad.offer_id")
-      .select("ad.*", "ag.id as agreement_id")
-      .where("affiliate_id", affiliate_id);
+    const ads = await models.allAdsByAffiliateId(affiliate_id);
 
     res.json(ads);
   } catch ({ message }) {
