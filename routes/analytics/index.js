@@ -75,7 +75,12 @@ route.post("/", async (req, res) => {
             const userEmail = await models.findBy("users", {
               id: user.user_id
             });
-            emailer(res, userEmail);
+            emailer(
+              res,
+              userEmail,
+              "Your advertisement has reached it's budget",
+              "Your ad was stopped because it has reached the budget you have set up for it, if you want to keep running your add, update your budget immediately, THANK YOU!"
+            );
             await models.update("offers", user.offer_id, { status: false });
           }
         });

@@ -1,6 +1,6 @@
 const mailer = require("nodemailer");
 
-const emailer = (res, email) => {
+const emailer = (res, email, subject, message) => {
   const smtpTransport = mailer.createTransport({
     service: "Gmail",
     auth: {
@@ -12,8 +12,10 @@ const emailer = (res, email) => {
   const mail = {
     from: "LAD Network <ladnetwork@gmail.com>",
     to: email,
-    subject: "Someone obtained your offer",
-    text: `Hey, an affiliate just got your offer on their website. you can now track its analytics`
+    subject: subject || "Someone obtained your offer",
+    text:
+      message ||
+      `Hey, an affiliate just got your offer on their website. you can now track its analytics`
   };
 
   smtpTransport.sendMail(mail, function(error, response) {
