@@ -1,6 +1,8 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
+const emailer = require("../../common/mailer");
+
 const iplocation = require("iplocation").default;
 const UAParser = require("ua-parser-js");
 
@@ -70,6 +72,15 @@ route.post("/", async (req, res) => {
               });
             }
           } else {
+            const userEmail = await models.findBy("users", {
+              id: user.user_id
+            });
+            emailer(
+              res,
+              userEmail,
+              "Your advertisement has reached it's budget",
+              "Your ad was stopped because it has reached the budget you have set up for it, if you want to keep running your add, update your budget immediately, THANK YOU!"
+            );
             await models.update("offers", user.offer_id, { status: false });
           }
         });
