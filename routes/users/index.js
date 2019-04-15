@@ -23,16 +23,19 @@ route.get("/", authenticate, async (req, res) => {
     let users = await models.findAllBy("users", { email, sub });
     if (_customer.acct_type === "affiliate") {
       stripe.transfers.list(
-        { destination: _customer.stripe_payout_id },
+        _customer.stripe_payout_id && {
+          destination: _customer.stripe_payout_id
+        },
         async (err, transfers) => {
+          let total_amount;
           if (err) {
-            return res.status(500).json({ err });
+            total_amount = 0;
+          } else {
+            total_amount =
+              transfers.data
+                .map(payout => payout.amount)
+                .reduce((a, b) => a + b, 0) / 100;
           }
-
-          const total_amount =
-            transfers.data
-              .map(payout => payout.amount)
-              .reduce((a, b) => a + b, 0) / 100;
 
           if (users) {
             const result = await users.map(async user => {
@@ -62,14 +65,17 @@ route.get("/", authenticate, async (req, res) => {
       );
     } else {
       stripe.charges.list(
-        { customer: _customer.stripe_cust_id },
+        _customer.stripe_cust_id && { customer: _customer.stripe_cust_id },
         async function(err, charges) {
-          if (err) return res.status(500).json({ message: "Server error" });
-
-          const total_amount =
-            charges.data
-              .map(charge => charge.amount)
-              .reduce((a, b) => a + b, 0) / 100;
+          let total_amount;
+          if (err) {
+            total_amount = 0;
+          } else {
+            total_amount =
+              charges.data
+                .map(charge => charge.amount)
+                .reduce((a, b) => a + b, 0) / 100;
+          }
 
           if (users) {
             const result = await users.map(async user => {
