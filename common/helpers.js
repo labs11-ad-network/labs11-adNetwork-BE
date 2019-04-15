@@ -224,6 +224,12 @@ const thisMonthAdvertiserAll = (user_id, action) =>
     .count()
     .first();
 
+const getAgreementsByAffiliate = affiliate_id =>
+  db("agreements as ag")
+    .join("offers as o", "ag.offer_id", "o.id")
+    .where("affiliate_id", affiliate_id)
+    .select("ag.*", "o.name");
+
 module.exports = {
   get,
   findBy,
@@ -253,5 +259,6 @@ module.exports = {
   lastMonthAffiliatesAll,
   thisMonthAffiliatesAll,
   lastMonthAdvertiserAll,
-  thisMonthAdvertiserAll
+  thisMonthAdvertiserAll,
+  getAgreementsByAffiliate
 };
