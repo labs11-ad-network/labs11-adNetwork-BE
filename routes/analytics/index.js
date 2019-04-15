@@ -1,6 +1,8 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
+const emailer = require("../../common/mailer");
+
 const iplocation = require("iplocation").default;
 const UAParser = require("ua-parser-js");
 
@@ -70,6 +72,10 @@ route.post("/", async (req, res) => {
               });
             }
           } else {
+            const userEmail = await models.findBy("users", {
+              id: user.user_id
+            });
+            emailer(res, userEmail);
             await models.update("offers", user.offer_id, { status: false });
           }
         });
