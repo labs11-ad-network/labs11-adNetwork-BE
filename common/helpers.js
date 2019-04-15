@@ -241,6 +241,14 @@ const allAdsByAffiliateId = affiliate_id =>
     .select("ad.*", "ag.id as agreement_id")
     .where("affiliate_id", affiliate_id);
 
+const offerAgreementsAffiliates = (user_id, allOffer) =>
+  db
+    .select()
+    .from("agreements")
+    .where({ affiliate_id: user_id })
+    .andWhere({ offer_id: allOffer.id })
+    .first();
+
 module.exports = {
   get,
   findBy,
@@ -273,5 +281,6 @@ module.exports = {
   lastMonthAdvertiserAll,
   thisMonthAdvertiserAll,
   getAgreementsByAffiliate,
-  allAdsByAffiliateId
+  allAdsByAffiliateId,
+  offerAgreementsAffiliates
 };
