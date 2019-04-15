@@ -1,6 +1,5 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 const { affiliateCheck } = require("../../common/roleCheck");
 const emailer = require("../../common/mailer");
@@ -13,11 +12,7 @@ route.get("/", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
 
   try {
-    // const agreements = await models.findAllBy("agreements", { affiliate_id });
-    const agreements = await db("agreements as ag")
-      .join("offers as o", "ag.offer_id", "o.id")
-      .where("affiliate_id", affiliate_id)
-      .select("ag.*", "o.name");
+    const agreements = await models.getAgreementsByAffiliate(affiliate_id);
 
     if (agreements) {
       res.status(200).json(agreements);
@@ -61,7 +56,9 @@ route.get("/:id", authenticate, async (req, res) => {
 // @Access   PRivate
 route.post("/", authenticate, affiliateCheck, async (req, res) => {
   const affiliate_id = req.decoded.id;
-  if (!req.body.hasOwnProperty("offer_id")) {
+  const { offer_id } = req.body;
+
+  if (!offer_id) {
     res.status(400).json({ message: "Required information is missing." });
   }
 
@@ -94,8 +91,8 @@ route.post("/", authenticate, affiliateCheck, async (req, res) => {
 // @Access   Private
 route.put("/:id", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
-
   const id = req.params.id;
+
   try {
     const agreement = await models.findBy("agreements", { id, affiliate_id });
     if (agreement) {
@@ -123,8 +120,8 @@ route.put("/:id", authenticate, async (req, res) => {
 // Postman TESTED
 route.delete("/:id", authenticate, async (req, res) => {
   const affiliate_id = req.decoded.id;
-
   const id = req.params.id;
+
   try {
     const agreement = await models.findBy("agreements", { id, affiliate_id });
 
@@ -132,7 +129,9 @@ route.delete("/:id", authenticate, async (req, res) => {
       return res
         .status(401)
         .json({ message: "You are not allowed to delete this" });
+
     const success = await models.remove("agreements", id);
+
     if (success) {
       res.status(200).json({ message: "Agreement sucessfully deleted." });
     } else {

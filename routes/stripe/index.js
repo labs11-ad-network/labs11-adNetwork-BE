@@ -12,6 +12,7 @@ const { authenticate } = require("../../common/authentication");
 route.post("/connect_customer", authenticate, async (req, res) => {
   const { code } = req.body;
   const { id } = req.decoded;
+
   if (!code) return res.status(422).json({ message: "Code required" });
 
   try {
@@ -116,8 +117,10 @@ route.post("/charge_customer", authenticate, async (req, res) => {
 // @Access   Private
 route.post("/payout", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
+
   if (_customer.acct_type !== "affiliate")
     return res.status(400).json({ message: "You must be an affiliate" });
+
   try {
     if (_customer.amount === 0) {
       return res
@@ -153,13 +156,13 @@ route.get("/payout", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
   try {
-    stripe.transfers.list({ limit: 10 }, async (err, transfers) => {
-      if (err) return res.status(500).json({ message: err });
-      const payout = transfers.data.filter(
-        payout => payout.destination === _customer.stripe_payout_id
-      );
-      res.json({ payouts: payout });
-    });
+    stripe.transfers.list(
+      { destination: _customer.stripe_payout_id },
+      async (err, transfers) => {
+        if (err) return res.status(500).json({ message: err });
+        res.json({ payouts: transfers.data });
+      }
+    );
   } catch ({ message }) {
     res.json({ message });
   }
@@ -173,18 +176,10 @@ route.get("/payments", authenticate, async (req, res) => {
 
   try {
     await stripe.charges.list(
-      {
-        limit: 10
-      },
+      { customer: _customer.stripe_cust_id },
       (err, charges) => {
         if (err) return res.status(500).json({ message: err });
-        const chargesHolder = [];
-        charges.data.map(charge => {
-          if (charge.customer === _customer.stripe_cust_id) {
-            chargesHolder.push(charge);
-          }
-        });
-        res.json({ payments: chargesHolder });
+        res.json({ payments: charges.data });
       }
     );
   } catch ({ message }) {

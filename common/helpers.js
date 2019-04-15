@@ -29,6 +29,11 @@ const update = (tbl, id, item) =>
     .where({ id })
     .update(item);
 
+const updateAdByUser = (id, user_id, items) =>
+  db("ads")
+    .where({ id, user_id })
+    .update({ ...items });
+
 const updateStripe = (tbl, filter, item) =>
   db(tbl)
     .where(filter)
@@ -224,6 +229,222 @@ const thisMonthAdvertiserAll = (user_id, action) =>
     .count()
     .first();
 
+const getAgreementsByAffiliate = affiliate_id =>
+  db("agreements as ag")
+    .join("offers as o", "ag.offer_id", "o.id")
+    .where("affiliate_id", affiliate_id)
+    .select("ag.*", "o.name");
+
+const agreementsByUserId = user =>
+  db
+    .select("ag.*", "o.id as test_id")
+    .from("agreements as ag")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where({ affiliate_id: user.id });
+
+const allAdsByAffiliateId = affiliate_id =>
+  db("agreements as ag")
+    .join("ads as ad", "ag.offer_id", "ad.offer_id")
+    .select("ad.*", "ag.id as agreement_id")
+    .where("affiliate_id", affiliate_id);
+
+const offerAgreementsAffiliates = (user_id, allOffer) =>
+  db
+    .select()
+    .from("agreements")
+    .where({ affiliate_id: user_id })
+    .andWhere({ offer_id: allOffer.id })
+    .first();
+
+const addPricingForAnalytics = () =>
+  db("agreements as ag")
+    .join("offers as o", "ag.offer_id", "o.id")
+    .join("analytics as an", "ag.id", "an.agreement_id")
+    .select(
+      "ag.*",
+      "o.user_id",
+      "o.price_per_impression",
+      "o.price_per_click",
+      "an.*"
+    );
+
+const offersActionByOfferId = (offer, action) =>
+  db("offers as o")
+    .join("agreements as ag", "ag.offer_id", offer.id)
+    .join("analytics as an", "ag.id", "an.agreement_id")
+    .select("o.*", "an.*")
+    .groupBy("o.id", "an.id", "an.action")
+    .where("action", action);
+
+const citiesFilteredById = (user_id, id) =>
+  db.raw(
+    `SELECT city, longitude, latitude,  count(*) as NUM
+    FROM analytics
+    JOIN agreements as ag ON ag.id = analytics.agreement_id
+    WHERE ag.affiliate_id = ${user_id}
+    AND ag.id = ${id}
+    GROUP BY city, longitude, latitude`
+  );
+
+const citiesByAffiliateId = affiliate_id =>
+  db("analytics as an")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .where("ag.affiliate_id", affiliate_id)
+    .select("city", "longitude", "latitude")
+    .count("* as num")
+    .groupBy("city", "longitude", "latitude");
+
+const citiesFilteredByAffiliateId = (affiliate_id, started_at, ended_at) =>
+  db("analytics as an")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .where("ag.affiliate_id", affiliate_id)
+    .select("city", "longitude", "latitude")
+    .where("an.created_at", ">=", started_at)
+    .andWhere("an.created_at", "<", ended_at)
+    .count("* as num")
+    .groupBy("city", "longitude", "latitude");
+
+const citiesFilteredByIdAdvertiser = (user_id, id) =>
+  db.raw(
+    `SELECT city, longitude, latitude,  count(*) as NUM
+      FROM analytics
+      JOIN agreements as ag ON ag.id = analytics.agreement_id
+      JOIN offers as o ON ag.offer_id = o.id
+      WHERE o.user_id = ${user_id}
+      AND o.id = ${id}
+      GROUP BY city, longitude, latitude`
+  );
+
+const allCitiesFiltered = (id, started_at, ended_at) =>
+  db("analytics as an")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .where("an.agreement_id", id)
+    .select("city", "longitude", "latitude")
+    .where("an.created_at", ">=", started_at)
+    .andWhere("an.created_at", "<", ended_at)
+    .count("* as num")
+    .groupBy("city", "longitude", "latitude");
+
+const allCitiesFilteredAdvertiser = (affiliate_id, started_at, ended_at) =>
+  db("analytics as an")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .join("offers as o", "ag.offer_id", "o.id")
+    .where("o.user_id", affiliate_id)
+    .select("city", "longitude", "latitude")
+    .where("an.created_at", ">=", started_at)
+    .andWhere("an.created_at", "<", ended_at)
+    .count("* as num")
+    .groupBy("city", "longitude", "latitude");
+
+const citiesFilteredByIdandUser = (user_id, id, started_at, ended_at) =>
+  db("analytics as an")
+    .join("agreements as ag", "ag.id", "an.agreement_id")
+    .join("offers as o", "ag.offer_id", "o.id")
+    .where("o.user_id", user_id)
+    .andWhere("o.id", id)
+    .select("city", "longitude", "latitude")
+    .where("an.created_at", ">=", started_at)
+    .andWhere("an.created_at", "<", ended_at)
+    .count("* as num")
+    .groupBy("city", "longitude", "latitude");
+
+const citiesFilteredByUser = affiliate_id =>
+  db.raw(
+    `SELECT city, longitude, latitude,  count(*) as NUM
+  FROM analytics
+  JOIN agreements as ag ON ag.id = analytics.agreement_id
+  JOIN offers as o ON ag.offer_id = o.id
+  WHERE o.user_id = ${affiliate_id} GROUP BY city, longitude, latitude`
+  );
+
+const filteredDevicesById = (user_id, id, started_at, ended_at) =>
+  db("analytics as an")
+    .select("device")
+    .count("device")
+    .from("analytics")
+    .join("agreements as ag", "ag.id", "analytics.agreement_id")
+    .where("ag.affiliate_id", user_id)
+    .andWhere("ag.id", id)
+    .andWhere("analytics.created_at", ">=", started_at)
+    .andWhere("analytics.created_at", "<", ended_at)
+    .groupBy("analytics.device");
+
+const filteredDevicesByIdandUser = (user_id, id, started_at, ended_at) =>
+  db("analytics as an")
+    .select("device")
+    .count("device")
+    .from("analytics")
+    .join("agreements as ag", "ag.id", "analytics.agreement_id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("o.user_id", user_id)
+    .andWhere("o.id", id)
+    .where("analytics.created_at", ">=", started_at)
+    .andWhere("analytics.created_at", "<", ended_at)
+    .groupBy("analytics.device");
+
+const filteredDevicesByUser = (affiliate_id, started_at, ended_at) =>
+  db("analytics as an")
+    .select("device")
+    .count("device")
+    .from("analytics")
+    .join("agreements as ag", "ag.id", "analytics.agreement_id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("o.user_id", affiliate_id)
+    .where("analytics.created_at", ">=", started_at)
+    .andWhere("analytics.created_at", "<", ended_at)
+    .groupBy("analytics.device");
+
+const deviceByUser = affiliate_id =>
+  db("analytics as an")
+    .select("device")
+    .count("device")
+    .from("analytics")
+    .join("agreements as ag", "ag.id", "analytics.agreement_id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("o.user_id", affiliate_id)
+    .groupBy("analytics.device");
+
+const devicesByIdandUser = (user_id, id) =>
+  db("analytics as an")
+    .select("device")
+    .count("device")
+    .from("analytics")
+    .join("agreements as ag", "ag.id", "analytics.agreement_id")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where("o.user_id", user_id)
+    .andWhere("o.id", id)
+    .groupBy("analytics.device");
+
+const affiliateDevicesById = (user_id, id) =>
+  db("analytics as an")
+    .select("device")
+    .count("device")
+    .from("analytics")
+    .join("agreements as ag", "ag.id", "analytics.agreement_id")
+    .where("ag.affiliate_id", user_id)
+    .andWhere("ag.id", id)
+    .groupBy("analytics.device");
+
+const affiliateDevices = affiliate_id =>
+  db("analytics as an")
+    .select("device")
+    .count("device")
+    .from("analytics")
+    .join("agreements as ag", "ag.id", "analytics.agreement_id")
+    .where("ag.affiliate_id", affiliate_id)
+    .groupBy("analytics.device");
+
+const filteredDevicesByUserId = (affiliate_id, started_at, ended_at) =>
+  db("analytics as an")
+    .select("device")
+    .count("device")
+    .from("analytics")
+    .join("agreements as ag", "ag.id", "analytics.agreement_id")
+    .where("ag.affiliate_id", affiliate_id)
+    .andWhere("analytics.created_at", ">=", started_at)
+    .andWhere("analytics.created_at", "<", ended_at)
+    .groupBy("analytics.device");
+
 module.exports = {
   get,
   findBy,
@@ -231,6 +452,7 @@ module.exports = {
   remove,
   removeAd,
   update,
+  updateAdByUser,
   updateStripe,
   findAllBy,
   queryByDate,
@@ -253,5 +475,27 @@ module.exports = {
   lastMonthAffiliatesAll,
   thisMonthAffiliatesAll,
   lastMonthAdvertiserAll,
-  thisMonthAdvertiserAll
+  thisMonthAdvertiserAll,
+  getAgreementsByAffiliate,
+  allAdsByAffiliateId,
+  offerAgreementsAffiliates,
+  agreementsByUserId,
+  addPricingForAnalytics,
+  offersActionByOfferId,
+  allCitiesFiltered,
+  filteredDevicesById,
+  citiesFilteredById,
+  affiliateDevicesById,
+  citiesFilteredByIdandUser,
+  filteredDevicesByIdandUser,
+  devicesByIdandUser,
+  citiesFilteredByIdAdvertiser,
+  citiesByAffiliateId,
+  citiesFilteredByAffiliateId,
+  filteredDevicesByUserId,
+  affiliateDevices,
+  filteredDevicesByUser,
+  allCitiesFilteredAdvertiser,
+  citiesFilteredByUser,
+  deviceByUser
 };

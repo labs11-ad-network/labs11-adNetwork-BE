@@ -1,6 +1,5 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const db = require("../../data/dbConfig");
 const errorHelper = require("../../error-helper/errorHelper");
 
 // @route    /api/auth/register
@@ -14,10 +13,7 @@ route.post("/register", async (req, res) => {
   }
 
   try {
-    const exists = await db("users")
-      .where({ email })
-      .andWhere({ sub })
-      .first();
+    const exists = await models.findBy("users", { email, sub });
 
     if (exists) {
       return res.status(200).json(exists);
