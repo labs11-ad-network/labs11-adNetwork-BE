@@ -20,8 +20,7 @@ route.get("/", authenticate, async (req, res) => {
   const { sub, email } = req.decoded;
   const _customer = await models.findBy("users", { id: req.decoded.id });
   try {
-    let users = await models.findBy("users", { email, sub });
-
+    let users = await models.findAllBy("users", { email, sub });
     if (_customer.acct_type === "affiliate") {
       stripe.transfers.list(
         { destination: _customer.stripe_payout_id },
@@ -74,6 +73,7 @@ route.get("/", authenticate, async (req, res) => {
             100;
 
           if (users) {
+            console.log(users);
             const result = await users.map(async user => {
               const offers = await models.findAllBy("offers", {
                 user_id: user.id
