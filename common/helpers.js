@@ -245,8 +245,10 @@ const agreementsByUserId = user =>
 const allAdsByAffiliateId = affiliate_id =>
   db("agreements as ag")
     .join("ads as ad", "ag.offer_id", "ad.offer_id")
+    .join("offers as o", "o.id", "ag.offer_id")
     .select("ad.*", "ag.id as agreement_id")
-    .where("affiliate_id", affiliate_id);
+    .where("affiliate_id", affiliate_id)
+    .andWhere("o.status", true);
 
 const offerAgreementsAffiliates = (user_id, allOffer) =>
   db
@@ -265,6 +267,7 @@ const addPricingForAnalytics = () =>
       "o.user_id",
       "o.price_per_impression",
       "o.price_per_click",
+      "o.budget",
       "an.*"
     );
 

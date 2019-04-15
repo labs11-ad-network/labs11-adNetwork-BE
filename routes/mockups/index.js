@@ -3,6 +3,7 @@ const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
 const cloudinary = require("cloudinary");
 const multipart = require("connect-multiparty")();
+const db = require("../../data/dbConfig.js");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
