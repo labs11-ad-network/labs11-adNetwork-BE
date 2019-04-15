@@ -9,101 +9,85 @@
 
 ## Table of Contents
  - [Summary Table of API Endpoints](#summary-table-of-api-endpoints)
-   - [Register](#register-schema)
-   - [️DB Schema](#️db-schema)
-   - [️Users](#users)
+   - [User](#user)
    - [Offers](#offers)
+   - [Ads](#ads)
+   - [Analytics](#analytics)
+   
 
 
 
 ### Summary Table of API Endpoints
-| Type   | Endpoints            | Description      |
-| ------ | -------------------- | ---------------- |
-| POST   | /api/auth/registerV2 | Register User    |
-| GET    | /api/api/users       | Get User Info    |
-| GET    | /api/api/users/:id   | Get User by Id   |
-| PUT    | /api/api/users/:id   | Update User      |
-| DELETE | /api/api/users/:id   | Delete User      |
-| GET    | /api/offers          | Get offers       |
-| GET    | /api/offers/:id      | Get offers by id |
-| POST   | /api/offers          | Add offers       |
-| PUT    | /api/offers/:id      | Update Offer     |
-| DELETE | /api/offers/:id      | Delete Offer     |
+| Type   | Endpoints           | Description                      |
+| ------ | ------------------- | -------------------------------- |
+| POST   | /api/auth/register  | Register User using Auth0        |
+| GET    | /api/api/users      | Get User Info                    |
+| PUT    | /api/api/users/:id  | Update User                      |
+| DELETE | /api/api/users      | Delete User Account              |
+| GET    | /api/offers         | Get offers                       |
+| GET    | /api/offers/:id     | Get offers by id                 |
+| POST   | /api/offers         | Add offers                       |
+| PUT    | /api/offers/:id     | Update Offer                     |
+| DELETE | /api/offers/:id     | Delete Offer                     |
+| GET    | /api/ads            | get all ads                      |
+| GET    | /api/ads/:id        | Get ads by id                    |
+| POST   | /api/ads            | Post an ads                      |
+| PUT    | /api/ads/:id        | update ads by id                 |
+| DELETE | /api/ads/:id        | Delete an ads                    |
+| GET    | /api/ads/offers/:id | get offers by id                 |
+| GET    | /api/ads/allads/:id | get accepted ads by affiliate_id |
 
-
-
-#### Register schema
-```
-{
-  id: 1,                                                 // integer unique
-  name: 'lad',                                           // string
-  email: 'lad@gmail.com',                                // string
-  image_url: 'https://via.placeholder.com',              // string
-  nickname: 'ladzz',                                     // string
-  sub: "google-oauth2|1141223585512312",                 // string
-  acct_type: 'admin',                                    // string
-  phone: '6191230543',                                   // string
-  stripe_cust_id: '12',                                  // string
-}
-```
 #### Register and Login Options
 ![](assets/loginoptions.png)
 
 
 
-#### Users
-`GET 200 success ✅`
+#### User
+
+`GET, PUT, DELETE 200 success ✅ Private`
 ```
 {
-    "id": 2,
-    "name": "Lad Network",
-    "email": "LadNetwork@live.com",
-    "image_url": "https://avatars0.githubusercontent.com/u/123323?v=4",
-    "nickname": "Lad",
-    "sub": "github|12533103",
+    "id": 4,
+    "name": "John Benedict Miranda",
+    "email": "jbmiranda22796@gmail.com",
+    "image_url": "https://media.licdn.com/dms/image/C4E03AQHWn1xyl8YaSA/profile-displayphoto-shrink_100_100/0?e=1560384000&v=beta&t=rSgo6M7-lDWtq772krO-EBB8gskFCGRlecEbVqQEJDU",
+    "nickname": "jbmiranda22796",
+    "sub": "linkedin|5gWW_xGV9g",
     "acct_type": "affiliate",
     "phone": null,
-    "stripe_cust_id": null
+    "amount": 0,
+    "show_tour": true,
+    "stripe_cust_id": null,
+    "stripe_payout_id": null,
+    "stripe_balance": 0,
+    "offers": 0,
+    "ads": 0,
+    "agreements": 1
 }
 ```
 
-`PUT 200 success ✅`
-```
-{
-    "user": {
-        "id": 4,
-        "name": "John Benedict Miranda",
-        "email": "jbmiranda22796@gmail.com",
-        "image_url": "https://res.cloudinary.com/dxvyzmvhi/image/upload/v1553732723/gbztktrfwkdrogomhgle.jpg",
-        "nickname": "jb",
-        "sub": "google-oauth2|114122358554022059970",
-        "acct_type": "affiliate",
-        "phone": null,
-        "amount": 0,
-        "stripe_cust_id": null
-    },
-    "message": "User edited successfully."
-}
-```
 
 #### Offers 
-`GET 200 success ✅`
+`GET, DELETE, PUT 200 success ✅`
 ```
-  [
+ [
     {
         "id": 1,
-        "price_per_click": 0.05,
-        "price_per_impression": 0.001,
+        "price_per_click": 0.5,
+        "price_per_impression": 0.02,
         "num_applicants": 0,
-        "budget": 56000,
-        "name": "Bananas",
-        "description": "The best bananas in town",
-        "category": "Health + Wellness",
+        "budget": 150,
+        "name": "Hamza's Offer",
+        "description": "Hamza's Description",
+        "category": "Finance",
         "currency": "USD",
         "status": true,
-        "user_id": 1,
-        "created_at": "2019-03-26T16:47:19.087Z",
-        "updated_at": "2019-03-26T16:47:19.087Z"
+        "user_id": 2,
+        "created_at": "2019-04-12T22:26:12.853Z",
+        "updated_at": "2019-04-12T22:26:12.853Z",
+        "active": false,
+        "accepted": false,
+        "agreement_id": null
     }
   ]
 ```
@@ -115,6 +99,75 @@
     }
 }
 ```
+
+#### Ads 
+`GET, DELETE, PUT 200 success ✅`
+```
+[
+    {
+        "id": 1,
+        "name": "HELLO",
+        "destination_url": "",
+        "active": true,
+        "size": "horizontal_banner",
+        "offer_id": 1,
+        "user_id": 2,
+        "image": "https://res.cloudinary.com/dypcywjue/image/upload/v1555108065/blbbqzuvg5m7hdkg2hhv.png",
+        "created_at": "2019-04-12T22:27:45.368Z",
+        "updated_at": "2019-04-12T22:27:45.368Z"
+    }
+  ]
+```
+
+#### Analytics 
+`GET, DELETE, PUT 200 success ✅`
+```
+{
+    "clicks": [],
+    "impressions": [],
+    "conversions": [],
+    "actionCount": {
+        "impressions": 0,
+        "clicks": 0,
+        "conversions": 0
+    },
+    "browserCount": {
+        "chrome": 0,
+        "safari": 0,
+        "edge": 0,
+        "firefox": 0,
+        "other": 0
+    },
+    "cities": [],
+    "growth": {
+        "clicks": null,
+        "impressions": null,
+        "conversions": null
+    },
+    "offersRanking": [
+        {
+            "id": 1,
+            "price_per_click": 0.5,
+            "price_per_impression": 0.02,
+            "num_applicants": 0,
+            "budget": 150,
+            "name": "Hamza's Offer",
+            "description": "Hamza's Description",
+            "category": "Finance",
+            "currency": "USD",
+            "status": true,
+            "user_id": 2,
+            "created_at": "2019-04-12T22:26:12.853Z",
+            "updated_at": "2019-04-12T22:26:12.853Z",
+            "ctr": 100
+        }
+    ],
+    "devices": []
+}
+```
+
+
+
 #### Private Route middleware
 `500 error ❌`
 ```
