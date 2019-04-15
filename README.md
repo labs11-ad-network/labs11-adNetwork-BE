@@ -36,6 +36,10 @@
 | DELETE | /api/ads/:id        | Delete an ads                    |
 | GET    | /api/ads/offers/:id | get offers by id                 |
 | GET    | /api/ads/allads/:id | get accepted ads by affiliate_id |
+| GET    | /api/analytics      | GET analytics                    |
+| GET    | /api/analytics/:id  | Get analytics by id              |
+| POST   | /api/analytics      | POST analytics                   |
+
 
 #### Register and Login Options
 ![](assets/loginoptions.png)
