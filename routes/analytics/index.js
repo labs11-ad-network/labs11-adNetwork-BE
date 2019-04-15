@@ -48,7 +48,7 @@ route.post("/", async (req, res) => {
                 amount: advertiser.amount - user.price_per_impression
               });
 
-              await models.update("users", user.user_id, {
+              await models.update("offers", user.offer_id, {
                 budget: user.budget - user.price_per_impression
               });
 
@@ -61,7 +61,9 @@ route.post("/", async (req, res) => {
               await models.update("users", user.user_id, {
                 amount: advertiser.amount - user.price_per_click
               });
-
+              await models.update("offers", user.offer_id, {
+                budget: user.budget - user.price_per_click
+              });
               // affiliate
               await models.update("users", user.affiliate_id, {
                 amount: affiliate.amount + user.price_per_click

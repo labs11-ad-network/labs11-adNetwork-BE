@@ -265,6 +265,7 @@ const addPricingForAnalytics = () =>
       "o.user_id",
       "o.price_per_impression",
       "o.price_per_click",
+      "o.budget",
       "an.*"
     );
 
