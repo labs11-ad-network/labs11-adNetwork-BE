@@ -62,18 +62,16 @@ route.get("/", authenticate, async (req, res) => {
       );
     } else {
       stripe.charges.list(
-        { customer: _customer.stripe_user_id },
+        { customer: _customer.stripe_cust_id },
         async function(err, charges) {
           if (err) return res.status(500).json({ message: "Server error" });
-          const mycharges = charges.data.filter(
-            charge => charge.customer !== _customer.stripe_user_id
-          );
+
           const total_amount =
-            mycharges.map(charge => charge.amount).reduce((a, b) => a + b, 0) /
-            100;
+            charges.data
+              .map(charge => charge.amount)
+              .reduce((a, b) => a + b, 0) / 100;
 
           if (users) {
-            console.log(users);
             const result = await users.map(async user => {
               const offers = await models.findAllBy("offers", {
                 user_id: user.id

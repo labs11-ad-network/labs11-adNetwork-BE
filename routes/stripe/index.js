@@ -157,7 +157,7 @@ route.get("/payout", authenticate, async (req, res) => {
 
   try {
     stripe.transfers.list(
-      { customer: _customer.stripe_user_id },
+      { destination: _customer.stripe_payout_id },
       async (err, transfers) => {
         if (err) return res.status(500).json({ message: err });
         res.json({ payouts: transfers.data });
