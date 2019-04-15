@@ -3,7 +3,6 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require("cors");
 
-const agreements = require("../routes/agreements");
 const auth = require("../routes/auth");
 const offers = require("../routes/offers");
 const ads = require("../routes/mockups");
@@ -11,6 +10,7 @@ const users = require("../routes/users");
 const analytics = require("../routes/analytics");
 const stripe = require("../routes/stripe");
 const notifications = require("../routes/notifications");
+const agreements = require("../routes/agreements");
 const contactform = require("../routes/contactForm/contactForm");
 
 const configureMiddleware = server => {
