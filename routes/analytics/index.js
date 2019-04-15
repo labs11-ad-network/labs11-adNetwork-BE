@@ -34,16 +34,7 @@ route.post("/", async (req, res) => {
           return res.json({ message: "Failed to add action" });
         });
       if (enterAction[0]) {
-        const payments = await db("agreements as ag")
-          .join("offers as o", "ag.offer_id", "o.id")
-          .join("analytics as an", "ag.id", "an.agreement_id")
-          .select(
-            "ag.*",
-            "o.user_id",
-            "o.price_per_impression",
-            "o.price_per_click",
-            "an.*"
-          );
+        const payments = await models.addPricingForAnalytics();
 
         payments.map(async user => {
           const advertiser = await models.findBy("users", { id: user.user_id });

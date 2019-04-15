@@ -256,6 +256,18 @@ const offerAgreementsAffiliates = (user_id, allOffer) =>
     .andWhere({ offer_id: allOffer.id })
     .first();
 
+const addPricingForAnalytics = () =>
+  db("agreements as ag")
+    .join("offers as o", "ag.offer_id", "o.id")
+    .join("analytics as an", "ag.id", "an.agreement_id")
+    .select(
+      "ag.*",
+      "o.user_id",
+      "o.price_per_impression",
+      "o.price_per_click",
+      "an.*"
+    );
+
 module.exports = {
   get,
   findBy,
@@ -290,5 +302,6 @@ module.exports = {
   getAgreementsByAffiliate,
   allAdsByAffiliateId,
   offerAgreementsAffiliates,
-  agreementsByUserId
+  agreementsByUserId,
+  addPricingForAnalytics
 };
