@@ -172,16 +172,13 @@ route.get("/payments", authenticate, async (req, res) => {
   const _customer = await models.findBy("users", { id: req.decoded.id });
 
   try {
-    await stripe.charges.list((err, charges) => {
-      if (err) return res.status(500).json({ message: err });
-      const chargesHolder = [];
-      charges.data.map(charge => {
-        if (charge.customer === _customer.stripe_cust_id) {
-          chargesHolder.push(charge);
-        }
-      });
-      res.json({ payments: chargesHolder });
-    });
+    await stripe.charges.list(
+      { customer: _customer.stripe_user_id },
+      (err, charges) => {
+        if (err) return res.status(500).json({ message: err });
+        res.json({ payments: charges.data });
+      }
+    );
   } catch ({ message }) {
     res.status(500).json({ message });
   }
