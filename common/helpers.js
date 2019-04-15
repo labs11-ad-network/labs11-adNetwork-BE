@@ -29,6 +29,11 @@ const update = (tbl, id, item) =>
     .where({ id })
     .update(item);
 
+const updateAdByUser = (id, user_id, items) =>
+  db("ads")
+    .where({ id, user_id })
+    .update({ ...items });
+
 const updateStripe = (tbl, filter, item) =>
   db(tbl)
     .where(filter)
@@ -224,6 +229,33 @@ const thisMonthAdvertiserAll = (user_id, action) =>
     .count()
     .first();
 
+const getAgreementsByAffiliate = affiliate_id =>
+  db("agreements as ag")
+    .join("offers as o", "ag.offer_id", "o.id")
+    .where("affiliate_id", affiliate_id)
+    .select("ag.*", "o.name");
+
+const agreementsByUserId = user =>
+  db
+    .select("ag.*", "o.id as test_id")
+    .from("agreements as ag")
+    .join("offers as o", "o.id", "ag.offer_id")
+    .where({ affiliate_id: user.id });
+
+const allAdsByAffiliateId = affiliate_id =>
+  db("agreements as ag")
+    .join("ads as ad", "ag.offer_id", "ad.offer_id")
+    .select("ad.*", "ag.id as agreement_id")
+    .where("affiliate_id", affiliate_id);
+
+const offerAgreementsAffiliates = (user_id, allOffer) =>
+  db
+    .select()
+    .from("agreements")
+    .where({ affiliate_id: user_id })
+    .andWhere({ offer_id: allOffer.id })
+    .first();
+
 module.exports = {
   get,
   findBy,
@@ -231,6 +263,7 @@ module.exports = {
   remove,
   removeAd,
   update,
+  updateAdByUser,
   updateStripe,
   findAllBy,
   queryByDate,
@@ -253,5 +286,9 @@ module.exports = {
   lastMonthAffiliatesAll,
   thisMonthAffiliatesAll,
   lastMonthAdvertiserAll,
-  thisMonthAdvertiserAll
+  thisMonthAdvertiserAll,
+  getAgreementsByAffiliate,
+  allAdsByAffiliateId,
+  offerAgreementsAffiliates,
+  agreementsByUserId
 };

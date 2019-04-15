@@ -1,6 +1,5 @@
 const route = require("express").Router();
 const models = require("../../common/helpers");
-const db = require("../../data/dbConfig");
 const { authenticate } = require("../../common/authentication");
 
 // @route    /api/offers
@@ -15,12 +14,10 @@ route.get("/", authenticate, async (req, res) => {
 
       //before reutrnin all offers
       const results = await allOffers.map(async allOffer => {
-        let agreements = await db
-          .select()
-          .from("agreements")
-          .where({ affiliate_id: user_id })
-          .andWhere({ offer_id: allOffer.id })
-          .first();
+        let agreements = await models.offerAgreementsAffiliates(
+          user_id,
+          allOffer
+        );
 
         allOffer.active = agreements ? agreements.active : false;
         allOffer.accepted = agreements ? true : false;
@@ -73,16 +70,9 @@ route.get("/:id", authenticate, async (req, res) => {
 route.post("/", authenticate, async (req, res) => {
   // Make sure to stop any attempts to create any info with IDs or timestamps
   const user_id = req.decoded.id;
-  if (
-    !(
-      req.body.hasOwnProperty("budget") &&
-      req.body.hasOwnProperty("name") &&
-      req.body.hasOwnProperty("description") &&
-      req.body.hasOwnProperty("category") &&
-      req.body.hasOwnProperty("currency") &&
-      req.body.hasOwnProperty("status")
-    )
-  ) {
+  const { budget, name, description, category, currency, status } = req.body;
+
+  if (!budget || !name || !description || !category || !currency || !status) {
     res.status(400).json({ message: "Required information is missing." });
   }
 
