@@ -263,7 +263,8 @@ route.get("/:id", authenticate, async (req, res) => {
               },
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
-              payouts: err ? [] : transfers.data
+              payouts: err ? [] : transfers.data,
+              stripeGrowth: await models.stripeGrowthAffiliate(stripe_payout_id)
             });
           }
         );
@@ -385,7 +386,8 @@ route.get("/:id", authenticate, async (req, res) => {
               },
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
-              payouts: err ? [] : transfers.data
+              payouts: err ? [] : transfers.data,
+              stripeGrowth: await models.stripeGrowthAffiliate(stripe_payout_id)
             });
           }
         );
@@ -535,7 +537,7 @@ route.get("/:id", authenticate, async (req, res) => {
               lte: moment(ended_at, "YYYY-MM-DD hh:mm:ss").unix()
             }
           },
-          (err, charges) => {
+          async (err, charges) => {
             res.json({
               clicks: advertiserAnalyticsClicks,
               impressions: advertiserAnalyticsImpressions,
@@ -560,7 +562,8 @@ route.get("/:id", authenticate, async (req, res) => {
               },
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
-              payments: err ? [] : charges.data
+              payments: err ? [] : charges.data,
+              stripeGrowth: await models.stripeGrowthAdvertisers(stripe_cust_id)
             });
           }
         );
@@ -656,7 +659,7 @@ route.get("/:id", authenticate, async (req, res) => {
           {
             customer: stripe_cust_id
           },
-          (err, charges) => {
+          async (err, charges) => {
             res.json({
               clicks: advertiserAnalyticsClicks,
               impressions: advertiserAnalyticsImpressions,
@@ -681,7 +684,8 @@ route.get("/:id", authenticate, async (req, res) => {
               },
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
-              payments: err ? [] : charges.data
+              payments: err ? [] : charges.data,
+              stripeGrowth: await models.stripeGrowthAdvertisers(stripe_cust_id)
             });
           }
         );
@@ -916,7 +920,8 @@ route.get("/", authenticate, async (req, res) => {
               },
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
-              payouts: err ? [] : transfers.data
+              payouts: err ? [] : transfers.data,
+              stripeGrowth: await models.stripeGrowthAffiliate(stripe_payout_id)
             });
           }
         );
@@ -993,7 +998,8 @@ route.get("/", authenticate, async (req, res) => {
               },
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
-              payouts: err ? [] : transfers.data
+              payouts: err ? [] : transfers.data,
+              stripeGrowth: await models.stripeGrowthAffiliate(stripe_payout_id)
             });
           }
         );
@@ -1142,7 +1148,7 @@ route.get("/", authenticate, async (req, res) => {
               lte: moment(ended_at, "YYYY-MM-DD hh:mm:ss").unix()
             }
           },
-          (err, charges) => {
+          async (err, charges) => {
             res.json({
               clicks: getAdvertisersClicksFiltered,
               impressions: getAdvertisersImpressionsFiltered,
@@ -1167,7 +1173,8 @@ route.get("/", authenticate, async (req, res) => {
               },
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
-              payments: err ? [] : charges.data
+              payments: err ? [] : charges.data,
+              stripeGrowth: await models.stripeGrowthAdvertisers(stripe_cust_id)
             });
           }
         );
@@ -1259,7 +1266,7 @@ route.get("/", authenticate, async (req, res) => {
               lte: moment(ended_at, "YYYY-MM-DD hh:mm:ss").unix()
             }
           },
-          (err, charges) => {
+          async (err, charges) => {
             res.json({
               clicks: analyticsForAdvertisersClicks,
               impressions: analyticsForAdvertisersImpressions,
@@ -1284,7 +1291,8 @@ route.get("/", authenticate, async (req, res) => {
               },
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
-              payments: err ? [] : charges.data
+              payments: err ? [] : charges.data,
+              stripeGrowth: await models.stripeGrowthAdvertisers(stripe_cust_id)
             });
           }
         );
