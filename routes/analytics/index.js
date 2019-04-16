@@ -120,6 +120,8 @@ route.get("/:id", authenticate, async (req, res) => {
         return offer;
       });
 
+      const categories = await models.categoriesAffiliate(user_id);
+
       if (started_at && ended_at) {
         const lastMonthsImpressions = await models.lastMonthAffiliates(
           user_id,
@@ -264,6 +266,7 @@ route.get("/:id", authenticate, async (req, res) => {
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
               payouts: err ? [] : transfers.data,
+              categories,
               stripeGrowth: await models.stripeGrowthAffiliate(stripe_payout_id)
             });
           }
@@ -387,6 +390,7 @@ route.get("/:id", authenticate, async (req, res) => {
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
               payouts: err ? [] : transfers.data,
+              categories,
               stripeGrowth: await models.stripeGrowthAffiliate(stripe_payout_id)
             });
           }
@@ -413,6 +417,7 @@ route.get("/:id", authenticate, async (req, res) => {
 
           return offer;
         });
+      const categories = await models.categoriesAdvertiser(user_id);
 
       if (started_at && ended_at) {
         const lastMonthsImpressions = await models.lastMonthAdvertiser(
@@ -563,6 +568,7 @@ route.get("/:id", authenticate, async (req, res) => {
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
               payments: err ? [] : charges.data,
+              categories,
               stripeGrowth: await models.stripeGrowthAdvertisers(stripe_cust_id)
             });
           }
@@ -685,6 +691,7 @@ route.get("/:id", authenticate, async (req, res) => {
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
               payments: err ? [] : charges.data,
+              categories,
               stripeGrowth: await models.stripeGrowthAdvertisers(stripe_cust_id)
             });
           }
@@ -726,6 +733,7 @@ route.get("/", authenticate, async (req, res) => {
         return offer;
       });
 
+      const categories = await models.categoriesAffiliate(affiliate_id);
       const lastMonthsImpressions = await models.lastMonthAffiliatesAll(
         affiliate_id,
         "impression"
@@ -921,6 +929,7 @@ route.get("/", authenticate, async (req, res) => {
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
               payouts: err ? [] : transfers.data,
+              categories,
               stripeGrowth: await models.stripeGrowthAffiliate(stripe_payout_id)
             });
           }
@@ -999,6 +1008,7 @@ route.get("/", authenticate, async (req, res) => {
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
               payouts: err ? [] : transfers.data,
+              categories,
               stripeGrowth: await models.stripeGrowthAffiliate(stripe_payout_id)
             });
           }
@@ -1025,7 +1035,7 @@ route.get("/", authenticate, async (req, res) => {
 
           return offer;
         });
-
+      const categories = await models.categoriesAdvertiser(affiliate_id);
       if (started_at && ended_at) {
         const devices = await models.filteredDevicesByUser(
           affiliate_id,
@@ -1174,6 +1184,7 @@ route.get("/", authenticate, async (req, res) => {
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
               payments: err ? [] : charges.data,
+              categories,
               stripeGrowth: await models.stripeGrowthAdvertisers(stripe_cust_id)
             });
           }
@@ -1289,6 +1300,7 @@ route.get("/", authenticate, async (req, res) => {
               offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
               devices,
               payments: err ? [] : charges.data,
+              categories,
               stripeGrowth: await models.stripeGrowthAdvertisers(stripe_cust_id)
             });
           }
