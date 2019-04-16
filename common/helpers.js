@@ -451,6 +451,8 @@ const filteredDevicesByUserId = (affiliate_id, started_at, ended_at) =>
     .groupBy("analytics.device");
 
 const stripeGrowthAffiliate = async stripe_payout_id => {
+  if (!stripe_payout_id) return 0;
+
   const lastMonthStripe = await stripe.transfers.list({
     destination: stripe_payout_id,
     created: {
@@ -482,6 +484,8 @@ const stripeGrowthAffiliate = async stripe_payout_id => {
 };
 
 const stripeGrowthAdvertisers = async stripe_cust_id => {
+  if (!stripe_cust_id) return 0;
+
   const lastMonthStripe = await stripe.charges.list({
     customer: stripe_cust_id,
     created: {
