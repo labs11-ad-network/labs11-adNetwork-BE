@@ -65,7 +65,9 @@ route.get("/", authenticate, async (req, res) => {
       );
     } else {
       stripe.charges.list(
-        _customer.stripe_cust_id && { customer: _customer.stripe_cust_id },
+        _customer.stripe_cust_id && {
+          customer: _customer.stripe_cust_id
+        },
         async function(err, charges) {
           let total_amount;
           if (err) {

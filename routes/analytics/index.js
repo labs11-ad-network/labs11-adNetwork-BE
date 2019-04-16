@@ -2,9 +2,11 @@ const route = require("express").Router();
 const models = require("../../common/helpers");
 const { authenticate } = require("../../common/authentication");
 const emailer = require("../../common/mailer");
+const stripe = require("stripe")(process.env.SECRET_KEY);
 
 const iplocation = require("iplocation").default;
 const UAParser = require("ua-parser-js");
+const moment = require("moment");
 
 // @route    /api/analytics
 // @desc     POST analytics
@@ -98,7 +100,7 @@ route.post("/", async (req, res) => {
 route.get("/:id", authenticate, async (req, res) => {
   const { id } = req.params;
   const user_id = req.decoded.id;
-  const { acct_type } = req.decoded;
+  const { acct_type, stripe_payout_id, stripe_cust_id } = req.decoded;
   const { started_at, ended_at } = req.query;
   try {
     if (acct_type === "affiliate") {
@@ -228,31 +230,43 @@ route.get("/:id", authenticate, async (req, res) => {
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
-        res.json({
-          clicks: affiliateAnalyticsClicks,
-          impressions: affiliateAnalyticsImpressions,
-          conversions: affiliateAnalyticsConversions,
-          actionCount: {
-            impressions: Number(affiliateAnalyticsImpressions.length),
-            clicks: Number(affiliateAnalyticsClicks.length),
-            conversions: Number(affiliateAnalyticsConversions.length)
+        await stripe.transfers.list(
+          {
+            destination: stripe_payout_id,
+            created: {
+              gte: moment(started_at, "YYYY-MM-DD hh:mm:ss").unix(),
+              lte: moment(ended_at, "YYYY-MM-DD hh:mm:ss").unix()
+            }
           },
-          browserCount: {
-            chrome: chromeCount.length,
-            safari: safariCount.length,
-            edge: edgeCount.length,
-            firefox: firefoxCount.length,
-            other: otherCount.length
-          },
-          cities: cities,
-          growth: {
-            clicks: clicksGrowth,
-            impressions: impressionsGrowth,
-            conversions: conversionsGrowth
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
-          devices
-        });
+          async (err, transfers) => {
+            res.json({
+              clicks: affiliateAnalyticsClicks,
+              impressions: affiliateAnalyticsImpressions,
+              conversions: affiliateAnalyticsConversions,
+              actionCount: {
+                impressions: Number(affiliateAnalyticsImpressions.length),
+                clicks: Number(affiliateAnalyticsClicks.length),
+                conversions: Number(affiliateAnalyticsConversions.length)
+              },
+              browserCount: {
+                chrome: chromeCount.length,
+                safari: safariCount.length,
+                edge: edgeCount.length,
+                firefox: firefoxCount.length,
+                other: otherCount.length
+              },
+              cities: cities,
+              growth: {
+                clicks: clicksGrowth,
+                impressions: impressionsGrowth,
+                conversions: conversionsGrowth
+              },
+              offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+              devices,
+              payouts: err ? [] : transfers.data
+            });
+          }
+        );
       } else {
         const lastMonthsImpressions = await models.lastMonthAffiliates(
           user_id,
@@ -342,31 +356,39 @@ route.get("/:id", authenticate, async (req, res) => {
           .browserCountPerOfferAffiliates("Other", user_id, id)
           .orderBy("an.id", "desc");
 
-        res.json({
-          clicks: affiliateAnalyticsClicks,
-          impressions: affiliateAnalyticsImpressions,
-          conversions: affiliateAnalyticsConversions,
-          actionCount: {
-            impressions: Number(affiliateAnalyticsImpressions.length),
-            clicks: Number(affiliateAnalyticsClicks.length),
-            conversions: Number(affiliateAnalyticsConversions.length)
+        await stripe.transfers.list(
+          {
+            destination: stripe_payout_id
           },
-          browserCount: {
-            chrome: chromeCount.length,
-            safari: safariCount.length,
-            edge: edgeCount.length,
-            firefox: firefoxCount.length,
-            other: otherCount.length
-          },
-          cities: cities.rows,
-          growth: {
-            clicks: clicksGrowth,
-            impressions: impressionsGrowth,
-            conversions: conversionsGrowth
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
-          devices
-        });
+          async (err, transfers) => {
+            res.json({
+              clicks: affiliateAnalyticsClicks,
+              impressions: affiliateAnalyticsImpressions,
+              conversions: affiliateAnalyticsConversions,
+              actionCount: {
+                impressions: Number(affiliateAnalyticsImpressions.length),
+                clicks: Number(affiliateAnalyticsClicks.length),
+                conversions: Number(affiliateAnalyticsConversions.length)
+              },
+              browserCount: {
+                chrome: chromeCount.length,
+                safari: safariCount.length,
+                edge: edgeCount.length,
+                firefox: firefoxCount.length,
+                other: otherCount.length
+              },
+              cities: cities.rows,
+              growth: {
+                clicks: clicksGrowth,
+                impressions: impressionsGrowth,
+                conversions: conversionsGrowth
+              },
+              offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+              devices,
+              payouts: err ? [] : transfers.data
+            });
+          }
+        );
       }
     } else if (acct_type === "advertiser") {
       const offersRanking = await models
@@ -505,31 +527,43 @@ route.get("/:id", authenticate, async (req, res) => {
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
-        res.json({
-          clicks: advertiserAnalyticsClicks,
-          impressions: advertiserAnalyticsImpressions,
-          conversions: advertiserAnalyticsConversions,
-          actionCount: {
-            impressions: Number(advertiserAnalyticsImpressions.length),
-            clicks: Number(advertiserAnalyticsClicks.length),
-            conversions: Number(advertiserAnalyticsConversions.length)
+        await stripe.charges.list(
+          {
+            customer: stripe_cust_id,
+            created: {
+              gte: moment(started_at, "YYYY-MM-DD hh:mm:ss").unix(),
+              lte: moment(ended_at, "YYYY-MM-DD hh:mm:ss").unix()
+            }
           },
-          browserCount: {
-            chrome: chromeCount.length,
-            safari: safariCount.length,
-            edge: edgeCount.length,
-            firefox: firefoxCount.length,
-            other: otherCount.length
-          },
-          cities: cities,
-          growth: {
-            clicks: clicksGrowth,
-            impressions: impressionsGrowth,
-            conversions: conversionsGrowth
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
-          devices
-        });
+          (err, charges) => {
+            res.json({
+              clicks: advertiserAnalyticsClicks,
+              impressions: advertiserAnalyticsImpressions,
+              conversions: advertiserAnalyticsConversions,
+              actionCount: {
+                impressions: Number(advertiserAnalyticsImpressions.length),
+                clicks: Number(advertiserAnalyticsClicks.length),
+                conversions: Number(advertiserAnalyticsConversions.length)
+              },
+              browserCount: {
+                chrome: chromeCount.length,
+                safari: safariCount.length,
+                edge: edgeCount.length,
+                firefox: firefoxCount.length,
+                other: otherCount.length
+              },
+              cities: cities,
+              growth: {
+                clicks: clicksGrowth,
+                impressions: impressionsGrowth,
+                conversions: conversionsGrowth
+              },
+              offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+              devices,
+              payments: err ? [] : charges.data
+            });
+          }
+        );
       } else {
         const devices = await models.devicesByIdandUser(user_id, id);
 
@@ -618,31 +652,39 @@ route.get("/:id", authenticate, async (req, res) => {
           .analyticsPerOfferAdvertisersBrowsers("Other", user_id, id)
           .orderBy("an.id", "desc");
 
-        res.json({
-          clicks: advertiserAnalyticsClicks,
-          impressions: advertiserAnalyticsImpressions,
-          conversions: advertiserAnalyticsConversions,
-          actionCount: {
-            impressions: Number(advertiserAnalyticsImpressions.length),
-            clicks: Number(advertiserAnalyticsClicks.length),
-            conversions: Number(advertiserAnalyticsConversions.length)
+        await stripe.charges.list(
+          {
+            customer: stripe_cust_id
           },
-          browserCount: {
-            chrome: chromeCount.length,
-            safari: safariCount.length,
-            edge: edgeCount.length,
-            firefox: firefoxCount.length,
-            other: otherCount.length
-          },
-          cities: cities.rows,
-          growth: {
-            clicks: clicksGrowth,
-            impressions: impressionsGrowth,
-            conversions: conversionsGrowth
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
-          devices
-        });
+          (err, charges) => {
+            res.json({
+              clicks: advertiserAnalyticsClicks,
+              impressions: advertiserAnalyticsImpressions,
+              conversions: advertiserAnalyticsConversions,
+              actionCount: {
+                impressions: Number(advertiserAnalyticsImpressions.length),
+                clicks: Number(advertiserAnalyticsClicks.length),
+                conversions: Number(advertiserAnalyticsConversions.length)
+              },
+              browserCount: {
+                chrome: chromeCount.length,
+                safari: safariCount.length,
+                edge: edgeCount.length,
+                firefox: firefoxCount.length,
+                other: otherCount.length
+              },
+              cities: cities.rows,
+              growth: {
+                clicks: clicksGrowth,
+                impressions: impressionsGrowth,
+                conversions: conversionsGrowth
+              },
+              offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+              devices,
+              payments: err ? [] : charges.data
+            });
+          }
+        );
       }
     }
   } catch ({ message }) {
@@ -656,7 +698,7 @@ route.get("/:id", authenticate, async (req, res) => {
 route.get("/", authenticate, async (req, res) => {
   // Current logged in user
   const affiliate_id = req.decoded.id;
-  const { acct_type } = req.decoded;
+  const { acct_type, stripe_payout_id, stripe_cust_id } = req.decoded;
 
   // // destructuring the query
 
@@ -841,31 +883,43 @@ route.get("/", authenticate, async (req, res) => {
             thisMonthConversionsFiltered.count) *
           100;
 
-        res.json({
-          clicks: getAffiliateClicksFiltered,
-          impressions: getAffiliateImpressionsFiltered,
-          conversions: getAffiliateConversionFiltered,
-          actionCount: {
-            impressions: Number(getAffiliateImpressionsFiltered.length),
-            clicks: Number(getAffiliateClicksFiltered.length),
-            conversions: Number(getAffiliateConversionFiltered.length)
+        await stripe.transfers.list(
+          {
+            destination: stripe_payout_id,
+            created: {
+              gte: moment(started_at, "YYYY-MM-DD hh:mm:ss").unix(),
+              lte: moment(ended_at, "YYYY-MM-DD hh:mm:ss").unix()
+            }
           },
-          browserCount: {
-            chrome: chromeAnalyticsFiltered.length,
-            safari: safariAnalyticsFiltered.length,
-            edge: edgeAnalyticsFiltered.length,
-            firefox: firefoxAnalyticsFiltered.length,
-            other: otherAnalyticsFiltered.length
-          },
-          cities: citiesFiltered,
-          growth: {
-            clicks: clicksGrowthFiltered,
-            impressions: impressionsGrowthFiltered,
-            conversions: conversionsGrowthFiltered
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
-          devices
-        });
+          async (err, transfers) => {
+            res.json({
+              clicks: getAffiliateClicksFiltered,
+              impressions: getAffiliateImpressionsFiltered,
+              conversions: getAffiliateConversionFiltered,
+              actionCount: {
+                impressions: Number(getAffiliateImpressionsFiltered.length),
+                clicks: Number(getAffiliateClicksFiltered.length),
+                conversions: Number(getAffiliateConversionFiltered.length)
+              },
+              browserCount: {
+                chrome: chromeAnalyticsFiltered.length,
+                safari: safariAnalyticsFiltered.length,
+                edge: edgeAnalyticsFiltered.length,
+                firefox: firefoxAnalyticsFiltered.length,
+                other: otherAnalyticsFiltered.length
+              },
+              cities: citiesFiltered,
+              growth: {
+                clicks: clicksGrowthFiltered,
+                impressions: impressionsGrowthFiltered,
+                conversions: conversionsGrowthFiltered
+              },
+              offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+              devices,
+              payouts: err ? [] : transfers.data
+            });
+          }
+        );
       } else {
         const devices = await models.affiliateDevices(affiliate_id);
 
@@ -910,31 +964,39 @@ route.get("/", authenticate, async (req, res) => {
           .where("browser", "Other")
           .orderBy("an.id", "desc");
 
-        res.json({
-          clicks: getAffiliateClicks,
-          impressions: getAffiliateImpressions,
-          conversions: getAffiliateConversion,
-          actionCount: {
-            impressions: Number(getAffiliateImpressions.length),
-            clicks: Number(getAffiliateClicks.length),
-            conversions: Number(getAffiliateConversion.length)
+        await stripe.transfers.list(
+          {
+            destination: stripe_payout_id
           },
-          browserCount: {
-            chrome: chromeAnalytics.length,
-            safari: safariAnalytics.length,
-            edge: edgeAnalytics.length,
-            firefox: firefoxAnalytics.length,
-            other: otherAnalytics.length
-          },
-          cities: cities,
-          growth: {
-            clicks: clicksGrowth,
-            impressions: impressionsGrowth,
-            conversions: conversionsGrowth
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
-          devices
-        });
+          async (err, transfers) => {
+            res.json({
+              clicks: getAffiliateClicks,
+              impressions: getAffiliateImpressions,
+              conversions: getAffiliateConversion,
+              actionCount: {
+                impressions: Number(getAffiliateImpressions.length),
+                clicks: Number(getAffiliateClicks.length),
+                conversions: Number(getAffiliateConversion.length)
+              },
+              browserCount: {
+                chrome: chromeAnalytics.length,
+                safari: safariAnalytics.length,
+                edge: edgeAnalytics.length,
+                firefox: firefoxAnalytics.length,
+                other: otherAnalytics.length
+              },
+              cities: cities,
+              growth: {
+                clicks: clicksGrowth,
+                impressions: impressionsGrowth,
+                conversions: conversionsGrowth
+              },
+              offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+              devices,
+              payouts: err ? [] : transfers.data
+            });
+          }
+        );
       }
     } else if (acct_type === "advertiser") {
       const offersRanking = await models
@@ -1072,31 +1134,43 @@ route.get("/", authenticate, async (req, res) => {
             thisMonthConversionsFiltered.count) *
           100;
 
-        res.json({
-          clicks: getAdvertisersClicksFiltered,
-          impressions: getAdvertisersImpressionsFiltered,
-          conversions: getAdvertisersConversionFiltered,
-          actionCount: {
-            impressions: Number(getAdvertisersImpressionsFiltered.length),
-            clicks: Number(getAdvertisersClicksFiltered.length),
-            conversions: Number(getAdvertisersConversionFiltered.length)
+        await stripe.charges.list(
+          {
+            customer: stripe_cust_id,
+            created: {
+              gte: moment(started_at, "YYYY-MM-DD hh:mm:ss").unix(),
+              lte: moment(ended_at, "YYYY-MM-DD hh:mm:ss").unix()
+            }
           },
-          browserCount: {
-            chrome: chromeAnalyticsFiltered.length,
-            safari: safariAnalyticsFiltered.length,
-            edge: edgeAnalyticsFiltered.length,
-            firefox: firefoxAnalyticsFiltered.length,
-            other: otherAnalyticsFiltered.length
-          },
-          cities: citiesFiltered,
-          growth: {
-            clicks: clicksGrowthFiltered,
-            impressions: impressionsGrowthFiltered,
-            conversions: conversionsGrowthFiltered
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
-          devices
-        });
+          (err, charges) => {
+            res.json({
+              clicks: getAdvertisersClicksFiltered,
+              impressions: getAdvertisersImpressionsFiltered,
+              conversions: getAdvertisersConversionFiltered,
+              actionCount: {
+                impressions: Number(getAdvertisersImpressionsFiltered.length),
+                clicks: Number(getAdvertisersClicksFiltered.length),
+                conversions: Number(getAdvertisersConversionFiltered.length)
+              },
+              browserCount: {
+                chrome: chromeAnalyticsFiltered.length,
+                safari: safariAnalyticsFiltered.length,
+                edge: edgeAnalyticsFiltered.length,
+                firefox: firefoxAnalyticsFiltered.length,
+                other: otherAnalyticsFiltered.length
+              },
+              cities: citiesFiltered,
+              growth: {
+                clicks: clicksGrowthFiltered,
+                impressions: impressionsGrowthFiltered,
+                conversions: conversionsGrowthFiltered
+              },
+              offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+              devices,
+              payments: err ? [] : charges.data
+            });
+          }
+        );
       } else {
         const lastMonthsImpressions = await models.lastMonthAdvertiserAll(
           affiliate_id,
@@ -1177,32 +1251,43 @@ route.get("/", authenticate, async (req, res) => {
         const otherAnalytics = await models
           .browserCountAdvertisers("Other", affiliate_id)
           .orderBy("an.id", "desc");
-
-        res.json({
-          clicks: analyticsForAdvertisersClicks,
-          impressions: analyticsForAdvertisersImpressions,
-          conversions: analyticsForAdvertisersConversions,
-          actionCount: {
-            impressions: Number(analyticsForAdvertisersImpressions.length),
-            clicks: Number(analyticsForAdvertisersClicks.length),
-            conversions: Number(analyticsForAdvertisersConversions.length)
+        await stripe.charges.list(
+          {
+            customer: stripe_cust_id,
+            created: {
+              gte: moment(started_at, "YYYY-MM-DD hh:mm:ss").unix(),
+              lte: moment(ended_at, "YYYY-MM-DD hh:mm:ss").unix()
+            }
           },
-          browserCount: {
-            chrome: chromeAnalytics.length,
-            safari: safariAnalytics.length,
-            edge: edgeAnalytics.length,
-            firefox: firefoxAnalytics.length,
-            other: otherAnalytics.length
-          },
-          cities: cities.rows,
-          growth: {
-            clicks: clicksGrowth,
-            impressions: impressionsGrowth,
-            conversions: conversionsGrowth
-          },
-          offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
-          devices
-        });
+          (err, charges) => {
+            res.json({
+              clicks: analyticsForAdvertisersClicks,
+              impressions: analyticsForAdvertisersImpressions,
+              conversions: analyticsForAdvertisersConversions,
+              actionCount: {
+                impressions: Number(analyticsForAdvertisersImpressions.length),
+                clicks: Number(analyticsForAdvertisersClicks.length),
+                conversions: Number(analyticsForAdvertisersConversions.length)
+              },
+              browserCount: {
+                chrome: chromeAnalytics.length,
+                safari: safariAnalytics.length,
+                edge: edgeAnalytics.length,
+                firefox: firefoxAnalytics.length,
+                other: otherAnalytics.length
+              },
+              cities: cities.rows,
+              growth: {
+                clicks: clicksGrowth,
+                impressions: impressionsGrowth,
+                conversions: conversionsGrowth
+              },
+              offersRanking: offersRanking.sort((a, b) => b.ctr - a.ctr),
+              devices,
+              payments: err ? [] : charges.data
+            });
+          }
+        );
       }
     }
   } catch ({ message }) {

@@ -157,9 +157,11 @@ route.get("/payout", authenticate, async (req, res) => {
 
   try {
     stripe.transfers.list(
-      { destination: _customer.stripe_payout_id },
+      _customer.stripe_payout_id && {
+        destination: _customer.stripe_payout_id
+      },
       async (err, transfers) => {
-        if (err) return res.status(500).json({ message: err });
+        if (err) return res.json({ payouts: [] });
         res.json({ payouts: transfers.data });
       }
     );
@@ -176,9 +178,11 @@ route.get("/payments", authenticate, async (req, res) => {
 
   try {
     await stripe.charges.list(
-      { customer: _customer.stripe_cust_id },
+      _customer.stripe_cust_id && {
+        customer: _customer.stripe_cust_id
+      },
       (err, charges) => {
-        if (err) return res.status(500).json({ message: err });
+        if (err) return res.json({ payments: [] });
         res.json({ payments: charges.data });
       }
     );
