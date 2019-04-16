@@ -450,6 +450,26 @@ const filteredDevicesByUserId = (affiliate_id, started_at, ended_at) =>
     .andWhere("analytics.created_at", "<", ended_at)
     .groupBy("analytics.device");
 
+const categoriesAdvertiser = user_id =>
+  db("offers as o")
+    .select("category")
+    .count("an.*")
+    .from("offers as o")
+    .join("agreements as ag", "ag.offer_id", "o.id")
+    .join("analytics as an", "an.agreement_id", "ag.id")
+    .where("o.user_id", user_id)
+    .groupBy("o.category");
+
+const categoriesAffiliate = affiliate_id =>
+  db("offers as o")
+    .select("category")
+    .count("an.*")
+    .from("offers as o")
+    .join("agreements as ag", "ag.offer_id", "o.id")
+    .join("analytics as an", "an.agreement_id", "ag.id")
+    .where("ag.affiliate_id", affiliate_id)
+    .groupBy("o.category");
+
 const stripeGrowthAffiliate = async stripe_payout_id => {
   if (!stripe_payout_id) return 0;
 
@@ -580,5 +600,7 @@ module.exports = {
   citiesFilteredByUser,
   deviceByUser,
   stripeGrowthAffiliate,
-  stripeGrowthAdvertisers
+  stripeGrowthAdvertisers,
+  categoriesAdvertiser,
+  categoriesAffiliate
 };
