@@ -162,6 +162,7 @@ route.get("/payout", authenticate, async (req, res) => {
       },
       async (err, transfers) => {
         if (err) return res.json({ payouts: [] });
+
         res.json({ payouts: transfers.data });
       }
     );
