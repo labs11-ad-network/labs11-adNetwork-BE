@@ -521,7 +521,6 @@ const stripeGrowthAdvertisers = async stripe_cust_id => {
     totalThisMonth += charge.amount;
   });
 
-  console.log(totalLastMonth, totalThisMonth);
   const stripeGrowth =
     ((totalThisMonth - totalLastMonth) / totalThisMonth) * 100;
 

@@ -1258,13 +1258,10 @@ route.get("/", authenticate, async (req, res) => {
         const otherAnalytics = await models
           .browserCountAdvertisers("Other", affiliate_id)
           .orderBy("an.id", "desc");
+
         await stripe.charges.list(
           {
-            customer: stripe_cust_id,
-            created: {
-              gte: moment(started_at, "YYYY-MM-DD hh:mm:ss").unix(),
-              lte: moment(ended_at, "YYYY-MM-DD hh:mm:ss").unix()
-            }
+            customer: stripe_cust_id
           },
           async (err, charges) => {
             res.json({
