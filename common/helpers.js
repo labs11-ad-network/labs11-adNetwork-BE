@@ -480,6 +480,11 @@ const stripeGrowthAffiliate = async stripe_payout_id => {
       lte: moment(last30, "YYYY-MM-DD hh:mm:ss").unix()
     }
   });
+  let totalLastMonth = 0;
+
+  lastMonthStripe.data.map(transfer => {
+    totalLastMonth += transfer.amount;
+  });
 
   const thisMonthStripe = await stripe.transfers.list({
     destination: stripe_payout_id,
@@ -488,17 +493,14 @@ const stripeGrowthAffiliate = async stripe_payout_id => {
     }
   });
 
-  const lastMonthStripeTotal =
-    lastMonthStripe.data.length &&
-    (await lastMonthStripe.data.reduce((a, b) => a.amount + b.amount));
+  let totalThisMonth = 0;
 
-  const thisMonthStripeTotal =
-    thisMonthStripe.data.length &&
-    (await thisMonthStripe.data.reduce((a, b) => a.amount + b.amount));
+  thisMonthStripe.data.map(transfer => {
+    totalThisMonth += transfer.amount;
+  });
 
   const stripeGrowth =
-    ((thisMonthStripeTotal - lastMonthStripeTotal) / thisMonthStripeTotal) *
-    100;
+    ((totalThisMonth - totalLastMonth) / totalThisMonth) * 100;
 
   return stripeGrowth;
 };
@@ -521,19 +523,11 @@ const stripeGrowthAdvertisers = async stripe_cust_id => {
     }
   });
 
-  const lastMonthStripeTotal =
-    lastMonthStripe.data.length &&
-    (await lastMonthStripe.data.reduce((a, b) => a.amount + b.amount));
-
   let totalLastMonth = 0;
 
   lastMonthStripe.data.map(charge => {
     totalLastMonth += charge.amount;
   });
-
-  const thisMonthStripeTotal =
-    thisMonthStripe.data.length &&
-    (await thisMonthStripe.data.reduce((a, b) => a.amount + b.amount));
 
   let totalThisMonth = 0;
 
