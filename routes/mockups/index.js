@@ -17,8 +17,8 @@ route.get("/", authenticate, async (req, res) => {
   try {
     const ads = await models.get("ads");
     res.json(ads);
-  } catch (error) {
-    res.status(500).json(error);
+  } catch ({ message }) {
+    res.status(500).json({ message });
   }
 });
 
@@ -95,8 +95,8 @@ route.get("/:id", async (req, res) => {
     const ad = await models.findBy("ads", { id });
     if (!ad) return res.status(404).json({ message: "No ads found" });
     res.json(ad);
-  } catch (error) {
-    res.status(500).json(error);
+  } catch ({ message }) {
+    res.status(500).json({ message });
   }
 });
 
