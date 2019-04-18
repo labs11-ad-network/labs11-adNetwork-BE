@@ -22,7 +22,7 @@ const authenticate = async (req, res, next) => {
         res.status(401).json({ message: "You are not authorized" });
       }
     } else {
-      res.status(401).json({ message: "You need to passed Headers !" });
+      res.status(401).json({ message: "You are not authorized" });
     }
   } catch (error) {
     return errorHelper(500, error, res);

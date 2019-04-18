@@ -4,8 +4,8 @@ const emailer = (res, email, subject, message) => {
   const smtpTransport = mailer.createTransport({
     service: "Gmail",
     auth: {
-      user: "ladnetwork11@gmail.com",
-      pass: "lambdaschool"
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD
     }
   });
 
