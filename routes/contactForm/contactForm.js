@@ -9,8 +9,8 @@ const transport = {
   port: 465,
   secure: true,
   auth: {
-    user: "ladnetwork11@gmail.com",
-    pass: "lambdaschool"
+    user: process.env.EMAIL,
+    pass: process.env.PASSWORD
   }
 };
 const transporter = nodemailer.createTransport(transport);
@@ -35,12 +35,12 @@ server.post("/", async (req, res) => {
 
   const mail = {
     from: email,
-    to: "ladnetwork11@gmail.com",
+    to: process.env.EMAIL,
     subject: `New Message from Lad Network Contact Form`,
     text: `
           From LAD network User:
-          Full Name : ${firstName} ${lastName} 
-          Email     : ${email} 
+          Full Name : ${firstName} ${lastName}
+          Email     : ${email}
           Comments  : ${comments}`
   };
 

@@ -17,7 +17,9 @@ route.post("/", async (req, res) => {
   const parser = new UAParser(userAgent);
 
   try {
+    // Generate a location using the request IP
     iplocation(ipAddr, [], async (error, location) => {
+      // Record the action into the DB
       const enterAction = await models
         .add("analytics", {
           action,
@@ -37,14 +39,17 @@ route.post("/", async (req, res) => {
           return res.json({ message: "Failed to add action" });
         });
       if (enterAction[0]) {
+        // Get pricing for that action
         const payments = await models.addPricingForAnalytics();
 
+        // Find concerned parties (affiliate and advertiser)
         payments.map(async user => {
           const advertiser = await models.findBy("users", { id: user.user_id });
           const affiliate = await models.findBy("users", {
             id: user.affiliate_id
           });
 
+          // Make sure they have not spent their budget and pay/charge both accounts
           if (user.budget > 0) {
             if (action === "impression") {
               // advertiser
@@ -74,6 +79,7 @@ route.post("/", async (req, res) => {
               });
             }
           } else {
+            // if they have spent their budget, find their email, alert them and then turn off their offer
             const userEmail = await models.findBy("users", {
               id: user.user_id
             });
@@ -103,7 +109,11 @@ route.get("/:id", authenticate, async (req, res) => {
   const { acct_type, stripe_payout_id, stripe_cust_id } = req.decoded;
   const { started_at, ended_at } = req.query;
   try {
+    /*
+      @@ACCT_TYPE: AFFILIATE
+    */
     if (acct_type === "affiliate") {
+      // Get best ranking offers
       const offersRanking = await models.get("offers").map(async offer => {
         const offersClick = await models.offersActionByOfferId(offer, "click");
 
@@ -112,6 +122,7 @@ route.get("/:id", authenticate, async (req, res) => {
           "impression"
         );
 
+        // calculate their ctr
         offer.ctr =
           Math.floor(
             (offersClick.length / offersImpression.length) * 100 * 100
@@ -120,62 +131,78 @@ route.get("/:id", authenticate, async (req, res) => {
         return offer;
       });
 
+      // Get offer categories that the affiliate has accepted
       const categories = await models.categoriesAffiliate(user_id);
 
+      // Get last month's impressions
+      const lastMonthsImpressions = await models.lastMonthAffiliates(
+        user_id,
+        "impression",
+        id
+      );
+
+      // Get this month's impressions
+      const thisMonthsImpressions = await models.thisMonthAffiliates(
+        user_id,
+        "impression",
+        id
+      );
+
+      // Get last month's clicks
+      const lastMonthClicks = await models.lastMonthAffiliates(
+        user_id,
+        "click",
+        id
+      );
+
+      // Get this month's clicks
+      const thisMonthClicks = await models.thisMonthAffiliates(
+        user_id,
+        "click",
+        id
+      );
+
+      // Get last month's conversions
+      const lastMonthConversions = await models.lastMonthAffiliates(
+        user_id,
+        "conversion",
+        id
+      );
+
+      // Get this month's conversions
+      const thisMonthConversions = await models.thisMonthAffiliates(
+        user_id,
+        "conversion",
+        id
+      );
+
+      // calculate impression growth month over month
+      const impressionsGrowth =
+        ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+          thisMonthsImpressions.count) *
+        100;
+
+      // calculate click growth month over month
+      const clicksGrowth =
+        ((thisMonthClicks.count - lastMonthClicks.count) /
+          thisMonthClicks.count) *
+        100;
+
+      // calculate conversion growth month over month
+      const conversionsGrowth =
+        ((thisMonthConversions.count - lastMonthConversions.count) /
+          thisMonthConversions.count) *
+        100;
+
+      /*
+        @@ACCT_TYPE: AFFILIATE
+        @@QUERY: DATE
+      */
       if (started_at && ended_at) {
-        const lastMonthsImpressions = await models.lastMonthAffiliates(
-          user_id,
-          "impression",
-          id
-        );
-
-        const thisMonthsImpressions = await models.thisMonthAffiliates(
-          user_id,
-          "impression",
-          id
-        );
-
-        const lastMonthClicks = await models.lastMonthAffiliates(
-          user_id,
-          "click",
-          id
-        );
-
-        const thisMonthClicks = await models.thisMonthAffiliates(
-          user_id,
-          "click",
-          id
-        );
-
-        const lastMonthConversions = await models.lastMonthAffiliates(
-          user_id,
-          "conversion",
-          id
-        );
-
-        const thisMonthConversions = await models.thisMonthAffiliates(
-          user_id,
-          "conversion",
-          id
-        );
-
-        const impressionsGrowth =
-          ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
-            thisMonthsImpressions.count) *
-          100;
-
-        const clicksGrowth =
-          ((thisMonthClicks.count - lastMonthClicks.count) /
-            thisMonthClicks.count) *
-          100;
-
-        const conversionsGrowth =
-          ((thisMonthConversions.count - lastMonthConversions.count) /
-            thisMonthConversions.count) *
-          100;
-
+        // find and filter cities
         const cities = await models.allCitiesFiltered(id, started_at, ended_at);
 
+        // find and filter devices
         const devices = await models.filteredDevicesById(
           user_id,
           id,
@@ -184,54 +211,64 @@ route.get("/:id", authenticate, async (req, res) => {
         );
 
         // send the id of an agreeement and get the analytics for that agreement formatter like below
+
+        // get and filter clicks
         const affiliateAnalyticsClicks = await models
           .analyticsPerOfferWithPricing("click", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
+        // get and filter impressions
         const affiliateAnalyticsImpressions = await models
           .analyticsPerOfferWithPricing("impression", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
+        // get and filter conversions
         const affiliateAnalyticsConversions = await models
           .analyticsPerOfferWithPricing("conversion", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
+        // count chrome actions (click, impressions and conversions)
         const chromeCount = await models
           .browserCountPerOfferAffiliates("Chrome", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
+        // count safari actions (click, impressions and conversions)
         const safariCount = await models
           .browserCountPerOfferAffiliates("Safari", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
+        // count firefox actions (click, impressions and conversions)
         const firefoxCount = await models
           .browserCountPerOfferAffiliates("Firefox", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
+        // count edge actions (click, impressions and conversions)
         const edgeCount = await models
           .browserCountPerOfferAffiliates("Edge", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
+        // count others actions (click, impressions and conversions)
         const otherCount = await models
           .browserCountPerOfferAffiliates("Other", user_id, id)
           .where("an.created_at", ">=", started_at)
           .andWhere("an.created_at", "<", ended_at)
           .orderBy("an.id", "desc");
 
+        // List and filter all transfers
         await stripe.transfers.list(
           {
             destination: stripe_payout_id,
@@ -241,6 +278,7 @@ route.get("/:id", authenticate, async (req, res) => {
             }
           },
           async (err, transfers) => {
+            // send the report
             res.json({
               clicks: affiliateAnalyticsClicks,
               impressions: affiliateAnalyticsImpressions,
@@ -272,57 +310,6 @@ route.get("/:id", authenticate, async (req, res) => {
           }
         );
       } else {
-        const lastMonthsImpressions = await models.lastMonthAffiliates(
-          user_id,
-          "impression",
-          id
-        );
-
-        const thisMonthsImpressions = await models.thisMonthAffiliates(
-          user_id,
-          "impression",
-          id
-        );
-
-        const lastMonthClicks = await models.lastMonthAffiliates(
-          user_id,
-          "click",
-          id
-        );
-
-        const thisMonthClicks = await models.thisMonthAffiliates(
-          user_id,
-          "click",
-          id
-        );
-
-        const lastMonthConversions = await models.lastMonthAffiliates(
-          user_id,
-          "conversion",
-          id
-        );
-
-        const thisMonthConversions = await models.thisMonthAffiliates(
-          user_id,
-          "conversion",
-          id
-        );
-
-        const impressionsGrowth =
-          ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
-            thisMonthsImpressions.count) *
-          100;
-
-        const clicksGrowth =
-          ((thisMonthClicks.count - lastMonthClicks.count) /
-            thisMonthClicks.count) *
-          100;
-
-        const conversionsGrowth =
-          ((thisMonthConversions.count - lastMonthConversions.count) /
-            thisMonthConversions.count) *
-          100;
-
         const cities = await models.citiesFilteredById(user_id, id);
 
         const devices = await models.affiliateDevicesById(user_id, id);
@@ -396,6 +383,10 @@ route.get("/:id", authenticate, async (req, res) => {
           }
         );
       }
+
+      /*
+        @@ACCT_TYPE: ADVERTISERS
+      */
     } else if (acct_type === "advertiser") {
       const offersRanking = await models
         .findAllBy("offers", { user_id })
@@ -419,58 +410,58 @@ route.get("/:id", authenticate, async (req, res) => {
         });
       const categories = await models.categoriesAdvertiser(user_id);
 
+      const lastMonthsImpressions = await models.lastMonthAdvertiser(
+        user_id,
+        "impression",
+        id
+      );
+
+      const thisMonthsImpressions = await models.thisMonthAdvertiser(
+        user_id,
+        "impression",
+        id
+      );
+
+      const lastMonthClicks = await models.lastMonthAdvertiser(
+        user_id,
+        "click",
+        id
+      );
+
+      const thisMonthClicks = await models.thisMonthAdvertiser(
+        user_id,
+        "click",
+        id
+      );
+
+      const lastMonthConversions = await models.lastMonthAdvertiser(
+        user_id,
+        "conversion",
+        id
+      );
+
+      const thisMonthConversions = await models.thisMonthAdvertiser(
+        user_id,
+        "conversion",
+        id
+      );
+
+      const impressionsGrowth =
+        ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
+          thisMonthsImpressions.count) *
+        100;
+
+      const clicksGrowth =
+        ((thisMonthClicks.count - lastMonthClicks.count) /
+          thisMonthClicks.count) *
+        100;
+
+      const conversionsGrowth =
+        ((thisMonthConversions.count - lastMonthConversions.count) /
+          thisMonthConversions.count) *
+        100;
+
       if (started_at && ended_at) {
-        const lastMonthsImpressions = await models.lastMonthAdvertiser(
-          user_id,
-          "impression",
-          id
-        );
-
-        const thisMonthsImpressions = await models.thisMonthAdvertiser(
-          user_id,
-          "impression",
-          id
-        );
-
-        const lastMonthClicks = await models.lastMonthAdvertiser(
-          user_id,
-          "click",
-          id
-        );
-
-        const thisMonthClicks = await models.thisMonthAdvertiser(
-          user_id,
-          "click",
-          id
-        );
-
-        const lastMonthConversions = await models.lastMonthAdvertiser(
-          user_id,
-          "conversion",
-          id
-        );
-
-        const thisMonthConversions = await models.thisMonthAdvertiser(
-          user_id,
-          "conversion",
-          id
-        );
-
-        const impressionsGrowth =
-          ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
-            thisMonthsImpressions.count) *
-          100;
-
-        const clicksGrowth =
-          ((thisMonthClicks.count - lastMonthClicks.count) /
-            thisMonthClicks.count) *
-          100;
-
-        const conversionsGrowth =
-          ((thisMonthConversions.count - lastMonthConversions.count) /
-            thisMonthConversions.count) *
-          100;
-
         const cities = await models.citiesFilteredByIdandUser(
           user_id,
           id,
@@ -576,57 +567,6 @@ route.get("/:id", authenticate, async (req, res) => {
       } else {
         const devices = await models.devicesByIdandUser(user_id, id);
 
-        const lastMonthsImpressions = await models.lastMonthAdvertiser(
-          user_id,
-          "impression",
-          id
-        );
-
-        const thisMonthsImpressions = await models.thisMonthAdvertiser(
-          user_id,
-          "impression",
-          id
-        );
-
-        const lastMonthClicks = await models.lastMonthAdvertiser(
-          user_id,
-          "click",
-          id
-        );
-
-        const thisMonthClicks = await models.thisMonthAdvertiser(
-          user_id,
-          "click",
-          id
-        );
-
-        const lastMonthConversions = await models.lastMonthAdvertiser(
-          user_id,
-          "conversion",
-          id
-        );
-
-        const thisMonthConversions = await models.thisMonthAdvertiser(
-          user_id,
-          "conversion",
-          id
-        );
-
-        const impressionsGrowth =
-          ((thisMonthsImpressions.count - lastMonthsImpressions.count) /
-            thisMonthsImpressions.count) *
-          100;
-
-        const clicksGrowth =
-          ((thisMonthClicks.count - lastMonthClicks.count) /
-            thisMonthClicks.count) *
-          100;
-
-        const conversionsGrowth =
-          ((thisMonthConversions.count - lastMonthConversions.count) /
-            thisMonthConversions.count) *
-          100;
-
         const cities = await models.citiesFilteredByIdAdvertiser(user_id, id);
         // send the id of an offer and get the analytics for that offer formatted like below
         const advertiserAnalyticsClicks = await models
@@ -713,7 +653,7 @@ route.get("/", authenticate, async (req, res) => {
 
   // // destructuring the query
 
-  const { action, started_at, ended_at, agreement_id } = req.query;
+  const { started_at, ended_at, agreement_id } = req.query;
 
   try {
     if (acct_type === "affiliate") {
@@ -781,7 +721,7 @@ route.get("/", authenticate, async (req, res) => {
 
       const cities = await models.citiesByAffiliateId(affiliate_id);
 
-      if (!action && started_at && ended_at) {
+      if (started_at && ended_at) {
         const devices = await models.filteredDevicesByUserId(
           affiliate_id,
           started_at,
