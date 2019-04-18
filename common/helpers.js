@@ -250,7 +250,8 @@ const allAdsByAffiliateId = affiliate_id =>
     .join("offers as o", "o.id", "ag.offer_id")
     .select("ad.*", "ag.id as agreement_id")
     .where("affiliate_id", affiliate_id)
-    .andWhere("o.status", true);
+    .andWhere("o.status", true)
+    .andWhere("ag.active", true);
 
 const offerAgreementsAffiliates = (user_id, allOffer) =>
   db
